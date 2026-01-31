@@ -207,7 +207,7 @@
       background:#fff;
     }
     .field textarea{
-      min-height:130px; /* ✅ bigger note */
+      min-height:130px; /* bigger note */
       resize:vertical;
       font-weight:300;
     }
@@ -248,9 +248,6 @@
       min-width:30px; height:30px; padding:0 9px; border-radius:999px;
       background:#fff; color:#111; font-weight:700; font-size:13px;
     }
-
-    /* Hide calc on mobile (already requested earlier) */
-    .calcFab{ display:none !important; }
 
     /* Mobile bottom cart bar (full width) */
     .cartBar{
@@ -296,15 +293,6 @@
       .cartBar{ display:block; }
       .cartFab{ display:none !important; }
     }
-
-    /* ✅ Mobile leads accordion (name + plus) */
-    .leadList{ display:flex; flex-direction:column; gap:10px; }
-    .leadCard{ border:1px solid var(--border); border-radius:18px; overflow:hidden; background:#fff; }
-    .leadTop{
-      display:flex; align-items:center; justify-content:space-between; gap:10px;
-      padding:12px;
-    }
-    .leadName{ font-weight:700; font-size:15px; flex:1; min-width:0; word-break:break-word; }
   </style>
 </head>
 
@@ -464,10 +452,10 @@
           </div>
         </div>
 
-        <!-- Mobile leads: name + plus -->
+        <!-- Mobile leads: name + plus (details like product info) -->
         <div class="mobileOnly">
           <div style="font-weight:700; margin-bottom:10px;">Leads overzicht</div>
-          <div id="mobileLeads" class="leadList"></div>
+          <div id="mobileLeads" class="productList"></div>
         </div>
 
         <div id="accountErr" class="err"></div>
@@ -477,7 +465,7 @@
 
   <script>
     const APPS_SCRIPT_WEBAPP_URL =
-      "https://script.google.com/macros/s/AKfycbwpnwNyO2micTXDswc10-gRenPh51riMYojlYhAE1FGN7LizthfF0CNy0cLkV11AdmENg/exec";
+      "https://script.google.com/macros/s/AKfycbyqzsvu-EaeJCLbUN3IZ6nxhXmi67SYM7sh15fJjmPtB6rvAJBn609IkpnDa7SFwc-QMg/exec";
 
     function jsonp(url){
       return new Promise((resolve,reject)=>{
@@ -568,9 +556,8 @@
     let isAdmin = false;
 
     let allRows = [];
-    let expanded = new Set();
-    let mobileExpanded = new Set();
-    let leadExpanded = new Set();
+    let expanded = new Set();       // desktop product expand
+    let mobileExpanded = new Set(); // mobile product expand
     let cart = [];
 
     function setCartBadge(){
@@ -644,7 +631,7 @@
       });
     }
 
-    // Account modal
+    // Account modal open/close
     function openAccount(){
       accountErr.textContent = "";
       accountOverlay.classList.add("active");
@@ -661,7 +648,6 @@
       accountErr.textContent = "";
       accountOrdersTbody.innerHTML = `<tr><td colspan="6" class="small">Laden…</td></tr>`;
       mobileLeads.innerHTML = "";
-      leadExpanded.clear();
 
       const scope = isAdmin ? "all" : "mine";
       try{
@@ -669,7 +655,7 @@
         if(!res || !res.ok) throw new Error(res?.error || "Kon leads niet laden");
         const orders = Array.isArray(res.orders) ? res.orders : [];
 
-        // Desktop table (no note2/sale)
+        // Desktop table
         if(!orders.length){
           accountOrdersTbody.innerHTML = `<tr><td colspan="6" class="small">Geen leads.</td></tr>`;
         }else{
@@ -685,7 +671,7 @@
           `).join("");
         }
 
-        // Mobile accordion: only name + plus
+        // Mobile leads: name + plus, details toggled like product info
         if(!orders.length){
           mobileLeads.innerHTML = `<div class="small">Geen leads.</div>`;
           return;
@@ -693,16 +679,15 @@
 
         mobileLeads.innerHTML = orders.map((o,i)=>{
           const id = `lead_${i}`;
-          const open = leadExpanded.has(id);
           return `
-            <div class="pCard" style="border-radius:18px;" data-id="${id}">
+            <div class="pCard" data-lead="${id}">
               <div class="pRow">
                 <div class="pName" style="font-weight:700;">${esc(o.name || "Lead")}</div>
                 <div class="pActions">
-                  <button class="btn pToggle" data-toggle-lead="${id}">${open ? "Sluit" : "+"}</button>
+                  <button class="btn pToggle" data-toggle-lead="${id}">+</button>
                 </div>
               </div>
-              <div class="pDetails ${open ? "open":""}" id="${id}">
+              <div class="pDetails" id="${id}">
                 <div class="kv">
                   <div class="k">Phone number</div><div class="v">${esc(o.phoneNumber||"-")}</div>
                   <div class="k">Mail</div><div class="v">${esc(o.mail||"-")}</div>
@@ -718,8 +703,9 @@
         mobileLeads.querySelectorAll("button[data-toggle-lead]").forEach(btn=>{
           btn.addEventListener("click", ()=>{
             const id = btn.getAttribute("data-toggle-lead");
-            if(leadExpanded.has(id)) leadExpanded.delete(id); else leadExpanded.add(id);
-            loadAccountOrders(); // re-render keeping accordion states simple
+            const details = document.getElementById(id);
+            const isOpen = details.classList.toggle("open");
+            btn.textContent = isOpen ? "−" : "+";
           });
         });
 
@@ -767,7 +753,7 @@
           const tr = document.createElement("tr");
 
           const scText = stockCellValue(r.surfcenterStock);
-          const whText = stockCellValue(r.dropshipmentStock); // warehouse = dropshipment data source
+          const whText = stockCellValue(r.dropshipmentStock);
           const total = stockTotal(r.surfcenterStock, r.dropshipmentStock);
 
           const tdExpand = document.createElement("td");
@@ -817,7 +803,7 @@
         });
       }
 
-      // Mobile cards
+      // Mobile cards (Product + Add, rest in Info)
       if(!rows.length){
         mobileProducts.innerHTML = `<div class="small">Geen resultaten.</div>`;
         return;
