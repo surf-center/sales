@@ -29,7 +29,7 @@
       color:#111;
     }
 
-    /* ✅ remove yellow autofill */
+    /* remove yellow autofill */
     input, textarea{
       background:#fff;
       color:#111;
@@ -45,28 +45,16 @@
       caret-color:#111 !important;
     }
 
-    /* Views */
     #loginView{ display:block; }
     #appView{ display:none; }
 
-    /* Layout */
-    .centerWrap{
-      max-width:560px;
-      margin:0 auto;
-      padding:34px 18px 28px;
-      text-align:center;
-    }
-    .wrap{
-      max-width:1200px;
-      margin:0 auto;
-      padding:16px 18px 120px; /* extra for mobile bottom cart bar */
-    }
+    .centerWrap{ max-width:560px; margin:0 auto; padding:34px 18px 28px; text-align:center; }
+    .wrap{ max-width:1200px; margin:0 auto; padding:16px 18px 120px; }
     @media (max-width:480px){
-      .centerWrap{ padding:22px 16px 18px; } /* ✅ less zoomy feel */
+      .centerWrap{ padding:22px 16px 18px; }
       .wrap{ padding:12px 16px 132px; }
     }
 
-    /* Logo */
     .logo{
       display:block;
       width:min(560px,100%);
@@ -79,7 +67,6 @@
       .logo{ max-height:56px; margin:12px auto 12px; }
     }
 
-    /* Inputs/buttons */
     .btn{
       font-family:'Poppins',sans-serif;
       font-weight:500;
@@ -106,7 +93,7 @@
       border:1px solid var(--border);
       font-family:'Poppins',sans-serif;
       font-weight:500;
-      font-size:16px; /* ✅ prevents iOS zoom */
+      font-size:16px; /* prevents iOS zoom */
       background:#fff;
     }
 
@@ -134,14 +121,9 @@
       justify-content:center;
       margin:6px 0 14px;
     }
-    .searchWrap input{ width:min(560px,100%); font-size:16px; } /* ✅ no iOS zoom */
+    .searchWrap input{ width:min(560px,100%); font-size:16px; }
 
-    .card{
-      background:var(--bg);
-      border:1px solid var(--border);
-      border-radius:20px;
-      padding:12px;
-    }
+    .card{ background:var(--bg); border:1px solid var(--border); border-radius:20px; padding:12px; }
 
     /* Desktop table */
     .tableWrap{ overflow-x:auto; -webkit-overflow-scrolling:touch; }
@@ -151,7 +133,6 @@
     .detailsRow td{ background:var(--soft); border-bottom:1px solid #eaeaea; }
     .small{ font-size:12px; color:var(--muted); }
 
-    /* Mobile / Desktop toggles */
     .mobileOnly{ display:none; }
     .desktopOnly{ display:block; }
     @media (max-width:640px){
@@ -159,20 +140,14 @@
       .desktopOnly{ display:none; }
     }
 
-    /* ✅ Mobile product cards */
+    /* Mobile product cards */
     .productList{ display:flex; flex-direction:column; gap:10px; }
     .pCard{ border:1px solid var(--border); border-radius:18px; background:#fff; overflow:hidden; }
     .pRow{ display:flex; align-items:center; justify-content:space-between; gap:10px; padding:12px; }
     .pName{ font-weight:500; font-size:15px; line-height:1.2; flex:1; min-width:0; word-break:break-word; }
     .pActions{ display:flex; gap:8px; align-items:center; flex-shrink:0; }
     .pTiny{ padding:9px 12px; border-radius:14px; font-weight:700; }
-
-    /* ✅ Info tab: text black */
-    .pToggle{
-      padding:9px 12px;
-      border-radius:14px;
-      color:#111;
-    }
+    .pToggle{ padding:9px 12px; border-radius:14px; color:#111; }
 
     .pDetails{ display:none; padding:10px 12px 12px; border-top:1px solid #eee; background:var(--soft); }
     .pDetails.open{ display:block; }
@@ -228,10 +203,14 @@
       border:1px solid var(--border);
       font-family:'Poppins',sans-serif;
       font-weight:500;
-      font-size:16px; /* ✅ prevents iOS zoom */
+      font-size:16px;
       background:#fff;
     }
-    .field textarea{ min-height:86px; resize:vertical; font-weight:300; }
+    .field textarea{
+      min-height:130px; /* ✅ bigger note */
+      resize:vertical;
+      font-weight:300;
+    }
 
     .cartList{ margin:10px 0 0; border:1px solid var(--border); border-radius:16px; overflow:hidden; }
     .cartRow{ display:flex; justify-content:space-between; gap:10px; padding:12px; border-bottom:1px solid #eee; }
@@ -254,7 +233,7 @@
       background:var(--ok); color:#fff; font-weight:700;
     }
 
-    /* ✅ Desktop cart + calc floating buttons */
+    /* Desktop floating cart */
     .cartFab{
       position:fixed; left:18px; bottom:18px;
       height:56px; padding:0 16px; border-radius:999px;
@@ -270,22 +249,10 @@
       background:#fff; color:#111; font-weight:700; font-size:13px;
     }
 
-    .calcFab{
-      position:fixed; right:18px; bottom:18px;
-      width:56px; height:56px; border-radius:50%;
-      background:var(--accent); color:#fff;
-      display:flex; align-items:center; justify-content:center;
-      cursor:pointer; box-shadow:0 10px 25px rgba(0,0,0,.25);
-      z-index:9999; user-select:none;
-    }
-    .calcFab span{ font-weight:700; font-size:22px; transform:translateY(-1px); }
+    /* Hide calc on mobile (already requested earlier) */
+    .calcFab{ display:none !important; }
 
-    /* ✅ On mobile: hide calculator completely */
-    @media (max-width:640px){
-      .calcFab{ display:none !important; }
-    }
-
-    /* ✅ Mobile bottom cart bar (full width) */
+    /* Mobile bottom cart bar (full width) */
     .cartBar{
       display:none;
       position:fixed;
@@ -329,6 +296,15 @@
       .cartBar{ display:block; }
       .cartFab{ display:none !important; }
     }
+
+    /* ✅ Mobile leads accordion (name + plus) */
+    .leadList{ display:flex; flex-direction:column; gap:10px; }
+    .leadCard{ border:1px solid var(--border); border-radius:18px; overflow:hidden; background:#fff; }
+    .leadTop{
+      display:flex; align-items:center; justify-content:space-between; gap:10px;
+      padding:12px;
+    }
+    .leadName{ font-weight:700; font-size:15px; flex:1; min-width:0; word-break:break-word; }
   </style>
 </head>
 
@@ -375,7 +351,7 @@
               <th>Product</th>
               <th>Retail price</th>
               <th>Surfcenter</th>
-              <th>Dropshipment</th>
+              <th>Warehouse</th>
               <th>Stock</th>
               <th>Add</th>
             </tr>
@@ -398,31 +374,12 @@
     <span>Cart</span><span class="badge" id="cartBadge">0</span>
   </div>
 
-  <!-- Desktop/laptop Calculator -->
-  <div class="calcFab desktopOnly" id="calcBtn" style="display:none;">
-    <span>%</span>
-  </div>
-
   <!-- Mobile bottom cart bar -->
   <div class="cartBar" id="cartBar" style="display:none;">
     <div class="cartBarInner">
       <button class="cartBarBtn" id="cartBarBtn">
         Cart <span class="badge" id="cartBarBadge">0</span>
       </button>
-    </div>
-  </div>
-
-  <!-- Calculator modal (desktop only) -->
-  <div id="calcOverlay" class="overlay">
-    <div class="modal">
-      <div class="modalHeader">
-        <span>Marge calculator</span>
-        <div class="actions">
-          <button id="calcOpenNew" class="btn">Nieuw tab</button>
-          <button id="calcClose" class="btn">Sluiten</button>
-        </div>
-      </div>
-      <iframe src="https://surf-center.github.io/calculator/" title="Calculator" style="flex:1;border:0;width:100%;"></iframe>
     </div>
   </div>
 
@@ -449,17 +406,13 @@
           </div>
 
           <div class="field">
-            <label>Mail (optioneel)</label>
+            <label>Mail</label>
             <input id="mail" placeholder="Mail" inputmode="email">
           </div>
 
           <div class="field">
-            <label>Note 1 (optioneel)</label>
+            <label>Note</label>
             <textarea id="note1" placeholder="Note"></textarea>
-          </div>
-          <div class="field">
-            <label>Note 2 (optioneel)</label>
-            <textarea id="note2" placeholder="Note"></textarea>
           </div>
         </div>
 
@@ -479,7 +432,7 @@
     </div>
   </div>
 
-  <!-- Account modal (unchanged UI here; keeps your existing setup) -->
+  <!-- Account modal -->
   <div id="accountOverlay" class="overlay">
     <div class="modal">
       <div class="modalHeader">
@@ -488,30 +441,33 @@
           <button id="accountClose" class="btn">Sluiten</button>
         </div>
       </div>
+
       <div class="modalBody">
         <div class="muted" id="accountSub" style="margin-bottom:10px;"></div>
 
-        <div class="card">
-          <div style="display:flex; justify-content:space-between; align-items:center; gap:12px; flex-wrap:wrap;">
-            <div style="font-weight:700;">Leads overzicht</div>
-            <button id="accountRefresh" class="btn">Refresh</button>
-          </div>
-
-          <div class="tableWrap" style="margin-top:8px;">
-            <table style="min-width:980px;">
+        <!-- Desktop leads table (updated headers) -->
+        <div class="card desktopOnly">
+          <div style="font-weight:700; margin-bottom:8px;">Leads overzicht</div>
+          <div class="tableWrap">
+            <table style="min-width:820px;">
               <thead>
                 <tr>
-                  <th>Product</th><th>Retail price</th>
                   <th>Name</th><th>Phone number</th><th>Mail</th>
-                  <th>Note 1</th><th>Note 2</th>
-                  <th>Sale</th>
+                  <th>Product</th><th>Retail price</th>
+                  <th>Note</th>
                 </tr>
               </thead>
               <tbody id="accountOrdersTbody">
-                <tr><td colspan="8" class="small">Laden…</td></tr>
+                <tr><td colspan="6" class="small">Laden…</td></tr>
               </tbody>
             </table>
           </div>
+        </div>
+
+        <!-- Mobile leads: name + plus -->
+        <div class="mobileOnly">
+          <div style="font-weight:700; margin-bottom:10px;">Leads overzicht</div>
+          <div id="mobileLeads" class="leadList"></div>
         </div>
 
         <div id="accountErr" class="err"></div>
@@ -521,7 +477,7 @@
 
   <script>
     const APPS_SCRIPT_WEBAPP_URL =
-      "https://script.google.com/macros/s/AKfycbwpnwNyO2micTXDswc10-gRenPh51riMYojlYhAE1FGN7LizthfF0CNy0cLkV11AdmENg/exec";
+      "https://script.google.com/macros/s/AKfycbyqzsvu-EaeJCLbUN3IZ6nxhXmi67SYM7sh15fJjmPtB6rvAJBn609IkpnDa7SFwc-QMg/exec";
 
     function jsonp(url){
       return new Promise((resolve,reject)=>{
@@ -548,16 +504,14 @@
       const n = Number(String(x).replace(",",".").trim());
       return Number.isFinite(n) ? n : null;
     }
-
     function stockCellValue(raw){
       const n = toNumberStock(raw);
       return (n===null) ? "not found" : String(n);
     }
-
-    function stockTotal(scRaw, dsRaw){
+    function stockTotal(scRaw, whRaw){
       const sc = toNumberStock(scRaw);
-      const ds = toNumberStock(dsRaw);
-      return (sc===null && ds===null) ? 0 : ( (sc||0) + (ds||0) );
+      const wh = toNumberStock(whRaw);
+      return (sc===null && wh===null) ? 0 : ((sc||0) + (wh||0));
     }
 
     function matchesTokens(row, q){
@@ -567,7 +521,6 @@
       return tokens.every(t => hay.includes(t));
     }
 
-    // Elements
     const loginView = document.getElementById("loginView");
     const appView = document.getElementById("appView");
 
@@ -589,13 +542,6 @@
     const cartBarBtn = document.getElementById("cartBarBtn");
     const cartBarBadge = document.getElementById("cartBarBadge");
 
-    const calcBtn = document.getElementById("calcBtn");
-    const calcOverlay = document.getElementById("calcOverlay");
-    document.getElementById("calcClose").onclick = () => calcOverlay.classList.remove("active");
-    document.getElementById("calcOpenNew").onclick = () => window.open("https://surf-center.github.io/calculator/","_blank","noopener");
-    if(calcBtn) calcBtn.onclick = () => calcOverlay.classList.add("active");
-    calcOverlay.addEventListener("click", e => { if(e.target===calcOverlay) calcOverlay.classList.remove("active"); });
-
     const cartOverlay = document.getElementById("cartOverlay");
     const cartClose = document.getElementById("cartClose");
     const cartListEl = document.getElementById("cartList");
@@ -608,23 +554,23 @@
     const phone = document.getElementById("phone");
     const mail = document.getElementById("mail");
     const note1 = document.getElementById("note1");
-    const note2 = document.getElementById("note2");
 
     const accountOverlay = document.getElementById("accountOverlay");
     const accountClose = document.getElementById("accountClose");
-    const accountRefresh = document.getElementById("accountRefresh");
     const accountTitle = document.getElementById("accountTitle");
     const accountSub = document.getElementById("accountSub");
     const accountOrdersTbody = document.getElementById("accountOrdersTbody");
     const accountErr = document.getElementById("accountErr");
+    const mobileLeads = document.getElementById("mobileLeads");
 
     let currentKey = "";
     let currentUserName = "";
     let isAdmin = false;
 
     let allRows = [];
-    let expanded = new Set();       // desktop expand
-    let mobileExpanded = new Set(); // mobile expand
+    let expanded = new Set();
+    let mobileExpanded = new Set();
+    let leadExpanded = new Set();
     let cart = [];
 
     function setCartBadge(){
@@ -638,7 +584,6 @@
       appView.style.display = "none";
       cartBtn.style.display = "none";
       cartBar.style.display = "none";
-      if(calcBtn) calcBtn.style.display = "none";
       loginErr.textContent = "";
       loginKey.value = "";
       loginKey.focus();
@@ -646,9 +591,8 @@
     function showApp(){
       loginView.style.display = "none";
       appView.style.display = "block";
-      cartBtn.style.display = "";    // desktop
-      cartBar.style.display = "";    // mobile (only visible via CSS media query)
-      if(calcBtn) calcBtn.style.display = ""; // desktop only via CSS
+      cartBtn.style.display = "";
+      cartBar.style.display = "";
     }
     function logout(){
       localStorage.removeItem("employeeKey");
@@ -676,13 +620,11 @@
       cart.push({ ean:item.ean, product:item.product, retailPrice:item.retailPrice });
       setCartBadge();
     }
-
     function removeFromCart(ean){
       cart = cart.filter(x => x.ean !== ean);
       setCartBadge();
       renderCart();
     }
-
     function renderCart(){
       if(!cart.length){
         cartListEl.innerHTML = `<div class="cartRow"><div class="small">Geen items.</div></div>`;
@@ -702,7 +644,7 @@
       });
     }
 
-    // Account modal open/close
+    // Account modal
     function openAccount(){
       accountErr.textContent = "";
       accountOverlay.classList.add("active");
@@ -714,36 +656,77 @@
     accountBtn.onclick = openAccount;
     accountClose.onclick = closeAccountFn;
     accountOverlay.addEventListener("click", e => { if(e.target===accountOverlay) closeAccountFn(); });
-    accountRefresh.onclick = loadAccountOrders;
 
     async function loadAccountOrders(){
       accountErr.textContent = "";
-      accountOrdersTbody.innerHTML = `<tr><td colspan="8" class="small">Laden…</td></tr>`;
+      accountOrdersTbody.innerHTML = `<tr><td colspan="6" class="small">Laden…</td></tr>`;
+      mobileLeads.innerHTML = "";
+      leadExpanded.clear();
+
       const scope = isAdmin ? "all" : "mine";
       try{
         const res = await jsonp(`${APPS_SCRIPT_WEBAPP_URL}?action=orders&scope=${scope}&key=${encodeURIComponent(currentKey)}`);
         if(!res || !res.ok) throw new Error(res?.error || "Kon leads niet laden");
         const orders = Array.isArray(res.orders) ? res.orders : [];
 
+        // Desktop table (no note2/sale)
         if(!orders.length){
-          accountOrdersTbody.innerHTML = `<tr><td colspan="8" class="small">Geen leads.</td></tr>`;
+          accountOrdersTbody.innerHTML = `<tr><td colspan="6" class="small">Geen leads.</td></tr>`;
+        }else{
+          accountOrdersTbody.innerHTML = orders.map(o => `
+            <tr>
+              <td>${esc(o.name||"")}</td>
+              <td>${esc(o.phoneNumber||"")}</td>
+              <td>${esc(o.mail||"")}</td>
+              <td>${esc(o.product||"")}</td>
+              <td>${esc(fmtPrice(o.retailPrice))}</td>
+              <td>${esc(o.note1||o.note||"")}</td>
+            </tr>
+          `).join("");
+        }
+
+        // Mobile accordion: only name + plus
+        if(!orders.length){
+          mobileLeads.innerHTML = `<div class="small">Geen leads.</div>`;
           return;
         }
-        accountOrdersTbody.innerHTML = orders.map(o => `
-          <tr>
-            <td>${esc(o.product||"")}</td>
-            <td>${esc(fmtPrice(o.retailPrice))}</td>
-            <td>${esc(o.name||"")}</td>
-            <td>${esc(o.phoneNumber||"")}</td>
-            <td>${esc(o.mail||"")}</td>
-            <td>${esc(o.note1||"")}</td>
-            <td>${esc(o.note2||"")}</td>
-            <td>${esc(o.sale||"")}</td>
-          </tr>
-        `).join("");
+
+        mobileLeads.innerHTML = orders.map((o,i)=>{
+          const id = `lead_${i}`;
+          const open = leadExpanded.has(id);
+          return `
+            <div class="pCard" style="border-radius:18px;" data-id="${id}">
+              <div class="pRow">
+                <div class="pName" style="font-weight:700;">${esc(o.name || "Lead")}</div>
+                <div class="pActions">
+                  <button class="btn pToggle" data-toggle-lead="${id}">${open ? "Sluit" : "+"}</button>
+                </div>
+              </div>
+              <div class="pDetails ${open ? "open":""}" id="${id}">
+                <div class="kv">
+                  <div class="k">Phone number</div><div class="v">${esc(o.phoneNumber||"-")}</div>
+                  <div class="k">Mail</div><div class="v">${esc(o.mail||"-")}</div>
+                  <div class="k">Product</div><div class="v">${esc(o.product||"")}</div>
+                  <div class="k">Retail price</div><div class="v">${esc(fmtPrice(o.retailPrice))}</div>
+                  <div class="k">Note</div><div class="v">${esc(o.note1||o.note||"-")}</div>
+                </div>
+              </div>
+            </div>
+          `;
+        }).join("");
+
+        mobileLeads.querySelectorAll("button[data-toggle-lead]").forEach(btn=>{
+          btn.addEventListener("click", ()=>{
+            const id = btn.getAttribute("data-toggle-lead");
+            if(leadExpanded.has(id)) leadExpanded.delete(id); else leadExpanded.add(id);
+            loadAccountOrders(); // re-render keeping accordion states simple
+          });
+        });
+
       }catch(e){
         accountErr.textContent = e.message;
-        accountOrdersTbody.innerHTML = `<tr><td colspan="8" class="small">Fout.</td></tr>`;
+        accountOrdersTbody.innerHTML = `<tr><td colspan="6" class="small">Fout.</td></tr>`;
+        mobileLeads.innerHTML = `<div class="small">Fout.</div>`;
       }
     }
 
@@ -784,7 +767,7 @@
           const tr = document.createElement("tr");
 
           const scText = stockCellValue(r.surfcenterStock);
-          const dsText = stockCellValue(r.dropshipmentStock);
+          const whText = stockCellValue(r.dropshipmentStock); // warehouse = dropshipment data source
           const total = stockTotal(r.surfcenterStock, r.dropshipmentStock);
 
           const tdExpand = document.createElement("td");
@@ -799,7 +782,7 @@
           tr.appendChild(Object.assign(document.createElement("td"), { textContent: r.product || "" }));
           tr.appendChild(Object.assign(document.createElement("td"), { textContent: fmtPrice(r.retailPrice) }));
           tr.appendChild(Object.assign(document.createElement("td"), { textContent: scText }));
-          tr.appendChild(Object.assign(document.createElement("td"), { textContent: dsText }));
+          tr.appendChild(Object.assign(document.createElement("td"), { textContent: whText }));
           tr.appendChild(Object.assign(document.createElement("td"), { textContent: String(total) }));
 
           const tdAdd = document.createElement("td");
@@ -821,7 +804,7 @@
               <div class="kv" style="grid-template-columns:140px 1fr;">
                 <div class="k">Retail price</div><div class="v">${esc(fmtPrice(r.retailPrice))}</div>
                 <div class="k">Surfcenter</div><div class="v">${esc(scText)}</div>
-                <div class="k">Dropshipment</div><div class="v">${esc(dsText)}</div>
+                <div class="k">Warehouse</div><div class="v">${esc(whText)}</div>
                 <div class="k">Stock</div><div class="v">${esc(String(total))}</div>
                 <div class="k">Season</div><div class="v">${esc(r.season||"")}</div>
                 <div class="k">EAN</div><div class="v">${esc(r.ean||"")}</div>
@@ -834,7 +817,7 @@
         });
       }
 
-      // Mobile cards (Product + Add, rest in Info)
+      // Mobile cards
       if(!rows.length){
         mobileProducts.innerHTML = `<div class="small">Geen resultaten.</div>`;
         return;
@@ -845,7 +828,7 @@
         const open = mobileExpanded.has(id);
 
         const scText = stockCellValue(r.surfcenterStock);
-        const dsText = stockCellValue(r.dropshipmentStock);
+        const whText = stockCellValue(r.dropshipmentStock);
         const total = stockTotal(r.surfcenterStock, r.dropshipmentStock);
 
         return `
@@ -861,7 +844,7 @@
               <div class="kv">
                 <div class="k">Retail price</div><div class="v">${esc(fmtPrice(r.retailPrice))}</div>
                 <div class="k">Surfcenter</div><div class="v">${esc(scText)}</div>
-                <div class="k">Dropshipment</div><div class="v">${esc(dsText)}</div>
+                <div class="k">Warehouse</div><div class="v">${esc(whText)}</div>
                 <div class="k">Stock</div><div class="v">${esc(String(total))}</div>
                 <div class="k">Season</div><div class="v">${esc(r.season||"")}</div>
                 <div class="k">EAN</div><div class="v">${esc(r.ean||"")}</div>
@@ -893,7 +876,7 @@
 
     searchInput.addEventListener("input", renderProducts);
 
-    // Submit lead
+    // Submit lead (no note2)
     saveLeadBtn.onclick = async () => {
       cartErr.textContent = "";
       cartTick.style.display = "none";
@@ -902,13 +885,12 @@
       const p = phone.value.trim();
       const m = mail.value.trim();
       const n1 = note1.value.trim();
-      const n2 = note2.value.trim();
 
       if(!name){ cartErr.textContent = "Name is verplicht."; return; }
       if(!p && !m){ cartErr.textContent = "Minimaal Phone number of Mail is verplicht."; return; }
       if(!cart.length){ cartErr.textContent = "Cart is leeg."; return; }
 
-      const payload = { name, phoneNumber:p, mail:m, note1:n1, note2:n2, items:cart };
+      const payload = { name, phoneNumber:p, mail:m, note1:n1, items:cart };
       const url = `${APPS_SCRIPT_WEBAPP_URL}?action=submitLead&key=${encodeURIComponent(currentKey)}&payload=${encodeURIComponent(JSON.stringify(payload))}`;
 
       saveLeadBtn.disabled = true;
@@ -921,7 +903,7 @@
         setCartBadge();
         renderCart();
 
-        custName.value=""; phone.value=""; mail.value=""; note1.value=""; note2.value="";
+        custName.value=""; phone.value=""; mail.value=""; note1.value="";
         cartTick.style.display = "";
       }catch(e){
         cartErr.textContent = "Fout bij opslaan: " + e.message;
@@ -980,10 +962,8 @@
 
       loadProducts().catch(()=>{ logout(); });
 
-      // show cart bottom bar & desktop floating cart
       cartBtn.style.display = "";
       cartBar.style.display = "";
-      if(calcBtn) calcBtn.style.display = ""; // hidden on mobile by CSS anyway
     });
   </script>
 </body>
