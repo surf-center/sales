@@ -1,380 +1,278 @@
-<!doctype html>
-<html lang="nl">
-<head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>Sales</title>
+/** =========================
+ *  CONFIG
+ *  ========================= */
+const SPREADSHEET_ID = "1AVU8dHTMSMuwmIdx4uV8MuEc-8S9B67MhK6ViuHPFf4";
 
-  <!-- Poppins -->
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;500;700&display=swap" rel="stylesheet">
+const SHEET_EMPLOYEE = "Employee";
+const SHEET_MAGENTO  = "Magento";
+const SUPPLIER_PREFIX = "Supplier_";
+const ADMIN_KEY = "SC76";
 
-  <style>
-    :root{
-      --border:#e5e7eb;
-      --muted:#6b7280;
-      --bg:#ffffff;
-      --soft:#f9fafb;
-      --accent:#111827;
-    }
+/** =========================
+ *  WEB APP ENTRYPOINT
+ *  ========================= */
+function doGet(e) {
+  try {
+    e = e || { parameter: {} };
+    e.parameter = e.parameter || {};
 
-    body{
-      margin:0;
-      font-family:'Poppins', system-ui, sans-serif;
-      font-weight:300;
-      background:#fcfcfc;
-      color:#111;
-    }
+    const action = String(e.parameter.action || "data").trim();
+    const key = String(e.parameter.key || "").trim();
+    const callback = String(e.parameter.callback || "").trim();
 
-    .wrap{
-      max-width:1200px;
-      margin:0 auto;
-      padding:28px 16px 92px;
-      text-align:center;
-    }
+    let result;
+    if (action === "ping") result = ping_();
+    else if (action === "data") result = getPortalDataForKey_(key);
+    else result = { ok: false, error: "Unknown action: " + action };
 
-    /* LOGO */
-    .logo{
-      height:56px;
-      margin:18px auto 14px;
-      display:block;
-    }
+    return output_(result, callback);
+  } catch (err) {
+    const cb = (e && e.parameter && e.parameter.callback) ? String(e.parameter.callback).trim() : "";
+    return output_({ ok: false, error: String(err && err.message ? err.message : err) }, cb);
+  }
+}
 
-    /* SEARCH */
-    .searchWrap{
-      display:flex;
-      justify-content:center;
-      margin-bottom:12px;
-    }
+function ping_() {
+  const ss = SpreadsheetApp.openById(SPREADSHEET_ID);
+  return { ok: true, spreadsheetId: SPREADSHEET_ID, sheets: ss.getSheets().map(s => s.getName()) };
+}
 
-    .searchWrap input{
-      width:min(560px, 100%);
-      padding:12px 16px;
-      border-radius:14px;
-      border:1px solid var(--border);
-      font-family:'Poppins', sans-serif;
-      font-weight:500;
-      font-size:15px;
-      box-sizing:border-box;
-    }
+/** =========================
+ *  MAIN
+ *  ========================= */
+function getPortalDataForKey_(key) {
+  if (!key) return { ok: false, error: "Missing key" };
 
-    .meta{
-      color:var(--muted);
-      font-size:13px;
-      font-weight:300;
-      margin:0 0 12px;
-      text-align:center;
-    }
+  const ss = SpreadsheetApp.openById(SPREADSHEET_ID);
 
-    .card{
-      background:var(--bg);
-      border:1px solid var(--border);
-      border-radius:18px;
-      padding:12px;
-      text-align:left;
-    }
+  const user = getUserByKey_(ss, key);
+  if (!user) return { ok: false, error: "Invalid key" };
 
-    /* Mobile-friendly table: allow horizontal scroll */
-    .tableWrap{
-      overflow-x:auto;
-      -webkit-overflow-scrolling:touch;
-    }
+  const isAdmin = (key === ADMIN_KEY) || (String(user.role || "").toUpperCase() === "ADMIN");
 
-    table{
-      width:100%;
-      border-collapse:collapse;
-      font-size:14px;
-      min-width: 720px; /* forces scroll on small screens instead of squishing */
-    }
+  const magentoMap = buildMagentoStockMap_(ss);
+  const supplierSheets = getVisibleSupplierSheetNames_(ss, user, isAdmin);
 
-    th{
-      padding:10px;
-      border-bottom:1px solid #eee;
-      font-weight:500;
-      text-align:left;
-      white-space:nowrap;
-    }
+  // Deduplicate by EAN: keep most recent year
+  const bestByEan = {}; // ean -> best row
 
-    td{
-      padding:10px;
-      border-bottom:1px solid #f1f1f1;
-      font-weight:300;
-      vertical-align:top;
-    }
+  supplierSheets.forEach(sheetName => {
+    const sh = ss.getSheetByName(sheetName);
+    if (!sh) return;
 
-    .plus{ width:36px; text-align:center; }
+    const sheetYear = extractYearFromSheetName_(sheetName); // 2025 or 0
+    const data = sh.getDataRange().getValues();
+    if (data.length < 2) return;
 
-    .plus button{
-      width:30px; height:30px;
-      border-radius:10px;
-      border:1px solid var(--border);
-      background:#fff;
-      font-weight:700;
-      cursor:pointer;
-      font-family:'Poppins', sans-serif;
-    }
-    .plus button:hover{ background:#f3f4f6; }
+    const headers = normalizeHeaders_(data[0]);
+    const idx = headerIndex_(headers, {
+      ean: "EAN",
+      product: "Product",
+      purchase: "Purchase price",
+      retail: "Retail price"
+    });
 
-    .detailsRow td{
-      background:var(--soft);
-      border-bottom:1px solid #eaeaea;
-    }
+    for (let r = 1; r < data.length; r++) {
+      const row = data[r];
 
-    .muted{ color:var(--muted); font-weight:300; }
-    .error{ color:#b00020; font-size:13px; margin:10px 0 0; text-align:left; }
+      const ean = safeText_(row[idx.ean]).trim();
+      if (!ean) continue; // dedupe key
 
-    /* FLOATING CALCULATOR BUTTON (black with white % icon) */
-    .calcFab{
-      position:fixed;
-      right:18px;
-      bottom:18px;
-      width:56px;
-      height:56px;
-      border-radius:50%;
-      background:var(--accent);
-      color:#fff;
-      display:flex;
-      align-items:center;
-      justify-content:center;
-      font-size:22px;
-      cursor:pointer;
-      box-shadow:0 10px 25px rgba(0,0,0,.25);
-      z-index:9999;
-      user-select:none;
-      -webkit-tap-highlight-color: transparent;
-    }
-    .calcFab:hover{ transform:scale(1.05); }
+      const product = safeText_(row[idx.product]).trim();
+      const purchasePrice = row[idx.purchase];
+      const retailPrice = row[idx.retail];
 
-    .calcFab span{
-      font-weight:700;
-      font-size:22px;
-      line-height:1;
-      transform: translateY(-1px);
-    }
+      const stock = magentoMap[ean] || { surfcenterStock: "", dropshipmentStock: "" };
 
-    /* CALCULATOR MODAL */
-    .overlay{
-      position:fixed;
-      inset:0;
-      background:rgba(0,0,0,.45);
-      display:none;
-      align-items:center;
-      justify-content:center;
-      z-index:10000;
-      padding:14px;
-    }
-    .overlay.active{ display:flex; }
+      const candidate = {
+        product,
+        retailPrice,
+        surfcenterStock: stock.surfcenterStock,
+        dropshipmentStock: stock.dropshipmentStock,
 
-    .modal{
-      background:#fff;
-      width:min(1100px, 96vw);
-      height:min(720px, 92vh);
-      border-radius:18px;
-      overflow:hidden;
-      display:flex;
-      flex-direction:column;
-    }
+        ean,
+        purchasePrice,
 
-    .modalHeader{
-      padding:10px 14px;
-      border-bottom:1px solid #eee;
-      display:flex;
-      justify-content:space-between;
-      align-items:center;
-      font-weight:500;
-      gap:10px;
-    }
+        supplier: sheetName,
+        supplierYear: sheetYear
+      };
 
-    .modalHeader .actions{
-      display:flex;
-      gap:10px;
-      flex-wrap:wrap;
-      justify-content:flex-end;
-    }
-
-    .modalHeader button{
-      font-family:'Poppins', sans-serif;
-      font-weight:500;
-      padding:8px 12px;
-      border-radius:10px;
-      border:1px solid var(--border);
-      background:#fff;
-      cursor:pointer;
-    }
-    .modalHeader button:hover{ background:#f3f4f6; }
-
-    .modal iframe{ flex:1; border:0; width:100%; }
-
-    /* Mobile tweaks */
-    @media (max-width: 480px){
-      .wrap{ padding:22px 12px 92px; }
-      .logo{ height:46px; margin:14px auto 12px; }
-      .card{ padding:10px; border-radius:16px; }
-      .calcFab{ width:54px; height:54px; right:14px; bottom:14px; }
-    }
-  </style>
-</head>
-
-<body>
-  <div class="wrap">
-    <!-- LOGO (ROOT) -->
-    <img src="./logo.png" alt="Logo" class="logo" onerror="this.style.display='none';">
-
-    <!-- SEARCH -->
-    <div class="searchWrap">
-      <input id="searchInput" placeholder="Zoek product of EAN…" disabled>
-    </div>
-
-    <div id="meta" class="meta"></div>
-    <div id="err" class="error"></div>
-
-    <!-- TABLE -->
-    <div class="card">
-      <div class="tableWrap">
-        <table>
-          <thead>
-            <tr>
-              <th class="plus"></th>
-              <th>Product</th>
-              <th>Retail price</th>
-              <th>Surfcenter</th>
-              <th>Dropshipment</th>
-            </tr>
-          </thead>
-          <tbody id="tbody">
-            <tr><td colspan="5" class="muted">Login key nodig om data te laden…</td></tr>
-          </tbody>
-        </table>
-      </div>
-    </div>
-  </div>
-
-  <!-- CALCULATOR BUTTON -->
-  <div class="calcFab" id="calcBtn" title="Calculator" aria-label="Open calculator">
-    <span>%</span>
-  </div>
-
-  <!-- CALCULATOR MODAL -->
-  <div id="calcOverlay" class="overlay">
-    <div class="modal">
-      <div class="modalHeader">
-        <span>Marge calculator</span>
-        <div class="actions">
-          <button id="calcOpenNew">Nieuw tab</button>
-          <button id="calcClose">Sluiten</button>
-        </div>
-      </div>
-      <iframe src="https://surf-center.github.io/calculator/" title="Calculator"></iframe>
-    </div>
-  </div>
-
-  <script>
-    // JOUW WEB APP URL
-    const APPS_SCRIPT_WEBAPP_URL =
-      "https://script.google.com/macros/s/AKfycbyqzsvu-EaeJCLbUN3IZ6nxhXmi67SYM7sh15fJjmPtB6rvAJBn609IkpnDa7SFwc-QMg/exec";
-
-    // Calculator modal
-    const overlay = document.getElementById("calcOverlay");
-    document.getElementById("calcBtn").onclick = () => overlay.classList.add("active");
-    document.getElementById("calcClose").onclick = () => overlay.classList.remove("active");
-    document.getElementById("calcOpenNew").onclick = () =>
-      window.open("https://surf-center.github.io/calculator/", "_blank", "noopener");
-    overlay.addEventListener("click", e => { if (e.target === overlay) overlay.classList.remove("active"); });
-    document.addEventListener("keydown", e => { if (e.key === "Escape") overlay.classList.remove("active"); });
-
-    // --- DATA LOGIC ---
-    const searchInput = document.getElementById("searchInput");
-    const tbody = document.getElementById("tbody");
-    const meta = document.getElementById("meta");
-    const err = document.getElementById("err");
-
-    let allRows = [];
-    let expanded = new Set();
-
-    function fmtPrice(v){
-      if(v===null||v===undefined||v==="") return "";
-      const n = Number(String(v).replace(",","."));
-      return Number.isFinite(n) ? "€ " + n.toFixed(2) : String(v);
-    }
-    const fmtVal = v => (v==null?"":String(v));
-    const esc = s => String(s).replace(/[&<>"']/g,m=>({ "&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;","'":"&#039;" }[m]));
-
-    function jsonp(url){
-      return new Promise((resolve,reject)=>{
-        const s=document.createElement("script");
-        const cb="cb_"+Math.random().toString(36).slice(2);
-        const t=setTimeout(()=>{cleanup();reject(new Error("Timeout"));},15000);
-        window[cb]=d=>{cleanup();resolve(d);};
-        function cleanup(){clearTimeout(t);delete window[cb];s.remove();}
-        s.onerror=()=>{cleanup();reject(new Error("Failed to load script"));};
-        s.src=url+(url.includes("?")?"&":"?")+"callback="+cb;
-        document.body.appendChild(s);
-      });
-    }
-
-    async function loadData(key){
-      err.textContent="";
-      meta.textContent="Laden…";
-      tbody.innerHTML=`<tr><td colspan="5" class="muted">Data laden…</td></tr>`;
-      const res = await jsonp(`${APPS_SCRIPT_WEBAPP_URL}?action=data&key=${encodeURIComponent(key)}`);
-      if(!res||!res.ok) throw new Error(res?.error||"Kon data niet laden");
-      allRows=res.rows||[];
-      expanded.clear();
-
-      // ✅ EMPLOYEE/role tekst weggehaald: alleen items + naam
-      const name = (res.user && res.user.name) ? res.user.name : "";
-      meta.textContent = `${allRows.length} items${name ? " • " + name : ""}`;
-
-      searchInput.disabled=false;
-      render();
-    }
-
-    function render(){
-      const q=searchInput.value.trim().toLowerCase();
-      const rows=!q?allRows:allRows.filter(r=>((r.product||"").toLowerCase().includes(q)||(r.ean||"").toLowerCase().includes(q)));
-      tbody.innerHTML="";
-      if(!rows.length){tbody.innerHTML=`<tr><td colspan="5" class="muted">Geen resultaten.</td></tr>`;return;}
-      rows.forEach((r,i)=>{
-        const id=`${r.ean}__${i}`;
-        const tr=document.createElement("tr");
-        const tdP=document.createElement("td"); tdP.className="plus";
-        const b=document.createElement("button"); b.textContent=expanded.has(id)?"−":"+"; b.onclick=()=>{expanded.has(id)?expanded.delete(id):expanded.add(id);render();};
-        tdP.appendChild(b);
-        tr.appendChild(tdP);
-        tr.appendChild(Object.assign(document.createElement("td"),{textContent:r.product||""}));
-        tr.appendChild(Object.assign(document.createElement("td"),{textContent:fmtPrice(r.retailPrice)}));
-        tr.appendChild(Object.assign(document.createElement("td"),{textContent:fmtVal(r.surfcenterStock)}));
-        tr.appendChild(Object.assign(document.createElement("td"),{textContent:fmtVal(r.dropshipmentStock)}));
-        tbody.appendChild(tr);
-        if(expanded.has(id)){
-          const tr2=document.createElement("tr"); tr2.className="detailsRow";
-          const td=document.createElement("td"); td.colSpan=5;
-          td.innerHTML=`<div style="display:flex;gap:18px;flex-wrap:wrap;">
-            <div><strong>EAN:</strong> ${esc(fmtVal(r.ean))}</div>
-            <div><strong>Purchase price:</strong> ${esc(fmtPrice(r.purchasePrice))}</div>
-          </div>`;
-          tr2.appendChild(td); tbody.appendChild(tr2);
-        }
-      });
-    }
-    searchInput.addEventListener("input",render);
-
-    // Simple key prompt
-    (async function(){
-      let key=localStorage.getItem("employeeKey")||"";
-      if(!key){
-        key=prompt("Employee KEY:");
-        if(!key){ meta.textContent="Geen key ingevuld."; return; }
-        localStorage.setItem("employeeKey", key.trim());
-        key = key.trim();
+      const existing = bestByEan[ean];
+      if (!existing) {
+        bestByEan[ean] = candidate;
+        continue;
       }
-      try{ await loadData(key); }
-      catch(e){
-        err.textContent="Fout bij laden: "+e.message;
-        meta.textContent="Data laden mislukt.";
+
+      const cy = candidate.supplierYear || 0;
+      const ey = existing.supplierYear || 0;
+
+      // Most recent year wins
+      if (cy > ey) {
+        bestByEan[ean] = candidate;
+      } else if (cy === ey) {
+        // Tie-break: prefer row with purchase price (optional)
+        const candHas = candidate.purchasePrice !== "" && candidate.purchasePrice != null;
+        const exHas = existing.purchasePrice !== "" && existing.purchasePrice != null;
+        if (candHas && !exHas) bestByEan[ean] = candidate;
       }
-    })();
-  </script>
-</body>
-</html>
+    }
+  });
+
+  const rows = Object.keys(bestByEan).map(ean => bestByEan[ean]);
+  rows.sort((a, b) => String(a.product || "").localeCompare(String(b.product || "")));
+
+  return {
+    ok: true,
+    user: { name: user.name || "", role: isAdmin ? "ADMIN" : (user.role || "EMPLOYEE") },
+    supplierSheets,
+    rows
+  };
+}
+
+/** =========================
+ *  AUTH / EMPLOYEE SHEET
+ *  ========================= */
+function getUserByKey_(ss, key) {
+  const sh = ss.getSheetByName(SHEET_EMPLOYEE);
+  if (!sh) throw new Error(`Missing sheet: ${SHEET_EMPLOYEE}`);
+
+  const data = sh.getDataRange().getValues();
+  if (data.length < 2) return null;
+
+  const headers = normalizeHeaders_(data[0]);
+  const keyCol  = headers.indexOf("EMPLOYEE KEY");
+  const nameCol = headers.indexOf("EMPLOYEE");
+  const roleCol = headers.indexOf("ROLE"); // optional
+
+  if (keyCol === -1) throw new Error('Employee sheet must have header "Employee KEY"');
+
+  for (let i = 1; i < data.length; i++) {
+    const rowKey = safeText_(data[i][keyCol]).trim();
+    if (rowKey === key) {
+      return {
+        name: nameCol >= 0 ? safeText_(data[i][nameCol]).trim() : "",
+        role: roleCol >= 0 ? safeText_(data[i][roleCol]).trim() : "",
+        row: data[i],
+        headers
+      };
+    }
+  }
+  return null;
+}
+
+/** =========================
+ *  MAGENTO STOCK MAP
+ *  ========================= */
+function buildMagentoStockMap_(ss) {
+  const sh = ss.getSheetByName(SHEET_MAGENTO);
+  if (!sh) throw new Error(`Missing sheet: ${SHEET_MAGENTO}`);
+
+  const data = sh.getDataRange().getValues();
+  if (data.length < 2) return {};
+
+  const headers = normalizeHeaders_(data[0]);
+  const eanCol = headers.indexOf("EAN");
+  const scCol  = headers.indexOf("SURFCENTER");
+  const dsCol  = headers.indexOf("DROPSHIPMENT");
+
+  if (eanCol === -1) throw new Error('Magento sheet must have header "EAN"');
+
+  const map = {};
+  for (let i = 1; i < data.length; i++) {
+    const ean = safeText_(data[i][eanCol]).trim();
+    if (!ean) continue;
+
+    map[ean] = {
+      surfcenterStock: scCol >= 0 ? data[i][scCol] : "",
+      dropshipmentStock: dsCol >= 0 ? data[i][dsCol] : ""
+    };
+  }
+  return map;
+}
+
+/** =========================
+ *  SUPPLIER VISIBILITY
+ *  - Supports columns:
+ *      Supplier_Severne = YES   (covers Supplier_Severne_2025 too)
+ *    OR exact:
+ *      Supplier_Severne_2025 = YES
+ *  ========================= */
+function getVisibleSupplierSheetNames_(ss, user, isAdmin) {
+  const allSheets = ss.getSheets().map(s => s.getName());
+  const supplierSheets = allSheets.filter(n => n.startsWith(SUPPLIER_PREFIX));
+
+  if (isAdmin) return supplierSheets;
+
+  const headers = user.headers; // normalized uppercase
+  const row = user.row;
+
+  return supplierSheets.filter(sheetName => {
+    const upper = sheetName.toUpperCase();
+    const base = baseSupplierName_(sheetName).toUpperCase(); // strip _YYYY
+
+    // 1) Exact column match first
+    let col = headers.indexOf(upper);
+    if (col >= 0) {
+      const val = safeText_(row[col]).trim().toUpperCase();
+      return val === "YES";
+    }
+
+    // 2) Fallback to base name column
+    col = headers.indexOf(base);
+    if (col >= 0) {
+      const val = safeText_(row[col]).trim().toUpperCase();
+      return val === "YES";
+    }
+
+    return false;
+  });
+}
+
+/** =========================
+ *  OUTPUT
+ *  ========================= */
+function output_(obj, callback) {
+  const payload = JSON.stringify(obj);
+
+  if (callback) {
+    return ContentService
+      .createTextOutput(`${callback}(${payload});`)
+      .setMimeType(ContentService.MimeType.JAVASCRIPT);
+  }
+
+  return ContentService
+    .createTextOutput(payload)
+    .setMimeType(ContentService.MimeType.JSON);
+}
+
+/** =========================
+ *  HELPERS
+ *  ========================= */
+function normalizeHeaders_(headerRow) {
+  return headerRow.map(h => safeText_(h).trim().toUpperCase());
+}
+
+function headerIndex_(headers, needed) {
+  const idx = {};
+  Object.keys(needed).forEach(k => {
+    const i = headers.indexOf(String(needed[k]).toUpperCase());
+    if (i === -1) throw new Error(`Missing header "${needed[k]}" in supplier sheet`);
+    idx[k] = i;
+  });
+  return idx;
+}
+
+function safeText_(v) {
+  if (v === null || v === undefined) return "";
+  return String(v);
+}
+
+function extractYearFromSheetName_(sheetName) {
+  const m = String(sheetName).match(/_(\d{4})$/);
+  return m ? Number(m[1]) : 0;
+}
+
+function baseSupplierName_(sheetName) {
+  // Supplier_Severne_2025 -> Supplier_Severne
+  return String(sheetName).replace(/_(\d{4})$/, "");
+}
