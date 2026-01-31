@@ -5,354 +5,98 @@
   <meta name="viewport" content="width=device-width,initial-scale=1" />
   <title>Sales</title>
 
-  <!-- Poppins -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;500;700&display=swap" rel="stylesheet">
 
   <style>
-    :root{
-      --border:#e5e7eb;
-      --muted:#6b7280;
-      --bg:#fff;
-      --soft:#f9fafb;
-      --accent:#111827;
-      --ok:#0f7b2f;
-      --bad:#b00020;
-    }
+    :root{ --border:#e5e7eb; --muted:#6b7280; --bg:#fff; --soft:#f9fafb; --accent:#111827; --ok:#0f7b2f; --bad:#b00020; }
     *{ box-sizing:border-box; }
-    body{
-      margin:0;
-      font-family:'Poppins',system-ui,sans-serif;
-      font-weight:300;
-      background:#fcfcfc;
-      color:#111;
-    }
+    body{ margin:0; font-family:'Poppins',system-ui,sans-serif; font-weight:300; background:#fcfcfc; color:#111; }
 
-    /* Views */
     #loginView{ display:block; }
     #appView{ display:none; }
 
-    /* Layout */
-    .centerWrap{
-      max-width:560px;
-      margin:0 auto;
-      padding:34px 18px 28px;
-      text-align:center;
-    }
-    .wrap{
-      max-width:1200px;
-      margin:0 auto;
-      padding:16px 18px 96px;
-    }
+    .centerWrap{ max-width:560px; margin:0 auto; padding:34px 18px 28px; text-align:center; }
+    .wrap{ max-width:1200px; margin:0 auto; padding:16px 18px 96px; }
+    @media (max-width:480px){ .centerWrap{ padding:26px 16px 20px; } .wrap{ padding:12px 16px 96px; } }
 
-    /* Mobile spacing */
-    @media (max-width:480px){
-      .centerWrap{ padding:26px 16px 20px; }
-      .wrap{ padding:12px 16px 96px; }
-    }
+    .logo{ display:block; width:min(560px,100%); height:auto; max-height:72px; object-fit:contain; margin:18px auto 18px; }
+    @media (max-width:480px){ .logo{ max-height:58px; margin:14px auto 14px; } }
 
-    /* Logo */
-    .logo{
-      display:block;
-      width:min(560px,100%);
-      height:auto;
-      max-height:72px;
-      object-fit:contain;
-      margin:18px auto 18px;
-    }
-    @media (max-width:480px){
-      .logo{ max-height:58px; margin:14px auto 14px; }
-    }
-
-    /* UI elements */
-    .btn{
-      font-family:'Poppins',sans-serif;
-      font-weight:500;
-      padding:10px 14px;
-      border-radius:14px;
-      border:1px solid var(--border);
-      background:#fff;
-      cursor:pointer;
-      white-space:nowrap;
-    }
+    .btn{ font-family:'Poppins',sans-serif; font-weight:500; padding:10px 14px; border-radius:14px; border:1px solid var(--border); background:#fff; cursor:pointer; white-space:nowrap; }
     .btn:hover{ background:#f3f4f6; }
-    .btnPrimary{
-      background:var(--accent);
-      color:#fff;
-      border-color:var(--accent);
-    }
+    .btnPrimary{ background:var(--accent); color:#fff; border-color:var(--accent); }
     .btnPrimary:hover{ opacity:.92; background:var(--accent); }
 
-    .input{
-      width:100%;
-      padding:13px 14px;
-      border-radius:16px;
-      border:1px solid var(--border);
-      font-family:'Poppins',sans-serif;
-      font-weight:500;
-      font-size:15px;
-      background:#fff;
-    }
-
+    .input{ width:100%; padding:13px 14px; border-radius:16px; border:1px solid var(--border); font-family:'Poppins',sans-serif; font-weight:500; font-size:15px; background:#fff; }
     .muted{ color:var(--muted); font-size:13px; font-weight:300; }
     .err{ color:var(--bad); font-size:13px; margin-top:10px; text-align:left; }
-    .ok{ color:var(--ok); font-size:13px; margin-top:10px; text-align:left; }
 
-    /* Login card */
-    .loginCard{
-      background:var(--bg);
-      border:1px solid var(--border);
-      border-radius:20px;
-      padding:16px;
-      text-align:left;
-    }
+    .loginCard{ background:var(--bg); border:1px solid var(--border); border-radius:20px; padding:16px; text-align:left; }
+    .topbar{ display:flex; justify-content:space-between; align-items:center; gap:10px; padding:6px 0 12px; }
 
-    /* Topbar */
-    .topbar{
-      display:flex;
-      justify-content:space-between;
-      align-items:center;
-      gap:10px;
-      padding:6px 0 12px;
-    }
+    .searchWrap{ display:flex; justify-content:center; margin:6px 0 14px; }
+    .searchWrap input{ width:min(560px,100%); }
 
-    /* Search */
-    .searchWrap{
-      display:flex;
-      justify-content:center;
-      margin:6px 0 14px;
-    }
-    .searchWrap input{
-      width:min(560px,100%);
-    }
-
-    /* Cards/tables */
-    .card{
-      background:var(--bg);
-      border:1px solid var(--border);
-      border-radius:20px;
-      padding:12px;
-    }
-    .tableWrap{
-      overflow-x:auto;
-      -webkit-overflow-scrolling:touch;
-    }
-    table{
-      width:100%;
-      border-collapse:collapse;
-      font-size:14px;
-      min-width:820px;
-    }
-    th{
-      padding:10px;
-      border-bottom:1px solid #eee;
-      font-weight:500;
-      text-align:left;
-      white-space:nowrap;
-    }
-    td{
-      padding:10px;
-      border-bottom:1px solid #f1f1f1;
-      font-weight:300;
-      vertical-align:top;
-    }
-    .detailsRow td{
-      background:var(--soft);
-      border-bottom:1px solid #eaeaea;
-    }
+    .card{ background:var(--bg); border:1px solid var(--border); border-radius:20px; padding:12px; }
+    .tableWrap{ overflow-x:auto; -webkit-overflow-scrolling:touch; }
+    table{ width:100%; border-collapse:collapse; font-size:14px; min-width:820px; }
+    th{ padding:10px; border-bottom:1px solid #eee; font-weight:500; text-align:left; white-space:nowrap; }
+    td{ padding:10px; border-bottom:1px solid #f1f1f1; font-weight:300; vertical-align:top; }
+    .detailsRow td{ background:var(--soft); border-bottom:1px solid #eaeaea; }
     .small{ font-size:12px; color:var(--muted); }
 
-    /* Details layout (Season/EAN/Purchase) */
-    .detailsGrid{
-      display:grid;
-      grid-template-columns:1fr;
-      gap:6px;
-      padding:2px 0;
-    }
-    .detailsLine{
-      display:flex;
-      gap:10px;
-      align-items:baseline;
-    }
-    .detailsKey{
-      min-width:110px;
-      font-weight:500;
-      color:#111;
-    }
-    .detailsVal{
-      color:#111;
-      word-break:break-word;
-    }
-    @media (max-width:480px){
-      .detailsKey{ min-width:92px; }
-    }
+    .detailsGrid{ display:grid; grid-template-columns:1fr; gap:6px; padding:2px 0; }
+    .detailsLine{ display:flex; gap:10px; align-items:baseline; }
+    .detailsKey{ min-width:110px; font-weight:500; }
+    @media (max-width:480px){ .detailsKey{ min-width:92px; } }
 
-    /* Floating buttons */
-    .calcFab{
-      position:fixed; right:18px; bottom:18px;
-      width:56px; height:56px; border-radius:50%;
-      background:var(--accent); color:#fff;
-      display:flex; align-items:center; justify-content:center;
-      cursor:pointer; box-shadow:0 10px 25px rgba(0,0,0,.25);
-      z-index:9999; user-select:none;
-    }
+    .calcFab{ position:fixed; right:18px; bottom:18px; width:56px; height:56px; border-radius:50%; background:var(--accent); color:#fff; display:flex; align-items:center; justify-content:center; cursor:pointer; box-shadow:0 10px 25px rgba(0,0,0,.25); z-index:9999; user-select:none; }
     .calcFab span{ font-weight:700; font-size:22px; transform:translateY(-1px); }
 
-    .cartFab{
-      position:fixed; left:18px; bottom:18px;
-      height:56px; padding:0 16px; border-radius:999px;
-      background:var(--accent); color:#fff;
-      display:flex; align-items:center; justify-content:center; gap:10px;
-      cursor:pointer; box-shadow:0 10px 25px rgba(0,0,0,.25);
-      z-index:9999; user-select:none;
-      font-family:'Poppins',sans-serif; font-weight:700;
-    }
-    .cartFab .badge{
-      display:inline-flex; align-items:center; justify-content:center;
-      min-width:30px; height:30px; padding:0 9px; border-radius:999px;
-      background:#fff; color:#111; font-weight:700; font-size:13px;
-    }
-    @media (max-width:480px){
-      .cartFab{ left:14px; bottom:14px; height:54px; padding:0 14px; }
-      .calcFab{ right:14px; bottom:14px; width:54px; height:54px; }
-    }
+    .cartFab{ position:fixed; left:18px; bottom:18px; height:56px; padding:0 16px; border-radius:999px; background:var(--accent); color:#fff; display:flex; align-items:center; justify-content:center; gap:10px; cursor:pointer; box-shadow:0 10px 25px rgba(0,0,0,.25); z-index:9999; user-select:none; font-family:'Poppins',sans-serif; font-weight:700; }
+    .cartFab .badge{ display:inline-flex; align-items:center; justify-content:center; min-width:30px; height:30px; padding:0 9px; border-radius:999px; background:#fff; color:#111; font-weight:700; font-size:13px; }
+    @media (max-width:480px){ .cartFab{ left:14px; bottom:14px; height:54px; padding:0 14px; } .calcFab{ right:14px; bottom:14px; width:54px; height:54px; } }
 
-    /* Modals */
-    .overlay{
-      position:fixed; inset:0;
-      background:rgba(0,0,0,.45);
-      display:none;
-      align-items:center;
-      justify-content:center;
-      z-index:10000;
-      padding:14px;
-    }
+    .overlay{ position:fixed; inset:0; background:rgba(0,0,0,.45); display:none; align-items:center; justify-content:center; z-index:10000; padding:14px; }
     .overlay.active{ display:flex; }
-    .modal{
-      background:#fff;
-      width:min(1100px,96vw);
-      height:min(760px,92vh);
-      border-radius:20px;
-      overflow:hidden;
-      display:flex;
-      flex-direction:column;
-    }
-    .modalHeader{
-      padding:12px 14px;
-      border-bottom:1px solid #eee;
-      display:flex;
-      justify-content:space-between;
-      align-items:center;
-      font-weight:500;
-      gap:10px;
-    }
-    .modalHeader .actions{
-      display:flex;
-      gap:10px;
-      flex-wrap:wrap;
-      justify-content:flex-end;
-    }
-    .modalBody{
-      padding:14px;
-      overflow:auto;
-    }
-    @media (max-width:480px){
-      .modalBody{ padding:14px 14px 18px; }
-      .modalHeader{ padding:12px 12px; }
-    }
+    .modal{ background:#fff; width:min(1100px,96vw); height:min(760px,92vh); border-radius:20px; overflow:hidden; display:flex; flex-direction:column; }
+    .modalHeader{ padding:12px 14px; border-bottom:1px solid #eee; display:flex; justify-content:space-between; align-items:center; font-weight:500; gap:10px; }
+    .modalHeader .actions{ display:flex; gap:10px; flex-wrap:wrap; justify-content:flex-end; }
+    .modalBody{ padding:14px; overflow:auto; }
     .modal iframe{ flex:1; border:0; width:100%; }
 
-    /* Lead form stacked */
     .formGrid{ display:grid; grid-template-columns:1fr; gap:12px; }
-    .field label{
-      display:block;
-      font-size:12px;
-      color:var(--muted);
-      margin:0 0 6px;
-      font-weight:500;
-    }
-    .field input, .field textarea{
-      width:100%;
-      padding:11px 12px;
-      border-radius:14px;
-      border:1px solid var(--border);
-      font-family:'Poppins',sans-serif;
-      font-weight:500;
-      font-size:14px;
-      background:#fff;
-    }
-    .field textarea{
-      min-height:86px;
-      resize:vertical;
-      font-weight:300;
-    }
+    .field label{ display:block; font-size:12px; color:var(--muted); margin:0 0 6px; font-weight:500; }
+    .field input, .field textarea{ width:100%; padding:11px 12px; border-radius:14px; border:1px solid var(--border); font-family:'Poppins',sans-serif; font-weight:500; font-size:14px; background:#fff; }
+    .field textarea{ min-height:86px; resize:vertical; font-weight:300; }
 
-    /* Cart list */
     .cartList{ margin:10px 0 0; border:1px solid var(--border); border-radius:16px; overflow:hidden; }
-    .cartRow{
-      display:flex;
-      justify-content:space-between;
-      gap:10px;
-      padding:12px 12px;
-      border-bottom:1px solid #eee;
-    }
+    .cartRow{ display:flex; justify-content:space-between; gap:10px; padding:12px 12px; border-bottom:1px solid #eee; }
     .cartRow:last-child{ border-bottom:none; }
     .cartRow .left{ display:flex; flex-direction:column; gap:3px; }
 
-    /* Tick after save */
-    .tick{
-      display:inline-flex; align-items:center; gap:8px;
-      padding:10px 12px;
-      border:1px solid rgba(15,123,47,.25);
-      background:rgba(15,123,47,.06);
-      border-radius:14px;
-      color:var(--ok);
-      font-weight:500;
-      margin-top:12px;
-    }
-    .tick .dot{
-      width:22px; height:22px; border-radius:50%;
-      display:inline-flex; align-items:center; justify-content:center;
-      background:var(--ok); color:#fff; font-weight:700;
-      line-height:1;
-    }
-
-    /* Debug box */
-    #debugBox{
-      display:none;
-      margin-top:10px;
-      padding:10px 12px;
-      border:1px solid rgba(176,0,32,.25);
-      background:rgba(176,0,32,.06);
-      border-radius:14px;
-      color:var(--bad);
-      text-align:left;
-      font-size:13px;
-    }
+    .tick{ display:inline-flex; align-items:center; gap:8px; padding:10px 12px; border:1px solid rgba(15,123,47,.25); background:rgba(15,123,47,.06); border-radius:14px; color:var(--ok); font-weight:500; margin-top:12px; }
+    .tick .dot{ width:22px; height:22px; border-radius:50%; display:inline-flex; align-items:center; justify-content:center; background:var(--ok); color:#fff; font-weight:700; }
   </style>
 </head>
 
 <body>
-  <!-- LOGIN VIEW -->
+  <!-- LOGIN -->
   <div id="loginView" class="centerWrap">
     <img src="./logo.png" alt="Logo" class="logo" onerror="this.style.display='none';">
     <div class="loginCard">
       <div style="font-weight:700; margin-bottom:10px;">Inloggen</div>
-
-      <!-- ✅ no extra text -->
       <input id="loginKey" class="input" placeholder="Key" autocomplete="off" autocapitalize="off" spellcheck="false">
-
       <div style="display:flex; gap:10px; margin-top:12px;">
         <button id="loginBtn" class="btn btnPrimary" style="flex:1;">Login</button>
       </div>
-
       <div id="loginErr" class="err"></div>
-      <div id="debugBox"></div>
     </div>
   </div>
 
-  <!-- APP VIEW -->
+  <!-- APP -->
   <div id="appView" class="wrap">
     <div class="topbar">
       <div></div>
@@ -393,13 +137,12 @@
   </div>
 
   <!-- Floating CART -->
-  <div class="cartFab" id="cartBtn" title="Cart" aria-label="Open cart" style="display:none;">
-    <span>Cart</span>
-    <span class="badge" id="cartBadge">0</span>
+  <div class="cartFab" id="cartBtn" style="display:none;">
+    <span>Cart</span><span class="badge" id="cartBadge">0</span>
   </div>
 
   <!-- Floating CALC -->
-  <div class="calcFab" id="calcBtn" title="Calculator" aria-label="Open calculator" style="display:none;">
+  <div class="calcFab" id="calcBtn" style="display:none;">
     <span>%</span>
   </div>
 
@@ -433,14 +176,19 @@
             <label>Name *</label>
             <input id="custName" placeholder="Name">
           </div>
+
+          <!-- ✅ SWAPPED: Phone number first -->
           <div class="field">
-            <label>Mail *</label>
-            <input id="mail" placeholder="Mail">
-          </div>
-          <div class="field">
-            <label>Phone number (optioneel)</label>
+            <label>Phone number *</label>
             <input id="phone" placeholder="Phone number">
           </div>
+
+          <!-- ✅ SWAPPED: Mail second -->
+          <div class="field">
+            <label>Mail (optioneel)</label>
+            <input id="mail" placeholder="Mail">
+          </div>
+
           <div class="field">
             <label>Note 1 (optioneel)</label>
             <textarea id="note1" placeholder="Note"></textarea>
@@ -490,9 +238,8 @@
             <table style="min-width:980px;">
               <thead>
                 <tr>
-                  <!-- ✅ removed Employee and EAN -->
                   <th>Product</th><th>Retail price</th>
-                  <th>Name</th><th>Mail</th><th>Phone number</th>
+                  <th>Name</th><th>Phone number</th><th>Mail</th>
                   <th>Note 1</th><th>Note 2</th>
                   <th>Sale</th>
                 </tr>
@@ -510,20 +257,9 @@
   </div>
 
   <script>
-    // ✅ update if deployment URL changed
     const APPS_SCRIPT_WEBAPP_URL =
       "https://script.google.com/macros/s/AKfycbyqzsvu-EaeJCLbUN3IZ6nxhXmi67SYM7sh15fJjmPtB6rvAJBn609IkpnDa7SFwc-QMg/exec";
 
-    // Debug
-    const debugBox = document.getElementById("debugBox");
-    function showDebug(msg){
-      debugBox.style.display = "block";
-      debugBox.textContent = msg;
-    }
-    window.addEventListener("error", (e)=> showDebug("JS error: " + (e.message || e.error || "Unknown")));
-    window.addEventListener("unhandledrejection", (e)=> showDebug("Promise error: " + (e.reason?.message || e.reason || "Unknown")));
-
-    // JSONP
     function jsonp(url){
       return new Promise((resolve,reject)=>{
         const s=document.createElement("script");
@@ -537,7 +273,6 @@
       });
     }
 
-    // Helpers
     function fmtPrice(v){
       if(v===null||v===undefined||v==="") return "";
       const n = Number(String(v).replace(",","."));
@@ -546,7 +281,6 @@
     const fmtVal = v => (v==null?"":String(v));
     const esc = s => String(s).replace(/[&<>"']/g,m=>({ "&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;","'":"&#039;" }[m]));
 
-    // Multi-word search: all tokens must match in product+ean
     function matchesTokens(row, q){
       const tokens = q.split(/\s+/).filter(Boolean);
       if(!tokens.length) return true;
@@ -554,7 +288,6 @@
       return tokens.every(t => hay.includes(t));
     }
 
-    // Elements
     const loginView = document.getElementById("loginView");
     const appView = document.getElementById("appView");
 
@@ -573,14 +306,12 @@
     const cartBtn = document.getElementById("cartBtn");
     const calcBtn = document.getElementById("calcBtn");
 
-    // Calculator modal
     const calcOverlay = document.getElementById("calcOverlay");
     document.getElementById("calcBtn").onclick = () => calcOverlay.classList.add("active");
     document.getElementById("calcClose").onclick = () => calcOverlay.classList.remove("active");
     document.getElementById("calcOpenNew").onclick = () => window.open("https://surf-center.github.io/calculator/","_blank","noopener");
     calcOverlay.addEventListener("click", e => { if(e.target===calcOverlay) calcOverlay.classList.remove("active"); });
 
-    // Cart modal
     const cartOverlay = document.getElementById("cartOverlay");
     const cartClose = document.getElementById("cartClose");
     const cartListEl = document.getElementById("cartList");
@@ -590,12 +321,11 @@
     const saveLeadBtn = document.getElementById("saveLeadBtn");
 
     const custName = document.getElementById("custName");
-    const mail = document.getElementById("mail");
-    const phone = document.getElementById("phone");
+    const phone = document.getElementById("phone");   // ✅ contact 1
+    const mail = document.getElementById("mail");     // ✅ contact 2
     const note1 = document.getElementById("note1");
     const note2 = document.getElementById("note2");
 
-    // Account modal
     const accountOverlay = document.getElementById("accountOverlay");
     const accountClose = document.getElementById("accountClose");
     const accountRefresh = document.getElementById("accountRefresh");
@@ -604,7 +334,6 @@
     const accountOrdersTbody = document.getElementById("accountOrdersTbody");
     const accountErr = document.getElementById("accountErr");
 
-    // State
     let currentKey = "";
     let currentUserName = "";
     let isAdmin = false;
@@ -621,7 +350,6 @@
       cartBtn.style.display = "none";
       calcBtn.style.display = "none";
       loginErr.textContent = "";
-      debugBox.style.display = "none";
       loginKey.value = "";
       loginKey.focus();
     }
@@ -638,7 +366,6 @@
     }
     logoutBtn.onclick = logout;
 
-    // Cart open/close
     function openCart(){
       cartErr.textContent = "";
       cartTick.style.display = "none";
@@ -676,13 +403,11 @@
           <div><button class="btn" data-remove="${esc(it.ean)}">Verwijder</button></div>
         </div>
       `).join("");
-
       cartListEl.querySelectorAll("button[data-remove]").forEach(b=>{
         b.addEventListener("click", ()=> removeFromCart(b.getAttribute("data-remove")));
       });
     }
 
-    // Account modal
     function openAccount(){
       accountErr.textContent = "";
       accountOverlay.classList.add("active");
@@ -703,21 +428,20 @@
         const res = await jsonp(`${APPS_SCRIPT_WEBAPP_URL}?action=orders&scope=${scope}&key=${encodeURIComponent(currentKey)}`);
         if(!res || !res.ok) throw new Error(res?.error || "Kon leads niet laden");
         const orders = Array.isArray(res.orders) ? res.orders : [];
+
         if(!orders.length){
           accountOrdersTbody.innerHTML = `<tr><td colspan="8" class="small">Geen leads.</td></tr>`;
           return;
         }
 
-        // NOTE: this expects your Apps Script to return:
-        // product, retailPrice, customerName(name), mail, phoneNumber, note1, note2, sale
         accountOrdersTbody.innerHTML = orders.map(o => `
           <tr>
             <td>${esc(o.product||"")}</td>
             <td>${esc(fmtPrice(o.retailPrice))}</td>
-            <td>${esc(o.customerName||"")}</td>
-            <td>${esc(o.mail||o.contact1||"")}</td>
-            <td>${esc(o.phoneNumber||o.contact2||"")}</td>
-            <td>${esc(o.note1||o.note||"")}</td>
+            <td>${esc(o.name||"")}</td>
+            <td>${esc(o.phoneNumber||"")}</td>
+            <td>${esc(o.mail||"")}</td>
+            <td>${esc(o.note1||"")}</td>
             <td>${esc(o.note2||"")}</td>
             <td>${esc(o.sale||"")}</td>
           </tr>
@@ -728,7 +452,6 @@
       }
     }
 
-    // Products
     async function loadProducts(){
       err.textContent = "";
       meta.textContent = "Laden…";
@@ -792,12 +515,11 @@
           tr2.className = "detailsRow";
           const td = document.createElement("td");
           td.colSpan = 6;
-
           td.innerHTML = `
             <div class="detailsGrid">
-              <div class="detailsLine"><span class="detailsKey">Season:</span><span class="detailsVal">${esc(r.season || "")}</span></div>
-              <div class="detailsLine"><span class="detailsKey">EAN:</span><span class="detailsVal">${esc(r.ean || "")}</span></div>
-              <div class="detailsLine"><span class="detailsKey">Purchase price:</span><span class="detailsVal">${esc(fmtPrice(r.purchasePrice))}</span></div>
+              <div class="detailsLine"><span class="detailsKey">Season:</span><span>${esc(r.season||"")}</span></div>
+              <div class="detailsLine"><span class="detailsKey">EAN:</span><span>${esc(r.ean||"")}</span></div>
+              <div class="detailsLine"><span class="detailsKey">Purchase price:</span><span>${esc(fmtPrice(r.purchasePrice))}</span></div>
             </div>
           `;
           tr2.appendChild(td);
@@ -807,30 +529,22 @@
     }
     searchInput.addEventListener("input", renderProducts);
 
-    // Save lead (UI payload keys match new headers intent)
+    // ✅ submitLead payload now matches swapped fields
     saveLeadBtn.onclick = async () => {
       cartErr.textContent = "";
       cartTick.style.display = "none";
 
       const name = custName.value.trim();
-      const m = mail.value.trim();
-      const p = phone.value.trim();
+      const p = phone.value.trim(); // contact 1
+      const m = mail.value.trim();  // contact 2
       const n1 = note1.value.trim();
       const n2 = note2.value.trim();
 
       if(!name){ cartErr.textContent = "Name is verplicht."; return; }
-      if(!m && !p){ cartErr.textContent = "Minimaal Mail of Phone number is verplicht."; return; }
+      if(!p && !m){ cartErr.textContent = "Minimaal Phone number of Mail is verplicht."; return; }
       if(!cart.length){ cartErr.textContent = "Cart is leeg."; return; }
 
-      const payload = {
-        name,
-        mail: m,
-        phoneNumber: p,
-        note1: n1,
-        note2: n2,
-        items: cart
-      };
-
+      const payload = { name, phoneNumber:p, mail:m, note1:n1, note2:n2, items:cart };
       const url = `${APPS_SCRIPT_WEBAPP_URL}?action=submitLead&key=${encodeURIComponent(currentKey)}&payload=${encodeURIComponent(JSON.stringify(payload))}`;
 
       saveLeadBtn.disabled = true;
@@ -843,7 +557,7 @@
         setCartBadge();
         renderCart();
 
-        custName.value=""; mail.value=""; phone.value=""; note1.value=""; note2.value="";
+        custName.value=""; phone.value=""; mail.value=""; note1.value=""; note2.value="";
         cartTick.style.display = "";
       }catch(e){
         cartErr.textContent = "Fout bij opslaan: " + e.message;
@@ -856,8 +570,6 @@
     // Login
     loginBtn.onclick = async () => {
       loginErr.textContent = "";
-      debugBox.style.display = "none";
-
       const key = loginKey.value.trim();
       if(!key){ loginErr.textContent = "Vul een key in."; return; }
 
@@ -883,10 +595,6 @@
         searchInput.disabled = false;
         renderProducts();
 
-        // enable floating buttons now
-        cartBtn.style.display = "";
-        calcBtn.style.display = "";
-
       }catch(e){
         loginErr.textContent = e.message;
       }finally{
@@ -895,55 +603,7 @@
       }
     };
 
-    function showLogin(){
-      loginView.style.display = "block";
-      appView.style.display = "none";
-      cartBtn.style.display = "none";
-      calcBtn.style.display = "none";
-      loginErr.textContent = "";
-      debugBox.style.display = "none";
-      loginKey.focus();
-    }
-    function showApp(){
-      loginView.style.display = "none";
-      appView.style.display = "block";
-      cartBtn.style.display = "";
-      calcBtn.style.display = "";
-    }
-    function logout(){
-      localStorage.removeItem("employeeKey");
-      currentKey = "";
-      showLogin();
-    }
-    logoutBtn.onclick = logout;
-
-    // Cart open/close
-    function openCart(){
-      cartErr.textContent = "";
-      cartTick.style.display = "none";
-      renderCart();
-      cartOverlay.classList.add("active");
-    }
-    function closeCart(){ cartOverlay.classList.remove("active"); }
-    cartBtn.onclick = openCart;
-    cartClose.onclick = closeCart;
-    cartOverlay.addEventListener("click", e => { if(e.target===cartOverlay) closeCart(); });
-
-    // Account open/close
-    function openAccount(){
-      accountErr.textContent = "";
-      accountOverlay.classList.add("active");
-      accountTitle.textContent = currentUserName ? currentUserName : "Account";
-      accountSub.textContent = isAdmin ? "Admin view: alle leads" : "Jouw leads";
-      loadAccountOrders();
-    }
-    function closeAccount(){ accountOverlay.classList.remove("active"); }
-    document.getElementById("accountClose").onclick = closeAccount;
-    accountOverlay.addEventListener("click", e => { if(e.target===accountOverlay) closeAccount(); });
-    accountBtn.onclick = openAccount;
-    accountRefresh.onclick = loadAccountOrders;
-
-    // Init
+    // init
     document.addEventListener("DOMContentLoaded", () => {
       const stored = (localStorage.getItem("employeeKey") || "").trim();
       if(!stored){ showLogin(); return; }
@@ -952,23 +612,11 @@
       showApp();
       setCartBadge();
 
-      loadProducts().catch((e)=>{
-        showLogin();
-        showDebug("Kon data niet laden. Check APPS_SCRIPT_WEBAPP_URL of deployment. (" + (e.message||e) + ")");
-      });
+      loadProducts().catch(()=>{ logout(); });
 
-      // show floating buttons when in app
       cartBtn.style.display = "";
       calcBtn.style.display = "";
-
-      // calc button action
-      document.getElementById("calcBtn").onclick = () => calcOverlay.classList.add("active");
     });
-
-    // calc open new tab/close
-    document.getElementById("calcOpenNew").onclick = () => window.open("https://surf-center.github.io/calculator/","_blank","noopener");
-    document.getElementById("calcClose").onclick = () => calcOverlay.classList.remove("active");
-
   </script>
 </body>
 </html>
