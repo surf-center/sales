@@ -5,213 +5,81 @@
   <meta name="viewport" content="width=device-width,initial-scale=1" />
   <title>Sales</title>
 
-  <!-- Poppins -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;500;700&display=swap" rel="stylesheet">
 
   <style>
     :root{
-      --border:#e5e7eb;
-      --muted:#6b7280;
-      --bg:#ffffff;
-      --soft:#f9fafb;
-      --accent:#111827;
+      --border:#e5e7eb; --muted:#6b7280; --bg:#fff; --soft:#f9fafb; --accent:#111827;
     }
+    body{ margin:0; font-family:'Poppins',system-ui,sans-serif; font-weight:300; background:#fcfcfc; color:#111; }
+    .wrap{ max-width:1200px; margin:0 auto; padding:28px 16px 92px; text-align:center; }
 
-    body{
-      margin:0;
-      font-family:'Poppins', system-ui, sans-serif;
-      font-weight:300;
-      background:#fcfcfc;
-      color:#111;
-    }
-
-    .wrap{
-      max-width:1200px;
-      margin:0 auto;
-      padding:28px 16px 92px;
-      text-align:center;
-    }
-
-    /* LOGO: zelfde breedte als search, volledig zichtbaar */
     .logo{
-      display:block;
-      width: min(560px, 100%);     /* exact match met search */
-      max-width: min(560px, 100%);
-      height: auto;
-      max-height: 70px;
-      object-fit: contain;
-      margin: 18px auto 14px;
+      display:block; width:min(560px,100%); max-width:min(560px,100%);
+      height:auto; max-height:70px; object-fit:contain;
+      margin:18px auto 14px;
     }
-    @media (max-width: 480px){
-      .logo{
-        max-height: 56px;
-        margin: 14px auto 12px;
-      }
-    }
+    @media (max-width:480px){ .logo{ max-height:56px; margin:14px auto 12px; } }
 
-    .searchWrap{
-      display:flex;
-      justify-content:center;
-      margin-bottom:10px;
-    }
-
+    .searchWrap{ display:flex; justify-content:center; margin-bottom:10px; gap:10px; flex-wrap:wrap; }
     .searchWrap input{
-      width:min(560px, 100%);
-      padding:12px 16px;
-      border-radius:14px;
-      border:1px solid var(--border);
-      font-family:'Poppins', sans-serif;
-      font-weight:500;
-      font-size:15px;
-      box-sizing:border-box;
+      width:min(560px,100%); padding:12px 16px; border-radius:14px; border:1px solid var(--border);
+      font-family:'Poppins',sans-serif; font-weight:500; font-size:15px; box-sizing:border-box;
     }
-
-    .meta{
-      color:var(--muted);
-      font-size:13px;
-      font-weight:300;
-      margin:0 0 12px;
-      text-align:center;
-      min-height: 18px;
-    }
-
-    .card{
-      background:var(--bg);
-      border:1px solid var(--border);
-      border-radius:18px;
-      padding:12px;
-      text-align:left;
-    }
-
-    .tableWrap{
-      overflow-x:auto;
-      -webkit-overflow-scrolling:touch;
-    }
-
-    table{
-      width:100%;
-      border-collapse:collapse;
-      font-size:14px;
-      min-width: 720px;
-    }
-
-    th{
-      padding:10px;
-      border-bottom:1px solid #eee;
-      font-weight:500;
-      text-align:left;
-      white-space:nowrap;
-    }
-
-    td{
-      padding:10px;
-      border-bottom:1px solid #f1f1f1;
-      font-weight:300;
-      vertical-align:top;
-    }
-
-    .plus{ width:36px; text-align:center; }
-
-    .plus button{
-      width:30px; height:30px;
-      border-radius:10px;
-      border:1px solid var(--border);
-      background:#fff;
-      font-weight:700;
-      cursor:pointer;
-      font-family:'Poppins', sans-serif;
-      -webkit-tap-highlight-color: transparent;
-    }
-    .plus button:hover{ background:#f3f4f6; }
-
-    .detailsRow td{
-      background:var(--soft);
-      border-bottom:1px solid #eaeaea;
-    }
-
-    .muted{ color:var(--muted); font-weight:300; }
+    .meta{ color:var(--muted); font-size:13px; font-weight:300; margin:0 0 12px; min-height:18px; }
     .error{ color:#b00020; font-size:13px; margin:10px 0 0; text-align:left; }
 
-    /* FLOATING calculator: black button with white % */
+    .card{ background:var(--bg); border:1px solid var(--border); border-radius:18px; padding:12px; text-align:left; }
+    .tableWrap{ overflow-x:auto; -webkit-overflow-scrolling:touch; }
+    table{ width:100%; border-collapse:collapse; font-size:14px; min-width:820px; }
+    th{ padding:10px; border-bottom:1px solid #eee; font-weight:500; text-align:left; white-space:nowrap; }
+    td{ padding:10px; border-bottom:1px solid #f1f1f1; font-weight:300; vertical-align:top; }
+    .plus{ width:36px; text-align:center; }
+
+    .btn{
+      font-family:'Poppins',sans-serif; font-weight:500;
+      padding:8px 12px; border-radius:10px; border:1px solid var(--border);
+      background:#fff; cursor:pointer; white-space:nowrap;
+    }
+    .btn:hover{ background:#f3f4f6; }
+    .btnPrimary{ background:var(--accent); color:#fff; border-color:var(--accent); }
+    .btnPrimary:hover{ opacity:.92; background:var(--accent); }
+
+    .detailsRow td{ background:var(--soft); border-bottom:1px solid #eaeaea; }
+
+    /* Floating % calc button */
     .calcFab{
-      position:fixed;
-      right:18px;
-      bottom:18px;
-      width:56px;
-      height:56px;
-      border-radius:50%;
-      background:var(--accent);
-      color:#fff;
-      display:flex;
-      align-items:center;
-      justify-content:center;
-      cursor:pointer;
-      box-shadow:0 10px 25px rgba(0,0,0,.25);
-      z-index:9999;
-      user-select:none;
+      position:fixed; right:18px; bottom:18px; width:56px; height:56px; border-radius:50%;
+      background:var(--accent); color:#fff; display:flex; align-items:center; justify-content:center;
+      cursor:pointer; box-shadow:0 10px 25px rgba(0,0,0,.25); z-index:9999; user-select:none;
     }
-    .calcFab:hover{ transform:scale(1.05); }
-    .calcFab span{
-      font-weight:700;
-      font-size:22px;
-      line-height:1;
-      transform: translateY(-1px);
-    }
+    .calcFab span{ font-weight:700; font-size:22px; transform:translateY(-1px); }
 
-    /* Modal */
-    .overlay{
-      position:fixed;
-      inset:0;
-      background:rgba(0,0,0,.45);
-      display:none;
-      align-items:center;
-      justify-content:center;
-      z-index:10000;
-      padding:14px;
-    }
+    /* Modal base */
+    .overlay{ position:fixed; inset:0; background:rgba(0,0,0,.45); display:none; align-items:center; justify-content:center; z-index:10000; padding:14px; }
     .overlay.active{ display:flex; }
-
-    .modal{
-      background:#fff;
-      width:min(1100px, 96vw);
-      height:min(720px, 92vh);
-      border-radius:18px;
-      overflow:hidden;
-      display:flex;
-      flex-direction:column;
-    }
-
-    .modalHeader{
-      padding:10px 14px;
-      border-bottom:1px solid #eee;
-      display:flex;
-      justify-content:space-between;
-      align-items:center;
-      font-weight:500;
-      gap:10px;
-    }
-
-    .modalHeader .actions{
-      display:flex;
-      gap:10px;
-      flex-wrap:wrap;
-      justify-content:flex-end;
-    }
-
-    .modalHeader button{
-      font-family:'Poppins', sans-serif;
-      font-weight:500;
-      padding:8px 12px;
-      border-radius:10px;
-      border:1px solid var(--border);
-      background:#fff;
-      cursor:pointer;
-    }
-    .modalHeader button:hover{ background:#f3f4f6; }
-
+    .modal{ background:#fff; width:min(1100px,96vw); height:min(760px,92vh); border-radius:18px; overflow:hidden; display:flex; flex-direction:column; }
+    .modalHeader{ padding:10px 14px; border-bottom:1px solid #eee; display:flex; justify-content:space-between; align-items:center; font-weight:500; gap:10px; }
+    .modalHeader .actions{ display:flex; gap:10px; flex-wrap:wrap; justify-content:flex-end; }
+    .modalBody{ padding:14px; overflow:auto; }
     .modal iframe{ flex:1; border:0; width:100%; }
+
+    .formGrid{ display:grid; grid-template-columns: 1fr 1fr; gap:12px; }
+    @media (max-width:700px){ .formGrid{ grid-template-columns:1fr; } table{ min-width:900px; } }
+    .field label{ display:block; font-size:12px; color:var(--muted); margin:0 0 6px; font-weight:500; }
+    .field input, .field textarea{
+      width:100%; box-sizing:border-box;
+      padding:10px 12px; border-radius:12px; border:1px solid var(--border);
+      font-family:'Poppins',sans-serif; font-weight:500; font-size:14px;
+    }
+    .field textarea{ min-height:80px; resize:vertical; font-weight:300; }
+    .cartList{ margin:10px 0 0; border:1px solid var(--border); border-radius:14px; overflow:hidden; }
+    .cartRow{ display:flex; justify-content:space-between; gap:10px; padding:10px 12px; border-bottom:1px solid #eee; }
+    .cartRow:last-child{ border-bottom:none; }
+    .cartRow .left{ display:flex; flex-direction:column; gap:2px; }
+    .small{ font-size:12px; color:var(--muted); }
   </style>
 </head>
 
@@ -221,6 +89,7 @@
 
     <div class="searchWrap">
       <input id="searchInput" placeholder="Zoek product of EAN…" disabled>
+      <button id="cartBtn" class="btn btnPrimary">Cart (0)</button>
     </div>
 
     <div id="meta" class="meta"></div>
@@ -236,64 +105,103 @@
               <th>Retail price</th>
               <th>Surfcenter</th>
               <th>Dropshipment</th>
+              <th>Add</th>
             </tr>
           </thead>
           <tbody id="tbody">
-            <tr><td colspan="5" class="muted">Employee KEY nodig om data te laden…</td></tr>
+            <tr><td colspan="6" class="small">Employee KEY nodig om data te laden…</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <div style="height:16px;"></div>
+
+    <div class="card">
+      <div style="display:flex; justify-content:space-between; align-items:center; gap:12px; flex-wrap:wrap;">
+        <div style="font-weight:700;">Leads</div>
+        <button id="refreshOrdersBtn" class="btn">Refresh</button>
+      </div>
+      <div class="tableWrap">
+        <table style="min-width:980px;">
+          <thead>
+            <tr>
+              <th>Employee</th><th>EAN</th><th>Product</th><th>Retail price</th>
+              <th>Name</th><th>Contact 1</th><th>Contact 2</th><th>Note</th><th>Sale</th>
+            </tr>
+          </thead>
+          <tbody id="ordersTbody">
+            <tr><td colspan="9" class="small">Nog geen leads geladen…</td></tr>
           </tbody>
         </table>
       </div>
     </div>
   </div>
 
-  <div class="calcFab" id="calcBtn" title="Calculator" aria-label="Open calculator">
-    <span>%</span>
-  </div>
+  <!-- Calculator floating button -->
+  <div class="calcFab" id="calcBtn" title="Calculator" aria-label="Open calculator"><span>%</span></div>
 
+  <!-- Calculator modal -->
   <div id="calcOverlay" class="overlay">
     <div class="modal">
       <div class="modalHeader">
         <span>Marge calculator</span>
         <div class="actions">
-          <button id="calcOpenNew">Nieuw tab</button>
-          <button id="calcClose">Sluiten</button>
+          <button id="calcOpenNew" class="btn">Nieuw tab</button>
+          <button id="calcClose" class="btn">Sluiten</button>
         </div>
       </div>
       <iframe src="https://surf-center.github.io/calculator/" title="Calculator"></iframe>
     </div>
   </div>
 
+  <!-- Cart / Lead modal -->
+  <div id="cartOverlay" class="overlay">
+    <div class="modal">
+      <div class="modalHeader">
+        <span>Lead doorgeven</span>
+        <div class="actions">
+          <button id="cartClose" class="btn">Sluiten</button>
+        </div>
+      </div>
+      <div class="modalBody">
+        <div class="formGrid">
+          <div class="field">
+            <label>Naam klant *</label>
+            <input id="custName" placeholder="Naam">
+          </div>
+          <div class="field">
+            <label>Contact 1 (mail of tel) *</label>
+            <input id="contact1" placeholder="E-mail of telefoon">
+          </div>
+          <div class="field">
+            <label>Contact 2 (optioneel)</label>
+            <input id="contact2" placeholder="E-mail of telefoon">
+          </div>
+          <div class="field">
+            <label>Note (optioneel)</label>
+            <textarea id="note" placeholder="Extra info…"></textarea>
+          </div>
+        </div>
+
+        <div style="margin-top:14px; font-weight:700;">Winkelmandje</div>
+        <div id="cartList" class="cartList"></div>
+
+        <div style="display:flex; justify-content:flex-end; gap:10px; margin-top:14px; flex-wrap:wrap;">
+          <button id="clearCartBtn" class="btn">Leegmaken</button>
+          <button id="saveLeadBtn" class="btn btnPrimary">Opslaan</button>
+        </div>
+
+        <div id="cartErr" class="error"></div>
+      </div>
+    </div>
+  </div>
+
   <script>
-    // ✅ jouw Web App URL
     const APPS_SCRIPT_WEBAPP_URL =
-      "https://script.google.com/macros/s/AKfycbwbJt9KmS80D0wFj-fuzuB-taQsDZbhd_fuqY_38LPm9S9JiWzzpt_2I08t8PC5DFi0cw/exec";
+      "https://script.google.com/macros/s/AKfycbyqzsvu-EaeJCLbUN3IZ6nxhXmi67SYM7sh15fJjmPtB6rvAJBn609IkpnDa7SFwc-QMg/exec";
 
-    // Calculator modal
-    const overlay = document.getElementById("calcOverlay");
-    document.getElementById("calcBtn").onclick = () => overlay.classList.add("active");
-    document.getElementById("calcClose").onclick = () => overlay.classList.remove("active");
-    document.getElementById("calcOpenNew").onclick = () =>
-      window.open("https://surf-center.github.io/calculator/", "_blank", "noopener");
-    overlay.addEventListener("click", e => { if (e.target === overlay) overlay.classList.remove("active"); });
-    document.addEventListener("keydown", e => { if (e.key === "Escape") overlay.classList.remove("active"); });
-
-    // --- DATA LOGIC ---
-    const searchInput = document.getElementById("searchInput");
-    const tbody = document.getElementById("tbody");
-    const meta = document.getElementById("meta");
-    const err = document.getElementById("err");
-
-    let allRows = [];
-    let expanded = new Set();
-
-    function fmtPrice(v){
-      if(v===null||v===undefined||v==="") return "";
-      const n = Number(String(v).replace(",","."));
-      return Number.isFinite(n) ? "€ " + n.toFixed(2) : String(v);
-    }
-    const fmtVal = v => (v==null?"":String(v));
-    const esc = s => String(s).replace(/[&<>"']/g,m=>({ "&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;","'":"&#039;" }[m]));
-
+    // ===== JSONP =====
     function jsonp(url){
       return new Promise((resolve,reject)=>{
         const s=document.createElement("script");
@@ -307,80 +215,290 @@
       });
     }
 
-    async function loadData(key){
-      err.textContent="";
-      meta.textContent="Laden…";
-      tbody.innerHTML=`<tr><td colspan="5" class="muted">Data laden…</td></tr>`;
+    // ===== Helpers =====
+    function fmtPrice(v){
+      if(v===null||v===undefined||v==="") return "";
+      const n = Number(String(v).replace(",","."));
+      return Number.isFinite(n) ? "€ " + n.toFixed(2) : String(v);
+    }
+    const fmtVal = v => (v==null?"":String(v));
+    const esc = s => String(s).replace(/[&<>"']/g,m=>({ "&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;","'":"&#039;" }[m]));
 
-      const res = await jsonp(`${APPS_SCRIPT_WEBAPP_URL}?action=data&key=${encodeURIComponent(key)}`);
-      if(!res||!res.ok) throw new Error(res?.error||"Kon data niet laden");
+    // ===== Calculator modal =====
+    const calcOverlay = document.getElementById("calcOverlay");
+    document.getElementById("calcBtn").onclick = () => calcOverlay.classList.add("active");
+    document.getElementById("calcClose").onclick = () => calcOverlay.classList.remove("active");
+    document.getElementById("calcOpenNew").onclick = () =>
+      window.open("https://surf-center.github.io/calculator/","_blank","noopener");
+    calcOverlay.addEventListener("click", e => { if(e.target===calcOverlay) calcOverlay.classList.remove("active"); });
+
+    // ===== State =====
+    const searchInput = document.getElementById("searchInput");
+    const tbody = document.getElementById("tbody");
+    const meta = document.getElementById("meta");
+    const err = document.getElementById("err");
+
+    const ordersTbody = document.getElementById("ordersTbody");
+    const refreshOrdersBtn = document.getElementById("refreshOrdersBtn");
+
+    const cartBtn = document.getElementById("cartBtn");
+    const cartOverlay = document.getElementById("cartOverlay");
+    const cartClose = document.getElementById("cartClose");
+    const cartListEl = document.getElementById("cartList");
+    const cartErr = document.getElementById("cartErr");
+    const clearCartBtn = document.getElementById("clearCartBtn");
+    const saveLeadBtn = document.getElementById("saveLeadBtn");
+
+    const custName = document.getElementById("custName");
+    const contact1 = document.getElementById("contact1");
+    const contact2 = document.getElementById("contact2");
+    const note = document.getElementById("note");
+
+    let allRows = [];
+    let expanded = new Set();
+    let cart = []; // items: {ean, product, retailPrice}
+    let currentKey = "";
+    let currentUserName = "";
+
+    function setCartButton(){
+      cartBtn.textContent = `Cart (${cart.length})`;
+    }
+
+    function openCart(){
+      cartErr.textContent = "";
+      renderCart();
+      cartOverlay.classList.add("active");
+    }
+    function closeCart(){
+      cartOverlay.classList.remove("active");
+    }
+    cartBtn.onclick = openCart;
+    cartClose.onclick = closeCart;
+    cartOverlay.addEventListener("click", e => { if(e.target===cartOverlay) closeCart(); });
+
+    clearCartBtn.onclick = () => {
+      cart = [];
+      setCartButton();
+      renderCart();
+    };
+
+    function addToCart(item){
+      // no duplicates in cart by EAN
+      if(cart.some(x => x.ean === item.ean)) return;
+      cart.push({ ean: item.ean, product: item.product, retailPrice: item.retailPrice });
+      setCartButton();
+    }
+
+    function removeFromCart(ean){
+      cart = cart.filter(x => x.ean !== ean);
+      setCartButton();
+      renderCart();
+    }
+
+    function renderCart(){
+      if(!cart.length){
+        cartListEl.innerHTML = `<div class="cartRow"><div class="small">Winkelmandje is leeg.</div></div>`;
+        return;
+      }
+      cartListEl.innerHTML = cart.map(it => `
+        <div class="cartRow">
+          <div class="left">
+            <div style="font-weight:500;">${esc(it.product || "")}</div>
+            <div class="small">EAN: ${esc(it.ean || "")} • Retail: ${esc(fmtPrice(it.retailPrice))}</div>
+          </div>
+          <div><button class="btn" data-remove="${esc(it.ean)}">Verwijder</button></div>
+        </div>
+      `).join("");
+
+      cartListEl.querySelectorAll("button[data-remove]").forEach(b=>{
+        b.addEventListener("click", ()=> removeFromCart(b.getAttribute("data-remove")));
+      });
+    }
+
+    // ===== Load products =====
+    async function loadProducts(){
+      err.textContent = "";
+      meta.textContent = "Laden…";
+      tbody.innerHTML = `<tr><td colspan="6" class="small">Data laden…</td></tr>`;
+
+      const res = await jsonp(`${APPS_SCRIPT_WEBAPP_URL}?action=data&key=${encodeURIComponent(currentKey)}`);
+      if(!res || !res.ok) throw new Error(res?.error || "Kon data niet laden");
 
       allRows = res.rows || [];
       expanded.clear();
+      currentUserName = (res.user && res.user.name) ? res.user.name : "";
 
-      // ✅ geen role/EMPLOYEE tekst: alleen items + naam
-      const name = (res.user && res.user.name) ? res.user.name : "";
-      meta.textContent = `${allRows.length} items${name ? " • " + name : ""}`;
+      meta.textContent = `${allRows.length} items${currentUserName ? " • " + currentUserName : ""}`;
+      searchInput.disabled = false;
 
-      searchInput.disabled=false;
-      render();
+      renderProducts();
     }
 
-    function render(){
-      const q=searchInput.value.trim().toLowerCase();
-      const rows=!q?allRows:allRows.filter(r=>((r.product||"").toLowerCase().includes(q)||(r.ean||"").toLowerCase().includes(q)));
-      tbody.innerHTML="";
+    function renderProducts(){
+      const q = searchInput.value.trim().toLowerCase();
+      const rows = !q ? allRows : allRows.filter(r => {
+        const p = (r.product || "").toLowerCase();
+        const e = (r.ean || "").toLowerCase();
+        return p.includes(q) || e.includes(q);
+      });
+
+      tbody.innerHTML = "";
       if(!rows.length){
-        tbody.innerHTML=`<tr><td colspan="5" class="muted">Geen resultaten.</td></tr>`;
+        tbody.innerHTML = `<tr><td colspan="6" class="small">Geen resultaten.</td></tr>`;
         return;
       }
 
       rows.forEach((r,i)=>{
-        const id=`${r.ean}__${i}`;
-        const tr=document.createElement("tr");
+        const id = `${r.ean}__${i}`;
 
-        const tdP=document.createElement("td"); tdP.className="plus";
-        const b=document.createElement("button");
-        b.textContent=expanded.has(id)?"−":"+";
-        b.onclick=()=>{expanded.has(id)?expanded.delete(id):expanded.add(id);render();};
-        tdP.appendChild(b);
+        const yearLabel = r.supplierYear ? ` (${r.supplierYear})` : "";
+
+        const tr = document.createElement("tr");
+
+        // expand button
+        const tdP = document.createElement("td");
+        tdP.className = "plus";
+        const btn = document.createElement("button");
+        btn.className = "btn";
+        btn.style.padding = "6px 10px";
+        btn.textContent = expanded.has(id) ? "−" : "+";
+        btn.onclick = () => { expanded.has(id) ? expanded.delete(id) : expanded.add(id); renderProducts(); };
+        tdP.appendChild(btn);
 
         tr.appendChild(tdP);
-        tr.appendChild(Object.assign(document.createElement("td"),{textContent:r.product||""}));
-        tr.appendChild(Object.assign(document.createElement("td"),{textContent:fmtPrice(r.retailPrice)}));
-        tr.appendChild(Object.assign(document.createElement("td"),{textContent:fmtVal(r.surfcenterStock)}));
-        tr.appendChild(Object.assign(document.createElement("td"),{textContent:fmtVal(r.dropshipmentStock)}));
+        tr.appendChild(Object.assign(document.createElement("td"), { textContent: r.product || "" }));
+        tr.appendChild(Object.assign(document.createElement("td"), { textContent: fmtPrice(r.retailPrice) }));
+        tr.appendChild(Object.assign(document.createElement("td"), { textContent: fmtVal(r.surfcenterStock) }));
+        tr.appendChild(Object.assign(document.createElement("td"), { textContent: fmtVal(r.dropshipmentStock) }));
+
+        const tdAdd = document.createElement("td");
+        const addBtn = document.createElement("button");
+        addBtn.className = "btn btnPrimary";
+        addBtn.textContent = "Add";
+        addBtn.onclick = () => addToCart({ ean: r.ean, product: r.product, retailPrice: r.retailPrice });
+        tdAdd.appendChild(addBtn);
+        tr.appendChild(tdAdd);
 
         tbody.appendChild(tr);
 
         if(expanded.has(id)){
-          const yearLabel = r.supplierYear ? ` (${r.supplierYear})` : "";
-          const tr2=document.createElement("tr"); tr2.className="detailsRow";
-          const td=document.createElement("td"); td.colSpan=5;
-          td.innerHTML=`<div style="display:flex;gap:18px;flex-wrap:wrap;">
-            <div><strong>EAN:</strong> ${esc(fmtVal(r.ean))}${esc(yearLabel)}</div>
-            <div><strong>Purchase price:</strong> ${esc(fmtPrice(r.purchasePrice))}</div>
-          </div>`;
+          const tr2 = document.createElement("tr");
+          tr2.className = "detailsRow";
+          const td = document.createElement("td");
+          td.colSpan = 6;
+          td.innerHTML = `
+            <div style="display:flex;gap:18px;flex-wrap:wrap;">
+              <div><strong>EAN:</strong> ${esc(fmtVal(r.ean))}${esc(yearLabel)}</div>
+              <div><strong>Purchase price:</strong> ${esc(fmtPrice(r.purchasePrice))}</div>
+            </div>`;
           tr2.appendChild(td);
           tbody.appendChild(tr2);
         }
       });
     }
-    searchInput.addEventListener("input",render);
 
-    // Key prompt (werkt simpel; later kunnen we weer login scherm doen)
-    (async function(){
-      let key=localStorage.getItem("employeeKey")||"";
-      if(!key){
-        key=prompt("Employee KEY:");
-        if(!key){ meta.textContent="Geen key ingevuld."; return; }
-        localStorage.setItem("employeeKey", key.trim());
-        key = key.trim();
+    searchInput.addEventListener("input", renderProducts);
+
+    // ===== Orders (Leads) =====
+    async function loadOrders(){
+      ordersTbody.innerHTML = `<tr><td colspan="9" class="small">Leads laden…</td></tr>`;
+      const res = await jsonp(`${APPS_SCRIPT_WEBAPP_URL}?action=orders&key=${encodeURIComponent(currentKey)}`);
+      if(!res || !res.ok){
+        ordersTbody.innerHTML = `<tr><td colspan="9" class="small">Fout: ${esc(res?.error || "Kon leads niet laden")}</td></tr>`;
+        return;
       }
-      try{ await loadData(key); }
-      catch(e){
-        err.textContent="Fout bij laden: "+e.message;
-        meta.textContent="Data laden mislukt.";
+
+      const orders = res.orders || [];
+      if(!orders.length){
+        ordersTbody.innerHTML = `<tr><td colspan="9" class="small">Nog geen leads.</td></tr>`;
+        return;
+      }
+
+      ordersTbody.innerHTML = orders.map(o => `
+        <tr>
+          <td>${esc(o.employee || "")}</td>
+          <td>${esc(o.ean || "")}</td>
+          <td>${esc(o.product || "")}</td>
+          <td>${esc(fmtPrice(o.retailPrice))}</td>
+          <td>${esc(o.customerName || "")}</td>
+          <td>${esc(o.contact1 || "")}</td>
+          <td>${esc(o.contact2 || "")}</td>
+          <td>${esc(o.note || "")}</td>
+          <td>${esc(o.sale || "")}</td>
+        </tr>
+      `).join("");
+    }
+
+    refreshOrdersBtn.onclick = loadOrders;
+
+    // ===== Submit lead =====
+    saveLeadBtn.onclick = async () => {
+      cartErr.textContent = "";
+
+      const name = custName.value.trim();
+      const c1 = contact1.value.trim();
+      const c2 = contact2.value.trim();
+      const n = note.value.trim();
+
+      if(!name){ cartErr.textContent = "Naam is verplicht."; return; }
+      if(!c1 && !c2){ cartErr.textContent = "Minimaal 1 contactveld is verplicht."; return; }
+      if(!cart.length){ cartErr.textContent = "Winkelmandje is leeg."; return; }
+
+      const payload = {
+        customerName: name,
+        contact1: c1,
+        contact2: c2,
+        note: n,
+        items: cart
+      };
+
+      // JSONP submit (payload in URL)
+      const url = `${APPS_SCRIPT_WEBAPP_URL}?action=submitLead&key=${encodeURIComponent(currentKey)}&payload=${encodeURIComponent(JSON.stringify(payload))}`;
+
+      saveLeadBtn.disabled = true;
+      saveLeadBtn.textContent = "Opslaan…";
+
+      try{
+        const res = await jsonp(url);
+        if(!res || !res.ok) throw new Error(res?.error || "Opslaan mislukt");
+
+        // reset
+        cart = [];
+        setCartButton();
+        renderCart();
+        custName.value = "";
+        contact1.value = "";
+        contact2.value = "";
+        note.value = "";
+
+        closeCart();
+        await loadOrders();
+      } catch(e){
+        cartErr.textContent = "Fout bij opslaan: " + e.message;
+      } finally {
+        saveLeadBtn.disabled = false;
+        saveLeadBtn.textContent = "Opslaan";
+      }
+    };
+
+    // ===== Boot =====
+    (async function(){
+      currentKey = localStorage.getItem("employeeKey") || "";
+      if(!currentKey){
+        currentKey = prompt("Employee KEY:");
+        if(!currentKey){ meta.textContent = "Geen key ingevuld."; return; }
+        currentKey = currentKey.trim();
+        localStorage.setItem("employeeKey", currentKey);
+      }
+
+      setCartButton();
+
+      try{
+        await loadProducts();
+        await loadOrders();
+      } catch(e){
+        err.textContent = "Fout bij laden: " + e.message;
+        meta.textContent = "Data laden mislukt.";
       }
     })();
   </script>
