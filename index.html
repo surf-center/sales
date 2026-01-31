@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>Sales Portal</title>
+  <title>Sales</title>
 
   <!-- Poppins -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -12,10 +12,11 @@
 
   <style>
     :root {
-      --border:#e5e5e5;
+      --border:#e5e7eb;
       --muted:#6b7280;
       --bg:#ffffff;
-      --soft:#f8fafc;
+      --soft:#f9fafb;
+      --accent:#111827;
     }
 
     body {
@@ -26,43 +27,53 @@
       color: #111;
     }
 
-    h2 { font-weight: 700; margin: 0; }
-    .muted { color: var(--muted); font-size: 14px; font-weight: 300; }
+    .wrap {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 32px 20px 80px;
+      text-align: center;
+    }
 
-    .wrap { max-width: 1200px; margin: 0 auto; padding: 24px; }
+    /* Logo */
+    .logo {
+      height: 56px;
+      margin: 20px auto 18px;
+      display: block;
+    }
+
+    /* Search */
+    .searchWrap {
+      display: flex;
+      justify-content: center;
+      margin-bottom: 22px;
+    }
+
+    .searchWrap input {
+      width: min(420px, 90%);
+      padding: 12px 16px;
+      border-radius: 14px;
+      border: 1px solid var(--border);
+      font-family: 'Poppins', sans-serif;
+      font-weight: 500;
+      font-size: 15px;
+    }
+
+    /* Card */
     .card {
       background: var(--bg);
       border: 1px solid var(--border);
-      border-radius: 16px;
-      padding: 16px;
+      border-radius: 18px;
+      padding: 14px;
+      text-align: left;
     }
-
-    .row { display:flex; gap:12px; align-items:center; flex-wrap:wrap; }
-    .topbar { display:flex; justify-content:space-between; align-items:center; }
-
-    .header { display:flex; align-items:center; gap:14px; }
-    .logo { height: 38px; }
-
-    input, button {
-      font-family: 'Poppins', sans-serif;
-      font-weight: 500;
-      padding: 10px 14px;
-      border-radius: 10px;
-      border: 1px solid #ddd;
-      background: #fff;
-    }
-
-    button:hover { background:#f3f4f6; cursor:pointer; }
 
     table {
       width: 100%;
       border-collapse: collapse;
-      margin-top: 14px;
       font-size: 14px;
     }
 
     th {
-      text-align: left;
       padding: 10px;
       border-bottom: 1px solid #eee;
       font-weight: 500;
@@ -74,9 +85,35 @@
       font-weight: 300;
     }
 
-    .plus { width: 36px; text-align: center; }
+    .plus {
+      width: 36px;
+      text-align: center;
+    }
 
-    /* ---------- Modal ---------- */
+    /* Floating calculator button */
+    .calcFab {
+      position: fixed;
+      right: 20px;
+      bottom: 20px;
+      width: 56px;
+      height: 56px;
+      border-radius: 50%;
+      background: var(--accent);
+      color: #fff;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 22px;
+      cursor: pointer;
+      box-shadow: 0 10px 25px rgba(0,0,0,.25);
+      z-index: 9999;
+    }
+
+    .calcFab:hover {
+      transform: scale(1.05);
+    }
+
+    /* Calculator modal */
     .overlay {
       position: fixed;
       inset: 0;
@@ -84,61 +121,63 @@
       display: none;
       align-items: center;
       justify-content: center;
-      z-index: 9999;
+      z-index: 10000;
     }
-    .overlay.active { display:flex; }
+
+    .overlay.active { display: flex; }
 
     .modal {
       background:#fff;
       width: min(1100px, 95vw);
       height: min(720px, 90vh);
-      border-radius: 16px;
-      display:flex;
-      flex-direction: column;
+      border-radius: 18px;
       overflow: hidden;
+      display: flex;
+      flex-direction: column;
     }
 
     .modalHeader {
       padding: 10px 14px;
       border-bottom: 1px solid #eee;
-      display:flex;
+      display: flex;
       justify-content: space-between;
-      align-items:center;
+      align-items: center;
+      font-weight: 500;
     }
 
     .modal iframe {
-      flex:1;
-      border:0;
-      width:100%;
+      flex: 1;
+      border: 0;
+      width: 100%;
     }
+
+    button {
+      font-family: 'Poppins', sans-serif;
+      font-weight: 500;
+      padding: 8px 12px;
+      border-radius: 10px;
+      border: 1px solid var(--border);
+      background: #fff;
+      cursor: pointer;
+    }
+
+    button:hover { background:#f3f4f6; }
   </style>
 </head>
 
 <body>
+
 <div class="wrap">
+  <!-- LOGO -->
+  <img src="./assets/logo.png" alt="Logo" class="logo">
 
-  <!-- HEADER -->
+  <!-- SEARCH -->
+  <div class="searchWrap">
+    <input id="searchInput" placeholder="Zoek product of EAN…">
+  </div>
+
+  <!-- TABLE -->
   <div class="card">
-    <div class="topbar">
-      <div class="header">
-        <img src="./assets/logo.png" class="logo" alt="Surfcenter logo">
-        <div>
-          <h2>Sales Portal</h2>
-          <div id="userLine" class="muted"></div>
-        </div>
-      </div>
-
-      <div class="row">
-        <button id="calcBtn">Calculator</button>
-        <button id="logoutBtn">Logout</button>
-      </div>
-    </div>
-
-    <div class="row" style="margin-top:12px;">
-      <input id="searchInput" placeholder="Zoek product of EAN…" style="min-width:320px;">
-      <span id="meta" class="muted"></span>
-    </div>
-
     <table>
       <thead>
         <tr>
@@ -150,19 +189,26 @@
         </tr>
       </thead>
       <tbody id="tbody">
-        <tr><td colspan="5" class="muted">Data laden…</td></tr>
+        <tr>
+          <td colspan="5" class="muted">Data laden…</td>
+        </tr>
       </tbody>
     </table>
   </div>
+</div>
+
+<!-- CALCULATOR FLOATING BUTTON -->
+<div class="calcFab" id="calcBtn" title="Calculator">
+  🧮
 </div>
 
 <!-- CALCULATOR MODAL -->
 <div id="calcOverlay" class="overlay">
   <div class="modal">
     <div class="modalHeader">
-      <strong>Marge calculator</strong>
-      <div class="row">
-        <button id="calcOpenNew">Open nieuw tab</button>
+      <span>Marge calculator</span>
+      <div>
+        <button id="calcOpenNew">Nieuw tab</button>
         <button id="calcClose">Sluiten</button>
       </div>
     </div>
@@ -174,15 +220,18 @@
   const APPS_SCRIPT_WEBAPP_URL =
     "https://script.google.com/macros/s/AKfycbyqzsvu-EaeJCLbUN3IZ6nxhXmi67SYM7sh15fJjmPtB6rvAJBn609IkpnDa7SFwc-QMg/exec";
 
-  // --- Calculator modal ---
+  /* Calculator modal logic */
   const overlay = document.getElementById("calcOverlay");
   document.getElementById("calcBtn").onclick = () => overlay.classList.add("active");
   document.getElementById("calcClose").onclick = () => overlay.classList.remove("active");
   document.getElementById("calcOpenNew").onclick = () =>
     window.open("https://surf-center.github.io/calculator/", "_blank", "noopener");
-  overlay.addEventListener("click", e => { if (e.target === overlay) overlay.classList.remove("active"); });
+  overlay.addEventListener("click", e => {
+    if (e.target === overlay) overlay.classList.remove("active");
+  });
 
-  // (Portal data JS blijft zoals je nu al gebruikt)
+  /* (Je bestaande data / search JS kan hier direct onder blijven) */
 </script>
+
 </body>
 </html>
