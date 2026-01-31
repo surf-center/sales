@@ -1,0 +1,260 @@
+<!doctype html>
+<html lang="nl">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Sales Portal</title>
+  <style>
+    body { font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif; margin: 24px; }
+    .card { border: 1px solid #e5e5e5; border-radius: 12px; padding: 16px; max-width: 1100px; }
+    .row { display: flex; gap: 12px; flex-wrap: wrap; align-items: center; }
+    input { padding: 10px 12px; border-radius: 10px; border: 1px solid #ddd; min-width: 220px; }
+    button { padding: 10px 12px; border-radius: 10px; border: 1px solid #ddd; background: #fff; cursor: pointer; }
+    button:hover { background: #f7f7f7; }
+    .muted { color: #666; font-size: 14px; }
+    .error { color: #b00020; margin-top: 10px; }
+    table { width: 100%; border-collapse: collapse; margin-top: 14px; }
+    th, td { border-bottom: 1px solid #eee; padding: 10px 8px; text-align: left; vertical-align: top; }
+    th { font-size: 13px; color: #444; }
+    .plus { width: 34px; text-align: center; }
+    .plus button { width: 30px; height: 30px; border-radius: 10px; }
+    .details { background: #fafafa; }
+    .pill { display: inline-block; padding: 3px 10px; border: 1px solid #ddd; border-radius: 999px; font-size: 12px; }
+    .topbar { display:flex; justify-content: space-between; align-items:center; gap:12px; flex-wrap:wrap; }
+  </style>
+</head>
+<body>
+  <div class="card">
+    <div class="topbar">
+      <div>
+        <h2 style="margin:0 0 4px 0;">Sales Portal</h2>
+        <div id="userLine" class="muted">Niet ingelogd</div>
+      </div>
+      <div class="row">
+        <input id="keyInput" placeholder="Employee KEY" autocomplete="off" />
+        <button id="loginBtn">Login</button>
+        <button id="logoutBtn" style="display:none;">Logout</button>
+      </div>
+    </div>
+
+    <div class="row" style="margin-top:12px;">
+      <input id="searchInput" placeholder="Zoek op product of EAN…" style="min-width:320px;" disabled />
+      <span id="meta" class="muted"></span>
+    </div>
+
+    <div id="error" class="error"></div>
+
+    <table id="table" style="display:none;">
+      <thead>
+        <tr>
+          <th class="plus"></th>
+          <th>Product</th>
+          <th>Retail price</th>
+          <th>Surfcenter Stock</th>
+          <th>Dropshipment Stock</th>
+        </tr>
+      </thead>
+      <tbody id="tbody"></tbody>
+    </table>
+  </div>
+
+  <script>
+    // 1) Set jouw Apps Script Web App URL hier:
+    const APPS_SCRIPT_WEBAPP_URL = "PASTE_YOUR_WEBAPP_URL_HERE";
+
+    let allRows = [];
+    let expanded = new Set();
+    let currentKey = localStorage.getItem("employeeKey") || "";
+
+    const keyInput = document.getElementById("keyInput");
+    const loginBtn = document.getElementById("loginBtn");
+    const logoutBtn = document.getElementById("logoutBtn");
+    const searchInput = document.getElementById("searchInput");
+    const tbody = document.getElementById("tbody");
+    const table = document.getElementById("table");
+    const errorEl = document.getElementById("error");
+    const userLine = document.getElementById("userLine");
+    const meta = document.getElementById("meta");
+
+    keyInput.value = currentKey;
+
+    loginBtn.addEventListener("click", () => {
+      const key = keyInput.value.trim();
+      if (!key) return showError("Vul een Employee KEY in.");
+      localStorage.setItem("employeeKey", key);
+      currentKey = key;
+      loadData();
+    });
+
+    logoutBtn.addEventListener("click", () => {
+      localStorage.removeItem("employeeKey");
+      currentKey = "";
+      allRows = [];
+      expanded.clear();
+      keyInput.value = "";
+      table.style.display = "none";
+      searchInput.value = "";
+      searchInput.disabled = true;
+      logoutBtn.style.display = "none";
+      userLine.textContent = "Niet ingelogd";
+      meta.textContent = "";
+      showError("");
+    });
+
+    searchInput.addEventListener("input", () => render());
+
+    function showError(msg) {
+      errorEl.textContent = msg || "";
+    }
+
+    function fmtPrice(v) {
+      if (v === null || v === undefined || v === "") return "";
+      const num = Number(String(v).replace(",", "."));
+      if (Number.isFinite(num)) return "€ " + num.toFixed(2);
+      return String(v);
+    }
+
+    function fmtVal(v) {
+      if (v === null || v === undefined) return "";
+      return String(v);
+    }
+
+    // JSONP loader
+    function jsonp(url, callbackName) {
+      return new Promise((resolve, reject) => {
+        const script = document.createElement("script");
+        const cb = callbackName || ("cb_" + Math.random().toString(36).slice(2));
+        const timeout = setTimeout(() => {
+          cleanup();
+          reject(new Error("Timeout while loading data"));
+        }, 15000);
+
+        window[cb] = (data) => {
+          cleanup();
+          resolve(data);
+        };
+
+        function cleanup() {
+          clearTimeout(timeout);
+          delete window[cb];
+          script.remove();
+        }
+
+        script.onerror = () => {
+          cleanup();
+          reject(new Error("Failed to load script"));
+        };
+
+        const sep = url.includes("?") ? "&" : "?";
+        script.src = url + sep + "callback=" + encodeURIComponent(cb);
+        document.body.appendChild(script);
+      });
+    }
+
+    async function loadData() {
+      showError("");
+      table.style.display = "none";
+      searchInput.disabled = true;
+      tbody.innerHTML = "";
+      meta.textContent = "Laden…";
+
+      try {
+        const url = `${APPS_SCRIPT_WEBAPP_URL}?action=data&key=${encodeURIComponent(currentKey)}`;
+        const res = await jsonp(url);
+
+        if (!res || !res.ok) {
+          meta.textContent = "";
+          showError(res?.error || "Kon data niet laden.");
+          return;
+        }
+
+        allRows = res.rows || [];
+        expanded.clear();
+
+        userLine.innerHTML = `Ingelogd: <strong>${(res.user?.name || "Medewerker")}</strong> <span class="pill">${res.user?.role || "EMPLOYEE"}</span>`;
+        meta.textContent = `${allRows.length} items • Tabs: ${(res.supplierSheets || []).length}`;
+        logoutBtn.style.display = "inline-block";
+        searchInput.disabled = false;
+
+        render();
+      } catch (err) {
+        meta.textContent = "";
+        showError("Fout bij laden: " + err.message);
+      }
+    }
+
+    function render() {
+      const q = searchInput.value.trim().toLowerCase();
+      const rows = !q ? allRows : allRows.filter(r => {
+        const product = (r.product || "").toLowerCase();
+        const ean = (r.ean || "").toLowerCase();
+        return product.includes(q) || ean.includes(q);
+      });
+
+      tbody.innerHTML = "";
+
+      rows.forEach((r, i) => {
+        const id = `${r.ean}__${i}`;
+
+        // main row
+        const tr = document.createElement("tr");
+
+        const tdPlus = document.createElement("td");
+        tdPlus.className = "plus";
+        const btn = document.createElement("button");
+        btn.textContent = expanded.has(id) ? "−" : "+";
+        btn.addEventListener("click", () => {
+          if (expanded.has(id)) expanded.delete(id);
+          else expanded.add(id);
+          render();
+        });
+        tdPlus.appendChild(btn);
+
+        tr.appendChild(tdPlus);
+        tr.appendChild(tdText(r.product));
+        tr.appendChild(tdText(fmtPrice(r.retailPrice)));
+        tr.appendChild(tdText(fmtVal(r.surfcenterStock)));
+        tr.appendChild(tdText(fmtVal(r.dropshipmentStock)));
+
+        tbody.appendChild(tr);
+
+        // details row
+        if (expanded.has(id)) {
+          const tr2 = document.createElement("tr");
+          tr2.className = "details";
+          const td = document.createElement("td");
+          td.colSpan = 5;
+          td.innerHTML = `
+            <div class="row" style="justify-content:space-between;">
+              <div><strong>EAN:</strong> ${escapeHtml(fmtVal(r.ean))}</div>
+              <div><strong>Purchase price:</strong> ${escapeHtml(fmtPrice(r.purchasePrice))}</div>
+            </div>
+          `;
+          tr2.appendChild(td);
+          tbody.appendChild(tr2);
+        }
+      });
+
+      table.style.display = "table";
+    }
+
+    function tdText(text) {
+      const td = document.createElement("td");
+      td.textContent = (text ?? "");
+      return td;
+    }
+
+    function escapeHtml(s) {
+      return String(s)
+        .replaceAll("&", "&amp;")
+        .replaceAll("<", "&lt;")
+        .replaceAll(">", "&gt;")
+        .replaceAll('"', "&quot;")
+        .replaceAll("'", "&#039;");
+    }
+
+    // Auto-load if key exists
+    if (currentKey) loadData();
+  </script>
+</body>
+</html>
