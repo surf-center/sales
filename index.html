@@ -10,41 +10,63 @@
   <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;500;700&display=swap" rel="stylesheet">
 
   <style>
-    :root{ --border:#e5e7eb; --muted:#6b7280; --bg:#fff; --soft:#f9fafb; --accent:#111827; }
+    :root{ --border:#e5e7eb; --muted:#6b7280; --bg:#fff; --soft:#f9fafb; --accent:#111827; --ok:#0f7b2f; --bad:#b00020; }
+    *{ box-sizing:border-box; }
     body{ margin:0; font-family:'Poppins',system-ui,sans-serif; font-weight:300; background:#fcfcfc; color:#111; }
-    .wrap{ max-width:1200px; margin:0 auto; padding:28px 16px 92px; text-align:center; }
+
+    .wrap{ max-width:1200px; margin:0 auto; padding:18px 16px 92px; }
+    .centerWrap{ max-width:560px; margin:0 auto; padding:28px 16px 28px; text-align:center; }
 
     .logo{
       display:block; width:min(560px,100%); max-width:min(560px,100%);
-      height:auto; max-height:70px; object-fit:contain; margin:18px auto 14px;
+      height:auto; max-height:70px; object-fit:contain; margin:18px auto 16px;
     }
     @media (max-width:480px){ .logo{ max-height:56px; margin:14px auto 12px; } }
 
-    .searchWrap{ display:flex; justify-content:center; margin-bottom:10px; }
-    .searchWrap input{
-      width:min(560px,100%); padding:12px 16px; border-radius:14px; border:1px solid var(--border);
-      font-family:'Poppins',sans-serif; font-weight:500; font-size:15px; box-sizing:border-box;
+    /* Topbar */
+    .topbar{
+      display:flex; justify-content:space-between; align-items:center; gap:10px;
+      padding:8px 0 14px;
     }
-
-    .meta{ color:var(--muted); font-size:13px; font-weight:300; margin:0 0 12px; min-height:18px; }
-    .error{ color:#b00020; font-size:13px; margin:10px 0 0; text-align:left; }
-
-    .card{ background:var(--bg); border:1px solid var(--border); border-radius:18px; padding:12px; text-align:left; }
-    .tableWrap{ overflow-x:auto; -webkit-overflow-scrolling:touch; }
-    table{ width:100%; border-collapse:collapse; font-size:14px; min-width:820px; }
-    th{ padding:10px; border-bottom:1px solid #eee; font-weight:500; text-align:left; white-space:nowrap; }
-    td{ padding:10px; border-bottom:1px solid #f1f1f1; font-weight:300; vertical-align:top; }
-    .detailsRow td{ background:var(--soft); border-bottom:1px solid #eaeaea; }
+    .topbar .spacer{ width:1px; }
 
     .btn{
       font-family:'Poppins',sans-serif; font-weight:500;
-      padding:8px 12px; border-radius:10px; border:1px solid var(--border);
+      padding:8px 12px; border-radius:12px; border:1px solid var(--border);
       background:#fff; cursor:pointer; white-space:nowrap;
     }
     .btn:hover{ background:#f3f4f6; }
     .btnPrimary{ background:var(--accent); color:#fff; border-color:var(--accent); }
     .btnPrimary:hover{ opacity:.92; background:var(--accent); }
 
+    /* Login */
+    #loginView{ display:none; }
+    #appView{ display:none; }
+    .loginCard{
+      background:var(--bg); border:1px solid var(--border); border-radius:18px;
+      padding:16px; text-align:left;
+    }
+    .input{
+      width:100%; padding:12px 14px; border-radius:14px; border:1px solid var(--border);
+      font-family:'Poppins',sans-serif; font-weight:500; font-size:15px;
+    }
+    .muted{ color:var(--muted); font-size:13px; }
+    .err{ color:var(--bad); font-size:13px; margin-top:10px; }
+    .ok{ color:var(--ok); font-size:13px; margin-top:10px; }
+
+    /* Search */
+    .searchWrap{ display:flex; justify-content:center; margin:6px 0 12px; }
+    .searchWrap input{ width:min(560px,100%); }
+
+    /* Cards/tables */
+    .card{ background:var(--bg); border:1px solid var(--border); border-radius:18px; padding:12px; }
+    .tableWrap{ overflow-x:auto; -webkit-overflow-scrolling:touch; }
+    table{ width:100%; border-collapse:collapse; font-size:14px; min-width:820px; }
+    th{ padding:10px; border-bottom:1px solid #eee; font-weight:500; text-align:left; white-space:nowrap; }
+    td{ padding:10px; border-bottom:1px solid #f1f1f1; font-weight:300; vertical-align:top; }
+    .detailsRow td{ background:var(--soft); border-bottom:1px solid #eaeaea; }
+
+    /* Floating buttons */
     .calcFab{
       position:fixed; right:18px; bottom:18px; width:56px; height:56px; border-radius:50%;
       background:var(--accent); color:#fff; display:flex; align-items:center; justify-content:center;
@@ -67,6 +89,7 @@
       .calcFab{ right:14px; bottom:14px; width:54px; height:54px; }
     }
 
+    /* Modals */
     .overlay{ position:fixed; inset:0; background:rgba(0,0,0,.45); display:none; align-items:center; justify-content:center; z-index:10000; padding:14px; }
     .overlay.active{ display:flex; }
     .modal{ background:#fff; width:min(1100px,96vw); height:min(760px,92vh); border-radius:18px; overflow:hidden; display:flex; flex-direction:column; }
@@ -75,11 +98,11 @@
     .modalBody{ padding:14px; overflow:auto; }
     .modal iframe{ flex:1; border:0; width:100%; }
 
-    /* Form: stacked */
+    /* Lead form stacked */
     .formGrid{ display:grid; grid-template-columns:1fr; gap:12px; }
     .field label{ display:block; font-size:12px; color:var(--muted); margin:0 0 6px; font-weight:500; }
     .field input, .field textarea{
-      width:100%; box-sizing:border-box; padding:10px 12px; border-radius:12px; border:1px solid var(--border);
+      width:100%; padding:10px 12px; border-radius:12px; border:1px solid var(--border);
       font-family:'Poppins',sans-serif; font-weight:500; font-size:14px;
     }
     .field textarea{ min-height:80px; resize:vertical; font-weight:300; }
@@ -90,21 +113,60 @@
     .cartRow .left{ display:flex; flex-direction:column; gap:2px; }
     .small{ font-size:12px; color:var(--muted); }
 
-    /* ✅ never flash leads: hidden by default */
+    /* ✅ leads never visible in main UI */
     #leadsCard{ display:none; }
+
+    /* Success tick */
+    .tick{
+      display:inline-flex; align-items:center; gap:8px;
+      padding:10px 12px; border:1px solid rgba(15,123,47,.25);
+      background:rgba(15,123,47,.06);
+      border-radius:14px; color:var(--ok); font-weight:500;
+      margin-top:12px;
+    }
+    .tick .dot{
+      width:22px; height:22px; border-radius:50%;
+      display:inline-flex; align-items:center; justify-content:center;
+      background:var(--ok); color:#fff; font-weight:700;
+      line-height:1;
+    }
   </style>
 </head>
 
 <body>
-  <div class="wrap">
+
+  <!-- LOGIN VIEW -->
+  <div id="loginView" class="centerWrap">
+    <img src="./logo.png" alt="Logo" class="logo" onerror="this.style.display='none';">
+    <div class="loginCard">
+      <div style="font-weight:700; margin-bottom:8px;">Inloggen</div>
+      <div class="muted" style="margin-bottom:10px;">Vul je Employee KEY in om de portal te openen.</div>
+      <input id="loginKey" class="input" placeholder="Employee KEY">
+      <div style="display:flex; gap:10px; margin-top:12px;">
+        <button id="loginBtn" class="btn btnPrimary" style="flex:1;">Login</button>
+      </div>
+      <div id="loginErr" class="err"></div>
+    </div>
+  </div>
+
+  <!-- APP VIEW -->
+  <div id="appView" class="wrap">
+    <div class="topbar">
+      <div class="spacer"></div>
+      <div style="display:flex; gap:10px; align-items:center;">
+        <button id="accountBtn" class="btn">Account</button>
+        <button id="logoutBtn" class="btn">Log uit</button>
+      </div>
+    </div>
+
     <img src="./logo.png" alt="Logo" class="logo" onerror="this.style.display='none';">
 
     <div class="searchWrap">
-      <input id="searchInput" placeholder="Zoek product of EAN…" disabled>
+      <input id="searchInput" class="input" placeholder="Zoek product of EAN…" disabled>
     </div>
 
-    <div id="meta" class="meta"></div>
-    <div id="err" class="error"></div>
+    <div id="meta" class="muted" style="min-height:18px; margin:0 0 12px;"></div>
+    <div id="err" class="err"></div>
 
     <div class="card">
       <div class="tableWrap">
@@ -120,41 +182,24 @@
             </tr>
           </thead>
           <tbody id="tbody">
-            <tr><td colspan="6" class="small">Employee KEY nodig om data te laden…</td></tr>
+            <tr><td colspan="6" class="small">Laden…</td></tr>
           </tbody>
         </table>
       </div>
     </div>
 
-    <div id="leadsCard" class="card" style="margin-top:16px;">
-      <div style="display:flex; justify-content:space-between; align-items:center; gap:12px; flex-wrap:wrap;">
-        <div style="font-weight:700;">Leads</div>
-        <button id="refreshOrdersBtn" class="btn">Refresh</button>
-      </div>
-      <div class="tableWrap">
-        <table style="min-width:980px;">
-          <thead>
-            <tr>
-              <th>Employee</th><th>EAN</th><th>Product</th><th>Retail price</th>
-              <th>Name</th><th>Contact 1</th><th>Contact 2</th><th>Note</th><th>Sale</th>
-            </tr>
-          </thead>
-          <tbody id="ordersTbody">
-            <tr><td colspan="9" class="small">Leads laden…</td></tr>
-          </tbody>
-        </table>
-      </div>
-    </div>
+    <!-- never shown in main view -->
+    <div id="leadsCard" class="card" style="margin-top:16px;"></div>
   </div>
 
   <!-- Floating CART -->
-  <div class="cartFab" id="cartBtn" title="Cart" aria-label="Open cart">
+  <div class="cartFab" id="cartBtn" title="Cart" aria-label="Open cart" style="display:none;">
     <span>Cart</span>
     <span class="badge" id="cartBadge">0</span>
   </div>
 
   <!-- Floating CALC -->
-  <div class="calcFab" id="calcBtn" title="Calculator" aria-label="Open calculator">
+  <div class="calcFab" id="calcBtn" title="Calculator" aria-label="Open calculator" style="display:none;">
     <span>%</span>
   </div>
 
@@ -172,7 +217,7 @@
     </div>
   </div>
 
-  <!-- Cart modal -->
+  <!-- Cart / Lead modal -->
   <div id="cartOverlay" class="overlay">
     <div class="modal">
       <div class="modalHeader">
@@ -209,15 +254,55 @@
           <button id="saveLeadBtn" class="btn btnPrimary">Opslaan</button>
         </div>
 
-        <div id="cartErr" class="error"></div>
+        <div id="cartErr" class="err"></div>
+        <div id="cartTick" style="display:none;" class="tick">
+          <span class="dot">✓</span>
+          <span>Lead opgeslagen</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Account modal -->
+  <div id="accountOverlay" class="overlay">
+    <div class="modal">
+      <div class="modalHeader">
+        <span id="accountTitle">Account</span>
+        <div class="actions">
+          <button id="accountClose" class="btn">Sluiten</button>
+        </div>
+      </div>
+      <div class="modalBody">
+        <div class="muted" id="accountSub" style="margin-bottom:10px;"></div>
+        <div class="card">
+          <div style="display:flex; justify-content:space-between; align-items:center; gap:12px; flex-wrap:wrap;">
+            <div style="font-weight:700;">Leads overzicht</div>
+            <button id="accountRefresh" class="btn">Refresh</button>
+          </div>
+          <div class="tableWrap" style="margin-top:8px;">
+            <table style="min-width:980px;">
+              <thead>
+                <tr>
+                  <th>Employee</th><th>EAN</th><th>Product</th><th>Retail price</th>
+                  <th>Name</th><th>Contact 1</th><th>Contact 2</th><th>Note</th><th>Sale</th>
+                </tr>
+              </thead>
+              <tbody id="accountOrdersTbody">
+                <tr><td colspan="9" class="small">Laden…</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+        <div id="accountErr" class="err"></div>
       </div>
     </div>
   </div>
 
   <script>
     const APPS_SCRIPT_WEBAPP_URL =
-      "https://script.google.com/macros/s/AKfycbybAocPalcrkpUuFBMbJwGEW8qSybNQ5dd4a2_uN0ywioJlqPAXCWLrf6mf2Z-SAgQNmA/exec";
+      "https://script.google.com/macros/s/AKfycbyqzsvu-EaeJCLbUN3IZ6nxhXmi67SYM7sh15fJjmPtB6rvAJBn609IkpnDa7SFwc-QMg/exec";
 
+    // JSONP
     function jsonp(url){
       return new Promise((resolve,reject)=>{
         const s=document.createElement("script");
@@ -231,6 +316,7 @@
       });
     }
 
+    // Helpers
     function fmtPrice(v){
       if(v===null||v===undefined||v==="") return "";
       const n = Number(String(v).replace(",","."));
@@ -239,28 +325,46 @@
     const fmtVal = v => (v==null?"":String(v));
     const esc = s => String(s).replace(/[&<>"']/g,m=>({ "&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;","'":"&#039;" }[m]));
 
-    // Calculator
+    // Multi-word search: all tokens must match in (product + ean)
+    function matchesTokens(row, q){
+      const tokens = q.split(/\s+/).filter(Boolean);
+      if(!tokens.length) return true;
+      const hay = ((row.product||"") + " " + (row.ean||"")).toLowerCase();
+      return tokens.every(t => hay.includes(t));
+    }
+
+    // Views
+    const loginView = document.getElementById("loginView");
+    const appView = document.getElementById("appView");
+
+    const loginKey = document.getElementById("loginKey");
+    const loginBtn = document.getElementById("loginBtn");
+    const loginErr = document.getElementById("loginErr");
+
+    const logoutBtn = document.getElementById("logoutBtn");
+    const accountBtn = document.getElementById("accountBtn");
+
+    const searchInput = document.getElementById("searchInput");
+    const tbody = document.getElementById("tbody");
+    const meta = document.getElementById("meta");
+    const err = document.getElementById("err");
+
+    const cartBtn = document.getElementById("cartBtn");
+    const calcBtn = document.getElementById("calcBtn");
+
+    // Calculator modal
     const calcOverlay = document.getElementById("calcOverlay");
     document.getElementById("calcBtn").onclick = () => calcOverlay.classList.add("active");
     document.getElementById("calcClose").onclick = () => calcOverlay.classList.remove("active");
     document.getElementById("calcOpenNew").onclick = () => window.open("https://surf-center.github.io/calculator/","_blank","noopener");
     calcOverlay.addEventListener("click", e => { if(e.target===calcOverlay) calcOverlay.classList.remove("active"); });
 
-    // Elements
-    const searchInput = document.getElementById("searchInput");
-    const tbody = document.getElementById("tbody");
-    const meta = document.getElementById("meta");
-    const err = document.getElementById("err");
-
-    const leadsCard = document.getElementById("leadsCard");
-    const ordersTbody = document.getElementById("ordersTbody");
-    const refreshOrdersBtn = document.getElementById("refreshOrdersBtn");
-
-    const cartBtn = document.getElementById("cartBtn");
+    // Cart modal
     const cartOverlay = document.getElementById("cartOverlay");
     const cartClose = document.getElementById("cartClose");
     const cartListEl = document.getElementById("cartList");
     const cartErr = document.getElementById("cartErr");
+    const cartTick = document.getElementById("cartTick");
     const clearCartBtn = document.getElementById("clearCartBtn");
     const saveLeadBtn = document.getElementById("saveLeadBtn");
 
@@ -269,34 +373,78 @@
     const contact2 = document.getElementById("contact2");
     const note = document.getElementById("note");
 
+    // Account modal
+    const accountOverlay = document.getElementById("accountOverlay");
+    const accountClose = document.getElementById("accountClose");
+    const accountRefresh = document.getElementById("accountRefresh");
+    const accountTitle = document.getElementById("accountTitle");
+    const accountSub = document.getElementById("accountSub");
+    const accountOrdersTbody = document.getElementById("accountOrdersTbody");
+    const accountErr = document.getElementById("accountErr");
+
     // State
+    let currentKey = "";
+    let currentUserName = "";
+    let isAdmin = false;
+
     let allRows = [];
     let expanded = new Set();
     let cart = [];
-    let currentKey = "";
-    let isAdmin = false;
 
-    function setCartButton(){
+    function setCartBadge(){
       document.getElementById("cartBadge").textContent = String(cart.length);
     }
 
-    function openCart(){ cartErr.textContent=""; renderCart(); cartOverlay.classList.add("active"); }
-    function closeCart(){ cartOverlay.classList.remove("active"); }
+    function showLogin(){
+      loginView.style.display = "";
+      appView.style.display = "none";
+      cartBtn.style.display = "none";
+      calcBtn.style.display = "none";
+      loginErr.textContent = "";
+      loginKey.value = "";
+      loginKey.focus();
+    }
+
+    function showApp(){
+      loginView.style.display = "none";
+      appView.style.display = "";
+      cartBtn.style.display = "";
+      calcBtn.style.display = "";
+    }
+
+    function logout(){
+      localStorage.removeItem("employeeKey");
+      currentKey = "";
+      showLogin();
+    }
+
+    logoutBtn.onclick = logout;
+
+    // Cart open/close
+    function openCart(){
+      cartErr.textContent = "";
+      cartTick.style.display = "none";
+      renderCart();
+      cartOverlay.classList.add("active");
+    }
+    function closeCart(){
+      cartOverlay.classList.remove("active");
+    }
     cartBtn.onclick = openCart;
     cartClose.onclick = closeCart;
     cartOverlay.addEventListener("click", e => { if(e.target===cartOverlay) closeCart(); });
 
-    clearCartBtn.onclick = () => { cart=[]; setCartButton(); renderCart(); };
+    clearCartBtn.onclick = () => { cart=[]; setCartBadge(); renderCart(); };
 
     function addToCart(item){
       if(cart.some(x => x.ean === item.ean)) return;
       cart.push({ ean:item.ean, product:item.product, retailPrice:item.retailPrice });
-      setCartButton();
+      setCartBadge();
     }
 
     function removeFromCart(ean){
       cart = cart.filter(x => x.ean !== ean);
-      setCartButton();
+      setCartBadge();
       renderCart();
     }
 
@@ -308,18 +456,62 @@
       cartListEl.innerHTML = cart.map(it => `
         <div class="cartRow">
           <div class="left">
-            <div style="font-weight:500;">${esc(it.product||"")}</div>
-            <div class="small">EAN: ${esc(it.ean||"")} • Retail: ${esc(fmtPrice(it.retailPrice))}</div>
+            <div style="font-weight:500;">${esc(it.product || "")}</div>
+            <div class="small">EAN: ${esc(it.ean || "")} • Retail: ${esc(fmtPrice(it.retailPrice))}</div>
           </div>
           <div><button class="btn" data-remove="${esc(it.ean)}">Verwijder</button></div>
         </div>
       `).join("");
-
       cartListEl.querySelectorAll("button[data-remove]").forEach(b=>{
         b.addEventListener("click", ()=> removeFromCart(b.getAttribute("data-remove")));
       });
     }
 
+    // Account modal open/close
+    function openAccount(){
+      accountErr.textContent = "";
+      accountOverlay.classList.add("active");
+      accountTitle.textContent = currentUserName ? currentUserName : "Account";
+      accountSub.textContent = isAdmin ? "Admin view: alle leads" : "Jouw leads";
+      loadAccountOrders();
+    }
+    function closeAccount(){ accountOverlay.classList.remove("active"); }
+    accountBtn.onclick = openAccount;
+    accountClose.onclick = closeAccount;
+    accountOverlay.addEventListener("click", e => { if(e.target===accountOverlay) closeAccount(); });
+    accountRefresh.onclick = openAccount;
+
+    async function loadAccountOrders(){
+      accountOrdersTbody.innerHTML = `<tr><td colspan="9" class="small">Laden…</td></tr>`;
+      const scope = isAdmin ? "all" : "mine";
+      try{
+        const res = await jsonp(`${APPS_SCRIPT_WEBAPP_URL}?action=orders&scope=${scope}&key=${encodeURIComponent(currentKey)}`);
+        if(!res || !res.ok) throw new Error(res?.error || "Kon leads niet laden");
+        const orders = Array.isArray(res.orders) ? res.orders : [];
+        if(!orders.length){
+          accountOrdersTbody.innerHTML = `<tr><td colspan="9" class="small">Geen leads.</td></tr>`;
+          return;
+        }
+        accountOrdersTbody.innerHTML = orders.map(o => `
+          <tr>
+            <td>${esc(o.employee||"")}</td>
+            <td>${esc(o.ean||"")}</td>
+            <td>${esc(o.product||"")}</td>
+            <td>${esc(fmtPrice(o.retailPrice))}</td>
+            <td>${esc(o.customerName||"")}</td>
+            <td>${esc(o.contact1||"")}</td>
+            <td>${esc(o.contact2||"")}</td>
+            <td>${esc(o.note||"")}</td>
+            <td>${esc(o.sale||"")}</td>
+          </tr>
+        `).join("");
+      }catch(e){
+        accountErr.textContent = e.message;
+        accountOrdersTbody.innerHTML = `<tr><td colspan="9" class="small">Fout.</td></tr>`;
+      }
+    }
+
+    // Products load
     async function loadProducts(){
       err.textContent = "";
       meta.textContent = "Laden…";
@@ -329,28 +521,20 @@
       if(!res || !res.ok) throw new Error(res?.error || "Kon data niet laden");
 
       isAdmin = !!res.isAdmin;
-      // ✅ no flash: card hidden by default; only show if admin
-      leadsCard.style.display = isAdmin ? "" : "none";
+      currentUserName = (res.user && res.user.name) ? res.user.name : "";
+      accountBtn.textContent = currentUserName ? currentUserName : "Account";
 
       allRows = Array.isArray(res.rows) ? res.rows : [];
       expanded.clear();
 
-      const name = (res.user && res.user.name) ? res.user.name : "";
-      meta.textContent = `${allRows.length} items${name ? " • " + name : ""}`;
-
+      meta.textContent = `${allRows.length} items`;
       searchInput.disabled = false;
       renderProducts();
-
-      if (isAdmin) await loadOrders();
     }
 
     function renderProducts(){
       const q = searchInput.value.trim().toLowerCase();
-      const rows = !q ? allRows : allRows.filter(r => {
-        const p=(r.product||"").toLowerCase();
-        const e=(r.ean||"").toLowerCase();
-        return p.includes(q) || e.includes(q);
-      });
+      const rows = !q ? allRows : allRows.filter(r => matchesTokens(r, q));
 
       tbody.innerHTML = "";
       if(!rows.length){
@@ -360,8 +544,6 @@
 
       rows.forEach((r,i)=>{
         const id = `${r.ean}__${i}`;
-        const yearLabel = r.supplierYear ? ` (${r.supplierYear})` : "";
-
         const tr = document.createElement("tr");
 
         const tdExpand = document.createElement("td");
@@ -393,48 +575,26 @@
           tr2.className = "detailsRow";
           const td = document.createElement("td");
           td.colSpan = 6;
+
           td.innerHTML = `
             <div style="display:flex;gap:18px;flex-wrap:wrap;">
-              <div><strong>EAN:</strong> ${esc(fmtVal(r.ean))}${esc(yearLabel)}</div>
+              <div><strong>Season:</strong> ${esc(r.season || "")}</div>
+              <div><strong>EAN:</strong> ${esc(r.ean || "")}</div>
               <div><strong>Purchase price:</strong> ${esc(fmtPrice(r.purchasePrice))}</div>
-            </div>`;
+            </div>
+          `;
           tr2.appendChild(td);
           tbody.appendChild(tr2);
         }
       });
     }
+
     searchInput.addEventListener("input", renderProducts);
 
-    async function loadOrders(){
-      ordersTbody.innerHTML = `<tr><td colspan="9" class="small">Leads laden…</td></tr>`;
-      const res = await jsonp(`${APPS_SCRIPT_WEBAPP_URL}?action=orders&key=${encodeURIComponent(currentKey)}`);
-      if(!res || !res.ok){
-        ordersTbody.innerHTML = `<tr><td colspan="9" class="small">Fout: ${esc(res?.error || "Kon leads niet laden")}</td></tr>`;
-        return;
-      }
-      const orders = Array.isArray(res.orders) ? res.orders : [];
-      if(!orders.length){
-        ordersTbody.innerHTML = `<tr><td colspan="9" class="small">Nog geen leads.</td></tr>`;
-        return;
-      }
-      ordersTbody.innerHTML = orders.map(o => `
-        <tr>
-          <td>${esc(o.employee||"")}</td>
-          <td>${esc(o.ean||"")}</td>
-          <td>${esc(o.product||"")}</td>
-          <td>${esc(fmtPrice(o.retailPrice))}</td>
-          <td>${esc(o.customerName||"")}</td>
-          <td>${esc(o.contact1||"")}</td>
-          <td>${esc(o.contact2||"")}</td>
-          <td>${esc(o.note||"")}</td>
-          <td>${esc(o.sale||"")}</td>
-        </tr>
-      `).join("");
-    }
-    refreshOrdersBtn.onclick = () => { if(isAdmin) loadOrders(); };
-
+    // Save lead
     saveLeadBtn.onclick = async () => {
       cartErr.textContent = "";
+      cartTick.style.display = "none";
 
       const name = custName.value.trim();
       const c1 = contact1.value.trim();
@@ -456,11 +616,14 @@
         if(!res || !res.ok) throw new Error(res?.error || "Opslaan mislukt");
 
         cart = [];
-        setCartButton();
+        setCartBadge();
         renderCart();
+
         custName.value=""; contact1.value=""; contact2.value=""; note.value="";
-        closeCart();
-        if(isAdmin) await loadOrders();
+
+        // ✅ show checkmark
+        cartTick.style.display = "";
+
       }catch(e){
         cartErr.textContent = "Fout bij opslaan: " + e.message;
       }finally{
@@ -469,25 +632,62 @@
       }
     };
 
-    (async function boot(){
-      currentKey = localStorage.getItem("employeeKey") || "";
-      if(!currentKey){
-        currentKey = prompt("Employee KEY:");
-        if(!currentKey){ meta.textContent="Geen key ingevuld."; return; }
-        currentKey = currentKey.trim();
-        localStorage.setItem("employeeKey", currentKey);
-      }
+    // Boot + Login
+    function showLoginOrApp(){
+      const stored = localStorage.getItem("employeeKey") || "";
+      if(!stored){ showLogin(); return; }
+      currentKey = stored.trim();
+      showApp();
+      cartBtn.style.display = "";
+      calcBtn.style.display = "";
+      setCartBadge();
+      loadProducts().catch(e=>{
+        err.textContent = e.message;
+        logout(); // fallback to login
+      });
+    }
 
-      setCartButton();
+    loginBtn.onclick = async () => {
+      loginErr.textContent = "";
+      const key = loginKey.value.trim();
+      if(!key){ loginErr.textContent = "Vul een key in."; return; }
 
+      // quick validate by calling data
+      loginBtn.disabled = true;
+      loginBtn.textContent = "Login…";
       try{
-        await loadProducts();
-      }catch(e){
-        err.textContent = "Fout bij laden: " + e.message;
-        meta.textContent = "Data laden mislukt.";
-        tbody.innerHTML = `<tr><td colspan="6" class="small">Fout bij laden.</td></tr>`;
+        const res = await jsonp(`${APPS_SCRIPT_WEBAPP_URL}?action=data&key=${encodeURIComponent(key)}`);
+        if(!res || !res.ok) throw new Error(res?.error || "Login mislukt");
+
+        localStorage.setItem("employeeKey", key);
+        currentKey = key;
+
+        showApp();
+        cartBtn.style.display = "";
+        calcBtn.style.display = "";
+        setCartBadge();
+
+        // set user state
+        isAdmin = !!res.isAdmin;
+        currentUserName = (res.user && res.user.name) ? res.user.name : "";
+        accountBtn.textContent = currentUserName ? currentUserName : "Account";
+
+        allRows = Array.isArray(res.rows) ? res.rows : [];
+        expanded.clear();
+        meta.textContent = `${allRows.length} items`;
+        searchInput.disabled = false;
+        renderProducts();
+
+      } catch(e){
+        loginErr.textContent = e.message;
+      } finally {
+        loginBtn.disabled = false;
+        loginBtn.textContent = "Login";
       }
-    })();
+    };
+
+    // init
+    showLoginOrApp();
   </script>
 </body>
 </html>
