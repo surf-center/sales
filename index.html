@@ -30,14 +30,14 @@
     .wrap{
       max-width:1200px;
       margin:0 auto;
-      padding:32px 20px 90px;
+      padding:28px 16px 92px;
       text-align:center;
     }
 
     /* LOGO */
     .logo{
       height:56px;
-      margin:20px auto 18px;
+      margin:18px auto 14px;
       display:block;
     }
 
@@ -45,41 +45,47 @@
     .searchWrap{
       display:flex;
       justify-content:center;
-      margin-bottom:18px;
-      gap:10px;
-      flex-wrap:wrap;
+      margin-bottom:12px;
     }
 
     .searchWrap input{
-      width:min(520px, 92vw);
+      width:min(560px, 100%);
       padding:12px 16px;
       border-radius:14px;
       border:1px solid var(--border);
       font-family:'Poppins', sans-serif;
       font-weight:500;
       font-size:15px;
+      box-sizing:border-box;
     }
 
     .meta{
       color:var(--muted);
       font-size:13px;
       font-weight:300;
-      margin-top:-6px;
-      margin-bottom:14px;
+      margin:0 0 12px;
+      text-align:center;
     }
 
     .card{
       background:var(--bg);
       border:1px solid var(--border);
       border-radius:18px;
-      padding:14px;
+      padding:12px;
       text-align:left;
+    }
+
+    /* Mobile-friendly table: allow horizontal scroll */
+    .tableWrap{
+      overflow-x:auto;
+      -webkit-overflow-scrolling:touch;
     }
 
     table{
       width:100%;
       border-collapse:collapse;
       font-size:14px;
+      min-width: 720px; /* forces scroll on small screens instead of squishing */
     }
 
     th{
@@ -87,6 +93,7 @@
       border-bottom:1px solid #eee;
       font-weight:500;
       text-align:left;
+      white-space:nowrap;
     }
 
     td{
@@ -117,11 +124,11 @@
     .muted{ color:var(--muted); font-weight:300; }
     .error{ color:#b00020; font-size:13px; margin:10px 0 0; text-align:left; }
 
-    /* FLOATING CALCULATOR BUTTON */
+    /* FLOATING CALCULATOR BUTTON (black with white % icon) */
     .calcFab{
       position:fixed;
-      right:20px;
-      bottom:20px;
+      right:18px;
+      bottom:18px;
       width:56px;
       height:56px;
       border-radius:50%;
@@ -135,8 +142,16 @@
       box-shadow:0 10px 25px rgba(0,0,0,.25);
       z-index:9999;
       user-select:none;
+      -webkit-tap-highlight-color: transparent;
     }
     .calcFab:hover{ transform:scale(1.05); }
+
+    .calcFab span{
+      font-weight:700;
+      font-size:22px;
+      line-height:1;
+      transform: translateY(-1px);
+    }
 
     /* CALCULATOR MODAL */
     .overlay{
@@ -147,14 +162,14 @@
       align-items:center;
       justify-content:center;
       z-index:10000;
-      padding:18px;
+      padding:14px;
     }
     .overlay.active{ display:flex; }
 
     .modal{
       background:#fff;
-      width:min(1100px, 95vw);
-      height:min(720px, 90vh);
+      width:min(1100px, 96vw);
+      height:min(720px, 92vh);
       border-radius:18px;
       overflow:hidden;
       display:flex;
@@ -190,6 +205,14 @@
     .modalHeader button:hover{ background:#f3f4f6; }
 
     .modal iframe{ flex:1; border:0; width:100%; }
+
+    /* Mobile tweaks */
+    @media (max-width: 480px){
+      .wrap{ padding:22px 12px 92px; }
+      .logo{ height:46px; margin:14px auto 12px; }
+      .card{ padding:10px; border-radius:16px; }
+      .calcFab{ width:54px; height:54px; right:14px; bottom:14px; }
+    }
   </style>
 </head>
 
@@ -203,30 +226,34 @@
       <input id="searchInput" placeholder="Zoek product of EAN…" disabled>
     </div>
 
-    <div id="meta" class="meta">Niet ingelogd / geen key</div>
+    <div id="meta" class="meta"></div>
     <div id="err" class="error"></div>
 
     <!-- TABLE -->
     <div class="card">
-      <table>
-        <thead>
-          <tr>
-            <th class="plus"></th>
-            <th>Product</th>
-            <th>Retail price</th>
-            <th>Surfcenter</th>
-            <th>Dropshipment</th>
-          </tr>
-        </thead>
-        <tbody id="tbody">
-          <tr><td colspan="5" class="muted">Login key nodig om data te laden…</td></tr>
-        </tbody>
-      </table>
+      <div class="tableWrap">
+        <table>
+          <thead>
+            <tr>
+              <th class="plus"></th>
+              <th>Product</th>
+              <th>Retail price</th>
+              <th>Surfcenter</th>
+              <th>Dropshipment</th>
+            </tr>
+          </thead>
+          <tbody id="tbody">
+            <tr><td colspan="5" class="muted">Login key nodig om data te laden…</td></tr>
+          </tbody>
+        </table>
+      </div>
     </div>
   </div>
 
   <!-- CALCULATOR BUTTON -->
-  <div class="calcFab" id="calcBtn" title="Calculator">🧮</div>
+  <div class="calcFab" id="calcBtn" title="Calculator" aria-label="Open calculator">
+    <span>%</span>
+  </div>
 
   <!-- CALCULATOR MODAL -->
   <div id="calcOverlay" class="overlay">
@@ -238,7 +265,7 @@
           <button id="calcClose">Sluiten</button>
         </div>
       </div>
-      <iframe src="https://surf-center.github.io/calculator/"></iframe>
+      <iframe src="https://surf-center.github.io/calculator/" title="Calculator"></iframe>
     </div>
   </div>
 
@@ -294,7 +321,11 @@
       if(!res||!res.ok) throw new Error(res?.error||"Kon data niet laden");
       allRows=res.rows||[];
       expanded.clear();
-      meta.textContent=`${allRows.length} items • ${res.user?.name||""} • ${res.user?.role||""}`;
+
+      // ✅ EMPLOYEE/role tekst weggehaald: alleen items + naam
+      const name = (res.user && res.user.name) ? res.user.name : "";
+      meta.textContent = `${allRows.length} items${name ? " • " + name : ""}`;
+
       searchInput.disabled=false;
       render();
     }
@@ -332,8 +363,17 @@
     // Simple key prompt
     (async function(){
       let key=localStorage.getItem("employeeKey")||"";
-      if(!key){ key=prompt("Employee KEY:"); if(!key){meta.textContent="Geen key ingevuld.";return;} localStorage.setItem("employeeKey",key.trim()); key=key.trim(); }
-      try{ await loadData(key); }catch(e){ err.textContent="Fout bij laden: "+e.message; meta.textContent="Data laden mislukt."; }
+      if(!key){
+        key=prompt("Employee KEY:");
+        if(!key){ meta.textContent="Geen key ingevuld."; return; }
+        localStorage.setItem("employeeKey", key.trim());
+        key = key.trim();
+      }
+      try{ await loadData(key); }
+      catch(e){
+        err.textContent="Fout bij laden: "+e.message;
+        meta.textContent="Data laden mislukt.";
+      }
     })();
   </script>
 </body>
