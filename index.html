@@ -1,395 +1,530 @@
-/** =========================
- *  CONFIG
- *  ========================= */
-const SPREADSHEET_ID  = "1AVU8dHTMSMuwmIdx4uV8MuEc-8S9B67MhK6ViuHPFf4";
+<!doctype html>
+<html lang="nl">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Sales</title>
 
-const SHEET_EMPLOYEE  = "Employee";
-const SHEET_MAGENTO   = "Magento";
-const SHEET_ORDERS    = "Order";
-const SUPPLIER_PREFIX = "Supplier_";
-const ADMIN_KEY       = "SC76";
+  <!-- Poppins -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;500;700&display=swap" rel="stylesheet">
 
-// ✅ Zet hier jouw email (vaste ontvanger)
-const LEAD_NOTIFY_EMAIL = "PLAK_HIER_JOUW_EMAIL@DOMAIN.COM";
-
-/** =========================
- *  WEB APP ENTRYPOINT
- * ========================= */
-function doGet(e) {
-  try {
-    e = e || { parameter: {} };
-    e.parameter = e.parameter || {};
-
-    const action   = String(e.parameter.action || "data").trim();
-    const key      = String(e.parameter.key || "").trim();
-    const callback = String(e.parameter.callback || "").trim();
-
-    let result;
-    if (action === "ping") result = ping_();
-    else if (action === "data") result = getPortalDataForKey_(key);
-    else if (action === "orders") result = getOrdersForKey_(key);           // ✅ admin-only
-    else if (action === "submitLead") result = submitLead_(key, e.parameter);
-    else result = { ok: false, error: "Unknown action: " + action };
-
-    return output_(result, callback);
-  } catch (err) {
-    const cb = (e && e.parameter && e.parameter.callback) ? String(e.parameter.callback).trim() : "";
-    return output_({ ok: false, error: String(err && err.message ? err.message : err) }, cb);
-  }
-}
-
-function ping_() {
-  const ss = SpreadsheetApp.openById(SPREADSHEET_ID);
-  return { ok: true, sheets: ss.getSheets().map(s => s.getName()) };
-}
-
-/** =========================
- *  AUTH
- * ========================= */
-function getUserByKey_(ss, key) {
-  const sh = ss.getSheetByName(SHEET_EMPLOYEE);
-  if (!sh) throw new Error(`Missing sheet: ${SHEET_EMPLOYEE}`);
-
-  const data = sh.getDataRange().getValues();
-  if (data.length < 2) return null;
-
-  const headers = normalizeHeaders_(data[0]);
-  const keyCol  = headers.indexOf("EMPLOYEE KEY");
-  const nameCol = headers.indexOf("EMPLOYEE");
-  const roleCol = headers.indexOf("ROLE"); // optional
-
-  if (keyCol === -1) throw new Error('Employee sheet must have header "Employee KEY"');
-
-  for (let i = 1; i < data.length; i++) {
-    const rowKey = safeText_(data[i][keyCol]).trim();
-    if (rowKey === key) {
-      return {
-        name: nameCol >= 0 ? safeText_(data[i][nameCol]).trim() : "",
-        role: roleCol >= 0 ? safeText_(data[i][roleCol]).trim() : "",
-        row: data[i],
-        headers
-      };
+  <style>
+    :root{
+      --border:#e5e7eb; --muted:#6b7280; --bg:#fff; --soft:#f9fafb; --accent:#111827;
     }
-  }
-  return null;
-}
+    body{ margin:0; font-family:'Poppins',system-ui,sans-serif; font-weight:300; background:#fcfcfc; color:#111; }
+    .wrap{ max-width:1200px; margin:0 auto; padding:28px 16px 92px; text-align:center; }
 
-function isAdmin_(key, user) {
-  return (key === ADMIN_KEY) || (String(user.role || "").toUpperCase() === "ADMIN");
-}
+    /* LOGO aligned with search width, always fully visible */
+    .logo{
+      display:block;
+      width:min(560px,100%);
+      max-width:min(560px,100%);
+      height:auto;
+      max-height:70px;
+      object-fit:contain;
+      margin:18px auto 14px;
+    }
+    @media (max-width:480px){ .logo{ max-height:56px; margin:14px auto 12px; } }
 
-/** =========================
- *  PRODUCTS ENDPOINT
- *  - dedupe by EAN, latest year wins
- * ========================= */
-function getPortalDataForKey_(key) {
-  if (!key) return { ok: false, error: "Missing key" };
+    .searchWrap{ display:flex; justify-content:center; margin-bottom:10px; }
+    .searchWrap input{
+      width:min(560px,100%); padding:12px 16px; border-radius:14px; border:1px solid var(--border);
+      font-family:'Poppins',sans-serif; font-weight:500; font-size:15px; box-sizing:border-box;
+    }
 
-  const ss = SpreadsheetApp.openById(SPREADSHEET_ID);
-  const user = getUserByKey_(ss, key);
-  if (!user) return { ok: false, error: "Invalid key" };
+    .meta{ color:var(--muted); font-size:13px; font-weight:300; margin:0 0 12px; min-height:18px; }
+    .error{ color:#b00020; font-size:13px; margin:10px 0 0; text-align:left; }
 
-  const admin = isAdmin_(key, user);
-  const magentoMap = buildMagentoStockMap_(ss);
-  const supplierSheets = getVisibleSupplierSheetNames_(ss, user, admin);
+    .card{ background:var(--bg); border:1px solid var(--border); border-radius:18px; padding:12px; text-align:left; }
+    .tableWrap{ overflow-x:auto; -webkit-overflow-scrolling:touch; }
+    table{ width:100%; border-collapse:collapse; font-size:14px; min-width:820px; }
+    th{ padding:10px; border-bottom:1px solid #eee; font-weight:500; text-align:left; white-space:nowrap; }
+    td{ padding:10px; border-bottom:1px solid #f1f1f1; font-weight:300; vertical-align:top; }
+    .detailsRow td{ background:var(--soft); border-bottom:1px solid #eaeaea; }
 
-  const bestByEan = {};
+    .btn{
+      font-family:'Poppins',sans-serif; font-weight:500;
+      padding:8px 12px; border-radius:10px; border:1px solid var(--border);
+      background:#fff; cursor:pointer; white-space:nowrap;
+    }
+    .btn:hover{ background:#f3f4f6; }
+    .btnPrimary{ background:var(--accent); color:#fff; border-color:var(--accent); }
+    .btnPrimary:hover{ opacity:.92; background:var(--accent); }
 
-  supplierSheets.forEach(sheetName => {
-    const sh = ss.getSheetByName(sheetName);
-    if (!sh) return;
+    /* Floating calculator button */
+    .calcFab{
+      position:fixed; right:18px; bottom:18px; width:56px; height:56px; border-radius:50%;
+      background:var(--accent); color:#fff; display:flex; align-items:center; justify-content:center;
+      cursor:pointer; box-shadow:0 10px 25px rgba(0,0,0,.25); z-index:9999; user-select:none;
+    }
+    .calcFab span{ font-weight:700; font-size:22px; transform:translateY(-1px); }
 
-    const sheetYear = extractYearFromSheetName_(sheetName);
-    const data = sh.getDataRange().getValues();
-    if (data.length < 2) return;
+    /* Floating cart button (left bottom) */
+    .cartFab{
+      position:fixed;
+      left:18px;
+      bottom:18px;
+      height:56px;
+      padding:0 16px;
+      border-radius:999px;
+      background: var(--accent);
+      color:#fff;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      gap:10px;
+      cursor:pointer;
+      box-shadow:0 10px 25px rgba(0,0,0,.25);
+      z-index:9999;
+      user-select:none;
+      -webkit-tap-highlight-color: transparent;
+      font-family:'Poppins', sans-serif;
+      font-weight:700;
+    }
+    .cartFab .badge{
+      display:inline-flex;
+      align-items:center;
+      justify-content:center;
+      min-width:28px;
+      height:28px;
+      padding:0 8px;
+      border-radius:999px;
+      background:#fff;
+      color:#111;
+      font-weight:700;
+      font-size:13px;
+    }
+    @media (max-width:480px){
+      .cartFab{ left:14px; bottom:14px; height:54px; padding:0 14px; }
+      .calcFab{ right:14px; bottom:14px; width:54px; height:54px; }
+    }
 
-    const headers = normalizeHeaders_(data[0]);
-    const idx = headerIndex_(headers, {
-      ean: "EAN",
-      product: "Product",
-      purchase: "Purchase price",
-      retail: "Retail price"
-    });
+    /* Modal base */
+    .overlay{ position:fixed; inset:0; background:rgba(0,0,0,.45); display:none; align-items:center; justify-content:center; z-index:10000; padding:14px; }
+    .overlay.active{ display:flex; }
+    .modal{ background:#fff; width:min(1100px,96vw); height:min(760px,92vh); border-radius:18px; overflow:hidden; display:flex; flex-direction:column; }
+    .modalHeader{ padding:10px 14px; border-bottom:1px solid #eee; display:flex; justify-content:space-between; align-items:center; font-weight:500; gap:10px; }
+    .modalHeader .actions{ display:flex; gap:10px; flex-wrap:wrap; justify-content:flex-end; }
+    .modalBody{ padding:14px; overflow:auto; }
+    .modal iframe{ flex:1; border:0; width:100%; }
 
-    for (let r = 1; r < data.length; r++) {
-      const row = data[r];
-      const ean = safeText_(row[idx.ean]).trim();
-      if (!ean) continue;
+    /* Lead form: always stacked */
+    .formGrid{ display:grid; grid-template-columns: 1fr; gap:12px; }
+    .field label{ display:block; font-size:12px; color:var(--muted); margin:0 0 6px; font-weight:500; }
+    .field input, .field textarea{
+      width:100%; box-sizing:border-box;
+      padding:10px 12px; border-radius:12px; border:1px solid var(--border);
+      font-family:'Poppins',sans-serif; font-weight:500; font-size:14px;
+    }
+    .field textarea{ min-height:80px; resize:vertical; font-weight:300; }
 
-      const stock = magentoMap[ean] || { surfcenterStock: "", dropshipmentStock: "" };
+    .cartList{ margin:10px 0 0; border:1px solid var(--border); border-radius:14px; overflow:hidden; }
+    .cartRow{ display:flex; justify-content:space-between; gap:10px; padding:10px 12px; border-bottom:1px solid #eee; }
+    .cartRow:last-child{ border-bottom:none; }
+    .cartRow .left{ display:flex; flex-direction:column; gap:2px; }
+    .small{ font-size:12px; color:var(--muted); }
+  </style>
+</head>
 
-      const candidate = {
-        product: safeText_(row[idx.product]).trim(),
-        retailPrice: row[idx.retail],
-        purchasePrice: row[idx.purchase],
-        ean,
-        surfcenterStock: stock.surfcenterStock,
-        dropshipmentStock: stock.dropshipmentStock,
-        supplier: sheetName,
-        supplierYear: sheetYear
-      };
+<body>
+  <div class="wrap">
+    <img src="./logo.png" alt="Logo" class="logo" onerror="this.style.display='none';">
 
-      const existing = bestByEan[ean];
-      if (!existing) { bestByEan[ean] = candidate; continue; }
+    <div class="searchWrap">
+      <input id="searchInput" placeholder="Zoek product of EAN…" disabled>
+    </div>
 
-      const cy = candidate.supplierYear || 0;
-      const ey = existing.supplierYear || 0;
-      if (cy > ey) bestByEan[ean] = candidate;
-      else if (cy === ey) {
-        const candHas = candidate.purchasePrice !== "" && candidate.purchasePrice != null;
-        const exHas = existing.purchasePrice !== "" && existing.purchasePrice != null;
-        if (candHas && !exHas) bestByEan[ean] = candidate;
+    <div id="meta" class="meta"></div>
+    <div id="err" class="error"></div>
+
+    <!-- Products -->
+    <div class="card">
+      <div class="tableWrap">
+        <table>
+          <thead>
+            <tr>
+              <th></th>
+              <th>Product</th>
+              <th>Retail price</th>
+              <th>Surfcenter</th>
+              <th>Dropshipment</th>
+              <th>Add</th>
+            </tr>
+          </thead>
+          <tbody id="tbody">
+            <tr><td colspan="6" class="small">Employee KEY nodig om data te laden…</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <div id="leadsCard" class="card" style="margin-top:16px;">
+      <div style="display:flex; justify-content:space-between; align-items:center; gap:12px; flex-wrap:wrap;">
+        <div style="font-weight:700;">Leads</div>
+        <button id="refreshOrdersBtn" class="btn">Refresh</button>
+      </div>
+      <div class="tableWrap">
+        <table style="min-width:980px;">
+          <thead>
+            <tr>
+              <th>Employee</th><th>EAN</th><th>Product</th><th>Retail price</th>
+              <th>Name</th><th>Contact 1</th><th>Contact 2</th><th>Note</th><th>Sale</th>
+            </tr>
+          </thead>
+          <tbody id="ordersTbody">
+            <tr><td colspan="9" class="small">Nog geen leads geladen…</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- Floating CART button -->
+  <div class="cartFab" id="cartBtn" title="Cart" aria-label="Open cart">
+    <span>Cart</span>
+    <span class="badge" id="cartBadge">0</span>
+  </div>
+
+  <!-- Floating CALCULATOR button -->
+  <div class="calcFab" id="calcBtn" title="Calculator" aria-label="Open calculator">
+    <span>%</span>
+  </div>
+
+  <!-- Calculator modal -->
+  <div id="calcOverlay" class="overlay">
+    <div class="modal">
+      <div class="modalHeader">
+        <span>Marge calculator</span>
+        <div class="actions">
+          <button id="calcOpenNew" class="btn">Nieuw tab</button>
+          <button id="calcClose" class="btn">Sluiten</button>
+        </div>
+      </div>
+      <iframe src="https://surf-center.github.io/calculator/" title="Calculator"></iframe>
+    </div>
+  </div>
+
+  <!-- Cart / Lead modal -->
+  <div id="cartOverlay" class="overlay">
+    <div class="modal">
+      <div class="modalHeader">
+        <span>Lead doorgeven</span>
+        <div class="actions">
+          <button id="cartClose" class="btn">Sluiten</button>
+        </div>
+      </div>
+      <div class="modalBody">
+        <div class="formGrid">
+          <div class="field">
+            <label>Naam klant *</label>
+            <input id="custName" placeholder="Naam">
+          </div>
+          <div class="field">
+            <label>Contact 1 (mail of tel) *</label>
+            <input id="contact1" placeholder="E-mail of telefoon">
+          </div>
+          <div class="field">
+            <label>Contact 2 (optioneel)</label>
+            <input id="contact2" placeholder="E-mail of telefoon">
+          </div>
+          <div class="field">
+            <label>Note (optioneel)</label>
+            <textarea id="note" placeholder="Extra info…"></textarea>
+          </div>
+        </div>
+
+        <div style="margin-top:14px; font-weight:700;">Items:</div>
+        <div id="cartList" class="cartList"></div>
+
+        <div style="display:flex; justify-content:flex-end; gap:10px; margin-top:14px; flex-wrap:wrap;">
+          <button id="clearCartBtn" class="btn">Leegmaken</button>
+          <button id="saveLeadBtn" class="btn btnPrimary">Opslaan</button>
+        </div>
+
+        <div id="cartErr" class="error"></div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const APPS_SCRIPT_WEBAPP_URL =
+      "https://script.google.com/macros/s/AKfycbyqzsvu-EaeJCLbUN3IZ6nxhXmi67SYM7sh15fJjmPtB6rvAJBn609IkpnDa7SFwc-QMg/exec";
+
+    // JSONP
+    function jsonp(url){
+      return new Promise((resolve,reject)=>{
+        const s=document.createElement("script");
+        const cb="cb_"+Math.random().toString(36).slice(2);
+        const t=setTimeout(()=>{cleanup();reject(new Error("Timeout"));},15000);
+        window[cb]=d=>{cleanup();resolve(d);};
+        function cleanup(){clearTimeout(t);delete window[cb];s.remove();}
+        s.onerror=()=>{cleanup();reject(new Error("Failed to load script"));};
+        s.src=url+(url.includes("?")?"&":"?")+"callback="+cb;
+        document.body.appendChild(s);
+      });
+    }
+
+    // Helpers
+    function fmtPrice(v){
+      if(v===null||v===undefined||v==="") return "";
+      const n = Number(String(v).replace(",","."));
+      return Number.isFinite(n) ? "€ " + n.toFixed(2) : String(v);
+    }
+    const fmtVal = v => (v==null?"":String(v));
+    const esc = s => String(s).replace(/[&<>"']/g,m=>({ "&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;","'":"&#039;" }[m]));
+
+    // Calculator modal
+    const calcOverlay = document.getElementById("calcOverlay");
+    document.getElementById("calcBtn").onclick = () => calcOverlay.classList.add("active");
+    document.getElementById("calcClose").onclick = () => calcOverlay.classList.remove("active");
+    document.getElementById("calcOpenNew").onclick = () =>
+      window.open("https://surf-center.github.io/calculator/","_blank","noopener");
+    calcOverlay.addEventListener("click", e => { if(e.target===calcOverlay) calcOverlay.classList.remove("active"); });
+
+    // State
+    const searchInput = document.getElementById("searchInput");
+    const tbody = document.getElementById("tbody");
+    const meta = document.getElementById("meta");
+    const err = document.getElementById("err");
+
+    const leadsCard = document.getElementById("leadsCard");
+    const ordersTbody = document.getElementById("ordersTbody");
+    const refreshOrdersBtn = document.getElementById("refreshOrdersBtn");
+
+    const cartBtn = document.getElementById("cartBtn");
+    const cartOverlay = document.getElementById("cartOverlay");
+    const cartClose = document.getElementById("cartClose");
+    const cartListEl = document.getElementById("cartList");
+    const cartErr = document.getElementById("cartErr");
+    const clearCartBtn = document.getElementById("clearCartBtn");
+    const saveLeadBtn = document.getElementById("saveLeadBtn");
+
+    const custName = document.getElementById("custName");
+    const contact1 = document.getElementById("contact1");
+    const contact2 = document.getElementById("contact2");
+    const note = document.getElementById("note");
+
+    let allRows = [];
+    let expanded = new Set();
+    let cart = [];
+    let currentKey = "";
+    let isAdmin = false;
+
+    function setCartButton(){
+      const badge = document.getElementById("cartBadge");
+      if (badge) badge.textContent = String(cart.length);
+    }
+
+    function openCart(){ cartErr.textContent=""; renderCart(); cartOverlay.classList.add("active"); }
+    function closeCartModal(){ cartOverlay.classList.remove("active"); }
+    cartBtn.onclick = openCart;
+    cartClose.onclick = closeCartModal;
+    cartOverlay.addEventListener("click", e => { if(e.target===cartOverlay) closeCartModal(); });
+
+    clearCartBtn.onclick = () => { cart = []; setCartButton(); renderCart(); };
+
+    function addToCart(item){
+      if(cart.some(x => x.ean === item.ean)) return;
+      cart.push({ ean: item.ean, product: item.product, retailPrice: item.retailPrice });
+      setCartButton();
+    }
+
+    function removeFromCart(ean){
+      cart = cart.filter(x => x.ean !== ean);
+      setCartButton();
+      renderCart();
+    }
+
+    function renderCart(){
+      if(!cart.length){
+        cartListEl.innerHTML = `<div class="cartRow"><div class="small">Geen items.</div></div>`;
+        return;
       }
+      cartListEl.innerHTML = cart.map(it => `
+        <div class="cartRow">
+          <div class="left">
+            <div style="font-weight:500;">${esc(it.product || "")}</div>
+            <div class="small">EAN: ${esc(it.ean || "")} • Retail: ${esc(fmtPrice(it.retailPrice))}</div>
+          </div>
+          <div><button class="btn" data-remove="${esc(it.ean)}">Verwijder</button></div>
+        </div>
+      `).join("");
+
+      cartListEl.querySelectorAll("button[data-remove]").forEach(b=>{
+        b.addEventListener("click", ()=> removeFromCart(b.getAttribute("data-remove")));
+      });
     }
-  });
 
-  const rows = Object.keys(bestByEan).map(ean => bestByEan[ean]);
-  rows.sort((a, b) => String(a.product || "").localeCompare(String(b.product || "")));
+    async function loadProducts(){
+      err.textContent = "";
+      meta.textContent = "Laden…";
+      tbody.innerHTML = `<tr><td colspan="6" class="small">Data laden…</td></tr>`;
 
-  return {
-    ok: true,
-    user: { name: user.name || "", role: admin ? "ADMIN" : (user.role || "EMPLOYEE") },
-    isAdmin: admin,
-    rows
-  };
-}
+      const res = await jsonp(`${APPS_SCRIPT_WEBAPP_URL}?action=data&key=${encodeURIComponent(currentKey)}`);
+      if(!res || !res.ok) throw new Error(res?.error || "Kon data niet laden");
 
-/** =========================
- *  ORDERS (LEADS) ENDPOINT — ✅ ADMIN ONLY
- * ========================= */
-function getOrdersForKey_(key) {
-  if (!key) return { ok: false, error: "Missing key" };
+      allRows = res.rows || [];
+      expanded.clear();
 
-  const ss = SpreadsheetApp.openById(SPREADSHEET_ID);
-  const user = getUserByKey_(ss, key);
-  if (!user) return { ok: false, error: "Invalid key" };
+      isAdmin = !!res.isAdmin;
+      leadsCard.style.display = isAdmin ? "" : "none";
 
-  const admin = isAdmin_(key, user);
-  if (!admin) {
-    // ✅ hard-enforced: employees see nothing
-    return { ok: true, admin: false, orders: [] };
-  }
+      const name = (res.user && res.user.name) ? res.user.name : "";
+      meta.textContent = `${allRows.length} items${name ? " • " + name : ""}`;
 
-  const sh = ss.getSheetByName(SHEET_ORDERS);
-  if (!sh) throw new Error(`Missing sheet: ${SHEET_ORDERS}`);
+      searchInput.disabled = false;
+      renderProducts();
 
-  const data = sh.getDataRange().getValues();
-  if (data.length < 2) return { ok: true, admin: true, orders: [] };
+      if (isAdmin) await loadOrders();
+    }
 
-  const headers = normalizeHeaders_(data[0]);
-  const col = (name) => headers.indexOf(String(name).toUpperCase());
+    function renderProducts(){
+      const q = searchInput.value.trim().toLowerCase();
+      const rows = !q ? allRows : allRows.filter(r => {
+        const p = (r.product || "").toLowerCase();
+        const e = (r.ean || "").toLowerCase();
+        return p.includes(q) || e.includes(q);
+      });
 
-  const cEmployee = col("Employee");
-  const cEAN      = col("EAN");
-  const cProduct  = col("Product");
-  const cRetail   = col("Retail price");
-  const cName     = col("Name");
-  const cC1       = col("Contact 1");
-  const cC2       = col("Contact 2");
-  const cNote     = col("Note");
-  const cSale     = col("Sale");
+      tbody.innerHTML = "";
+      if(!rows.length){
+        tbody.innerHTML = `<tr><td colspan="6" class="small">Geen resultaten.</td></tr>`;
+        return;
+      }
 
-  if (cEmployee === -1 || cEAN === -1 || cProduct === -1 || cRetail === -1) {
-    throw new Error('Order sheet must have headers: Employee, EAN, Product, Retail price');
-  }
+      rows.forEach((r,i)=>{
+        const id = `${r.ean}__${i}`;
+        const yearLabel = r.supplierYear ? ` (${r.supplierYear})` : "";
 
-  const out = [];
-  for (let i = 1; i < data.length; i++) {
-    const row = data[i];
-    out.push({
-      employee: safeText_(row[cEmployee]).trim(),
-      ean: safeText_(row[cEAN]).trim(),
-      product: safeText_(row[cProduct]).trim(),
-      retailPrice: row[cRetail],
-      customerName: cName >= 0 ? safeText_(row[cName]).trim() : "",
-      contact1: cC1 >= 0 ? safeText_(row[cC1]).trim() : "",
-      contact2: cC2 >= 0 ? safeText_(row[cC2]).trim() : "",
-      note: cNote >= 0 ? safeText_(row[cNote]).trim() : "",
-      sale: cSale >= 0 ? safeText_(row[cSale]).trim() : ""
-    });
-  }
+        const tr = document.createElement("tr");
 
-  return { ok: true, admin: true, orders: out };
-}
+        const tdExpand = document.createElement("td");
+        const btn = document.createElement("button");
+        btn.className = "btn";
+        btn.style.padding = "6px 10px";
+        btn.textContent = expanded.has(id) ? "−" : "+";
+        btn.onclick = () => { expanded.has(id) ? expanded.delete(id) : expanded.add(id); renderProducts(); };
+        tdExpand.appendChild(btn);
 
-/** =========================
- *  SUBMIT LEAD (append + email)
- * ========================= */
-function submitLead_(key, params) {
-  if (!key) return { ok: false, error: "Missing key" };
+        tr.appendChild(tdExpand);
+        tr.appendChild(Object.assign(document.createElement("td"), { textContent: r.product || "" }));
+        tr.appendChild(Object.assign(document.createElement("td"), { textContent: fmtPrice(r.retailPrice) }));
+        tr.appendChild(Object.assign(document.createElement("td"), { textContent: fmtVal(r.surfcenterStock) }));
+        tr.appendChild(Object.assign(document.createElement("td"), { textContent: fmtVal(r.dropshipmentStock) }));
 
-  const ss = SpreadsheetApp.openById(SPREADSHEET_ID);
-  const user = getUserByKey_(ss, key);
-  if (!user) return { ok: false, error: "Invalid key" };
+        const tdAdd = document.createElement("td");
+        const addBtn = document.createElement("button");
+        addBtn.className = "btn btnPrimary";
+        addBtn.textContent = "Add";
+        addBtn.onclick = () => addToCart({ ean: r.ean, product: r.product, retailPrice: r.retailPrice });
+        tdAdd.appendChild(addBtn);
+        tr.appendChild(tdAdd);
 
-  const payloadRaw = String(params.payload || "");
-  if (!payloadRaw) return { ok: false, error: "Missing payload" };
+        tbody.appendChild(tr);
 
-  let payload;
-  try { payload = JSON.parse(payloadRaw); }
-  catch (e) { return { ok: false, error: "Invalid payload JSON" }; }
+        if(expanded.has(id)){
+          const tr2 = document.createElement("tr");
+          tr2.className = "detailsRow";
+          const td = document.createElement("td");
+          td.colSpan = 6;
+          td.innerHTML = `
+            <div style="display:flex;gap:18px;flex-wrap:wrap;">
+              <div><strong>EAN:</strong> ${esc(fmtVal(r.ean))}${esc(yearLabel)}</div>
+              <div><strong>Purchase price:</strong> ${esc(fmtPrice(r.purchasePrice))}</div>
+            </div>`;
+          tr2.appendChild(td);
+          tbody.appendChild(tr2);
+        }
+      });
+    }
+    searchInput.addEventListener("input", renderProducts);
 
-  const customerName = safeText_(payload.customerName).trim();
-  const contact1 = safeText_(payload.contact1).trim();
-  const contact2 = safeText_(payload.contact2).trim();
-  const note = safeText_(payload.note).trim();
-  const items = Array.isArray(payload.items) ? payload.items : [];
+    async function loadOrders(){
+      ordersTbody.innerHTML = `<tr><td colspan="9" class="small">Leads laden…</td></tr>`;
+      const res = await jsonp(`${APPS_SCRIPT_WEBAPP_URL}?action=orders&key=${encodeURIComponent(currentKey)}`);
+      if(!res || !res.ok){
+        ordersTbody.innerHTML = `<tr><td colspan="9" class="small">Fout: ${esc(res?.error || "Kon leads niet laden")}</td></tr>`;
+        return;
+      }
+      const orders = res.orders || [];
+      if(!orders.length){
+        ordersTbody.innerHTML = `<tr><td colspan="9" class="small">Nog geen leads.</td></tr>`;
+        return;
+      }
+      ordersTbody.innerHTML = orders.map(o => `
+        <tr>
+          <td>${esc(o.employee || "")}</td>
+          <td>${esc(o.ean || "")}</td>
+          <td>${esc(o.product || "")}</td>
+          <td>${esc(fmtPrice(o.retailPrice))}</td>
+          <td>${esc(o.customerName || "")}</td>
+          <td>${esc(o.contact1 || "")}</td>
+          <td>${esc(o.contact2 || "")}</td>
+          <td>${esc(o.note || "")}</td>
+          <td>${esc(o.sale || "")}</td>
+        </tr>
+      `).join("");
+    }
+    refreshOrdersBtn.onclick = () => { if (isAdmin) loadOrders(); };
 
-  if (!customerName) return { ok: false, error: "Naam is verplicht" };
-  if (!contact1 && !contact2) return { ok: false, error: "Minimaal 1 contactveld is verplicht" };
-  if (!items.length) return { ok: false, error: "Winkelmandje is leeg" };
+    saveLeadBtn.onclick = async () => {
+      cartErr.textContent = "";
 
-  const sh = ss.getSheetByName(SHEET_ORDERS);
-  if (!sh) throw new Error(`Missing sheet: ${SHEET_ORDERS}`);
+      const name = custName.value.trim();
+      const c1 = contact1.value.trim();
+      const c2 = contact2.value.trim();
+      const n = note.value.trim();
 
-  ensureOrderHeaders_(sh);
+      if(!name){ cartErr.textContent = "Naam is verplicht."; return; }
+      if(!c1 && !c2){ cartErr.textContent = "Minimaal 1 contactveld is verplicht."; return; }
+      if(!cart.length){ cartErr.textContent = "Cart is leeg."; return; }
 
-  const employeeName = user.name || "Employee";
-  const rowsToAppend = items.map(it => ([
-    employeeName,
-    safeText_(it.ean).trim(),
-    safeText_(it.product).trim(),
-    it.retailPrice,
-    customerName,
-    contact1,
-    contact2,
-    note,
-    "" // Sale
-  ]));
+      const payload = { customerName:name, contact1:c1, contact2:c2, note:n, items:cart };
+      const url = `${APPS_SCRIPT_WEBAPP_URL}?action=submitLead&key=${encodeURIComponent(currentKey)}&payload=${encodeURIComponent(JSON.stringify(payload))}`;
 
-  sh.getRange(sh.getLastRow() + 1, 1, rowsToAppend.length, rowsToAppend[0].length).setValues(rowsToAppend);
+      saveLeadBtn.disabled = true;
+      saveLeadBtn.textContent = "Opslaan…";
 
-  // ✅ email zonder Session.getEffectiveUser()
-  sendLeadEmail_(employeeName, customerName, contact1, contact2, note, items);
+      try{
+        const res = await jsonp(url);
+        if(!res || !res.ok) throw new Error(res?.error || "Opslaan mislukt");
 
-  return { ok: true, appended: rowsToAppend.length };
-}
+        cart = [];
+        setCartButton();
+        renderCart();
+        custName.value = ""; contact1.value = ""; contact2.value = ""; note.value = "";
+        closeCartModal();
 
-function ensureOrderHeaders_(sh) {
-  const desired = ["Employee","EAN","Product","Retail price","Name","Contact 1","Contact 2","Note","Sale"];
-  const lastRow = sh.getLastRow();
-  if (lastRow === 0) {
-    sh.getRange(1,1,1,desired.length).setValues([desired]);
-    return;
-  }
-  const header = sh.getRange(1,1,1,Math.max(sh.getLastColumn(), desired.length)).getValues()[0];
-  const norm = header.map(h => safeText_(h).trim());
-  if (!norm.some(x => x)) sh.getRange(1,1,1,desired.length).setValues([desired]);
-}
-
-function sendLeadEmail_(employeeName, customerName, contact1, contact2, note, items) {
-  const to = LEAD_NOTIFY_EMAIL;
-  const subject = `Nieuwe lead van ${employeeName}`;
-
-  const lines = [];
-  lines.push(`${employeeName} heeft de volgende lead doorgegeven:`);
-  lines.push("");
-  lines.push("Producten:");
-  items.forEach(it => {
-    lines.push(`- ${safeText_(it.product).trim()} | EAN: ${safeText_(it.ean).trim()} | Retail: ${formatEuro_(it.retailPrice)}`);
-  });
-  lines.push("");
-  lines.push("Voor klant:");
-  lines.push(`Naam: ${customerName}`);
-  lines.push(`Contact 1: ${contact1 || "-"}`);
-  lines.push(`Contact 2: ${contact2 || "-"}`);
-  lines.push(`Note: ${note || "-"}`);
-
-  MailApp.sendEmail({ to, subject, body: lines.join("\n") });
-}
-
-function formatEuro_(v) {
-  if (v === null || v === undefined || v === "") return "";
-  const num = Number(String(v).replace(",", "."));
-  return Number.isFinite(num) ? "€ " + num.toFixed(2) : String(v);
-}
-
-/** =========================
- *  Supplier visibility (base column covers years)
- * ========================= */
-function getVisibleSupplierSheetNames_(ss, user, admin) {
-  const allSheets = ss.getSheets().map(s => s.getName());
-  const supplierSheets = allSheets.filter(n => n.startsWith(SUPPLIER_PREFIX));
-  if (admin) return supplierSheets;
-
-  const headers = user.headers;
-  const row = user.row;
-
-  return supplierSheets.filter(sheetName => {
-    const upper = sheetName.toUpperCase();
-    const base = baseSupplierName_(sheetName).toUpperCase();
-
-    let col = headers.indexOf(upper);
-    if (col >= 0) return safeText_(row[col]).trim().toUpperCase() === "YES";
-
-    col = headers.indexOf(base);
-    if (col >= 0) return safeText_(row[col]).trim().toUpperCase() === "YES";
-
-    return false;
-  });
-}
-
-function buildMagentoStockMap_(ss) {
-  const sh = ss.getSheetByName(SHEET_MAGENTO);
-  if (!sh) throw new Error(`Missing sheet: ${SHEET_MAGENTO}`);
-
-  const data = sh.getDataRange().getValues();
-  if (data.length < 2) return {};
-
-  const headers = normalizeHeaders_(data[0]);
-  const eanCol = headers.indexOf("EAN");
-  const scCol  = headers.indexOf("SURFCENTER");
-  const dsCol  = headers.indexOf("DROPSHIPMENT");
-  if (eanCol === -1) throw new Error('Magento sheet must have header "EAN"');
-
-  const map = {};
-  for (let i = 1; i < data.length; i++) {
-    const ean = safeText_(data[i][eanCol]).trim();
-    if (!ean) continue;
-    map[ean] = {
-      surfcenterStock: scCol >= 0 ? data[i][scCol] : "",
-      dropshipmentStock: dsCol >= 0 ? data[i][dsCol] : ""
+        if (isAdmin) await loadOrders();
+      } catch(e){
+        cartErr.textContent = "Fout bij opslaan: " + e.message;
+      } finally {
+        saveLeadBtn.disabled = false;
+        saveLeadBtn.textContent = "Opslaan";
+      }
     };
-  }
-  return map;
-}
 
-/** =========================
- *  Utils
- * ========================= */
-function output_(obj, callback) {
-  const payload = JSON.stringify(obj);
-  if (callback) {
-    return ContentService.createTextOutput(`${callback}(${payload});`)
-      .setMimeType(ContentService.MimeType.JAVASCRIPT);
-  }
-  return ContentService.createTextOutput(payload)
-    .setMimeType(ContentService.MimeType.JSON);
-}
+    (async function(){
+      currentKey = localStorage.getItem("employeeKey") || "";
+      if(!currentKey){
+        currentKey = prompt("Employee KEY:");
+        if(!currentKey){ meta.textContent = "Geen key ingevuld."; return; }
+        currentKey = currentKey.trim();
+        localStorage.setItem("employeeKey", currentKey);
+      }
 
-function normalizeHeaders_(headerRow) {
-  return headerRow.map(h => safeText_(h).trim().toUpperCase());
-}
+      setCartButton();
 
-function headerIndex_(headers, needed) {
-  const idx = {};
-  Object.keys(needed).forEach(k => {
-    const i = headers.indexOf(String(needed[k]).toUpperCase());
-    if (i === -1) throw new Error(`Missing header "${needed[k]}" in supplier sheet`);
-    idx[k] = i;
-  });
-  return idx;
-}
-
-function safeText_(v) {
-  if (v === null || v === undefined) return "";
-  return String(v);
-}
-
-function extractYearFromSheetName_(sheetName) {
-  const m = String(sheetName).match(/_(\d{4})$/);
-  return m ? Number(m[1]) : 0;
-}
-function baseSupplierName_(sheetName) {
-  return String(sheetName).replace(/_(\d{4})$/, "");
-}
+      try{
+        await loadProducts();
+      } catch(e){
+        err.textContent = "Fout bij laden: " + e.message;
+        meta.textContent = "Data laden mislukt.";
+      }
+    })();
+  </script>
+</body>
+</html>
