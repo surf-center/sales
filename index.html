@@ -11,7 +11,7 @@
   <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;500;700&display=swap" rel="stylesheet">
 
   <style>
-    :root {
+    :root{
       --border:#e5e7eb;
       --muted:#6b7280;
       --bg:#ffffff;
@@ -19,219 +19,405 @@
       --accent:#111827;
     }
 
-    body {
-      margin: 0;
-      font-family: 'Poppins', system-ui, sans-serif;
-      font-weight: 300;
-      background: #fcfcfc;
-      color: #111;
+    body{
+      margin:0;
+      font-family:'Poppins', system-ui, sans-serif;
+      font-weight:300;
+      background:#fcfcfc;
+      color:#111;
     }
 
-    .wrap {
-      max-width: 1200px;
-      margin: 0 auto;
-      padding: 32px 20px 80px;
-      text-align: center;
+    .wrap{
+      max-width:1200px;
+      margin:0 auto;
+      padding:32px 20px 90px;
+      text-align:center;
     }
 
-    /* Logo */
-    .logo {
-      height: 56px;
-      margin: 20px auto 18px;
-      display: block;
+    .logo{
+      height:56px;
+      margin:20px auto 18px;
+      display:block;
     }
 
-    /* Search */
-    .searchWrap {
-      display: flex;
-      justify-content: center;
-      margin-bottom: 22px;
+    .searchWrap{
+      display:flex;
+      justify-content:center;
+      margin-bottom:18px;
+      gap:10px;
+      flex-wrap:wrap;
     }
 
-    .searchWrap input {
-      width: min(420px, 90%);
-      padding: 12px 16px;
-      border-radius: 14px;
-      border: 1px solid var(--border);
-      font-family: 'Poppins', sans-serif;
-      font-weight: 500;
-      font-size: 15px;
+    .searchWrap input{
+      width:min(520px, 92vw);
+      padding:12px 16px;
+      border-radius:14px;
+      border:1px solid var(--border);
+      font-family:'Poppins', sans-serif;
+      font-weight:500;
+      font-size:15px;
     }
 
-    /* Card */
-    .card {
-      background: var(--bg);
-      border: 1px solid var(--border);
-      border-radius: 18px;
-      padding: 14px;
-      text-align: left;
+    .meta{
+      color:var(--muted);
+      font-size:13px;
+      font-weight:300;
+      margin-top:-6px;
+      margin-bottom:14px;
     }
 
-    table {
-      width: 100%;
-      border-collapse: collapse;
-      font-size: 14px;
+    .card{
+      background:var(--bg);
+      border:1px solid var(--border);
+      border-radius:18px;
+      padding:14px;
+      text-align:left;
     }
 
-    th {
-      padding: 10px;
-      border-bottom: 1px solid #eee;
-      font-weight: 500;
+    table{
+      width:100%;
+      border-collapse:collapse;
+      font-size:14px;
     }
 
-    td {
-      padding: 10px;
-      border-bottom: 1px solid #f1f1f1;
-      font-weight: 300;
+    th{
+      padding:10px;
+      border-bottom:1px solid #eee;
+      font-weight:500;
+      text-align:left;
     }
 
-    .plus {
-      width: 36px;
-      text-align: center;
+    td{
+      padding:10px;
+      border-bottom:1px solid #f1f1f1;
+      font-weight:300;
+      vertical-align:top;
     }
+
+    .plus{ width:36px; text-align:center; }
+
+    .plus button{
+      width:30px; height:30px;
+      border-radius:10px;
+      border:1px solid var(--border);
+      background:#fff;
+      font-weight:700;
+      cursor:pointer;
+      font-family:'Poppins', sans-serif;
+    }
+    .plus button:hover{ background:#f3f4f6; }
+
+    .detailsRow td{
+      background:var(--soft);
+      border-bottom:1px solid #eaeaea;
+    }
+
+    .muted{ color:var(--muted); font-weight:300; }
+    .error{ color:#b00020; font-size:13px; margin:10px 0 0; text-align:left; }
 
     /* Floating calculator button */
-    .calcFab {
-      position: fixed;
-      right: 20px;
-      bottom: 20px;
-      width: 56px;
-      height: 56px;
-      border-radius: 50%;
-      background: var(--accent);
-      color: #fff;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-size: 22px;
-      cursor: pointer;
-      box-shadow: 0 10px 25px rgba(0,0,0,.25);
-      z-index: 9999;
+    .calcFab{
+      position:fixed;
+      right:20px;
+      bottom:20px;
+      width:56px;
+      height:56px;
+      border-radius:50%;
+      background:var(--accent);
+      color:#fff;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      font-size:22px;
+      cursor:pointer;
+      box-shadow:0 10px 25px rgba(0,0,0,.25);
+      z-index:9999;
+      user-select:none;
     }
-
-    .calcFab:hover {
-      transform: scale(1.05);
-    }
+    .calcFab:hover{ transform:scale(1.05); }
 
     /* Calculator modal */
-    .overlay {
-      position: fixed;
-      inset: 0;
-      background: rgba(0,0,0,.45);
-      display: none;
-      align-items: center;
-      justify-content: center;
-      z-index: 10000;
+    .overlay{
+      position:fixed;
+      inset:0;
+      background:rgba(0,0,0,.45);
+      display:none;
+      align-items:center;
+      justify-content:center;
+      z-index:10000;
+      padding:18px;
     }
+    .overlay.active{ display:flex; }
 
-    .overlay.active { display: flex; }
-
-    .modal {
+    .modal{
       background:#fff;
-      width: min(1100px, 95vw);
-      height: min(720px, 90vh);
-      border-radius: 18px;
-      overflow: hidden;
-      display: flex;
-      flex-direction: column;
+      width:min(1100px, 95vw);
+      height:min(720px, 90vh);
+      border-radius:18px;
+      overflow:hidden;
+      display:flex;
+      flex-direction:column;
     }
 
-    .modalHeader {
-      padding: 10px 14px;
-      border-bottom: 1px solid #eee;
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      font-weight: 500;
+    .modalHeader{
+      padding:10px 14px;
+      border-bottom:1px solid #eee;
+      display:flex;
+      justify-content:space-between;
+      align-items:center;
+      font-weight:500;
+      gap:10px;
     }
 
-    .modal iframe {
-      flex: 1;
-      border: 0;
-      width: 100%;
+    .modalHeader .actions{
+      display:flex;
+      gap:10px;
+      flex-wrap:wrap;
+      justify-content:flex-end;
     }
 
-    button {
-      font-family: 'Poppins', sans-serif;
-      font-weight: 500;
-      padding: 8px 12px;
-      border-radius: 10px;
-      border: 1px solid var(--border);
-      background: #fff;
-      cursor: pointer;
+    .modalHeader button{
+      font-family:'Poppins', sans-serif;
+      font-weight:500;
+      padding:8px 12px;
+      border-radius:10px;
+      border:1px solid var(--border);
+      background:#fff;
+      cursor:pointer;
     }
+    .modalHeader button:hover{ background:#f3f4f6; }
 
-    button:hover { background:#f3f4f6; }
+    .modal iframe{ flex:1; border:0; width:100%; }
   </style>
 </head>
 
 <body>
+  <div class="wrap">
+    <img src="./assets/logo.png" alt="Logo" class="logo" onerror="this.style.display='none';" />
 
-<div class="wrap">
-  <!-- LOGO -->
-  <img src="./assets/logo.png" alt="Logo" class="logo">
-
-  <!-- SEARCH -->
-  <div class="searchWrap">
-    <input id="searchInput" placeholder="Zoek product of EAN…">
-  </div>
-
-  <!-- TABLE -->
-  <div class="card">
-    <table>
-      <thead>
-        <tr>
-          <th class="plus"></th>
-          <th>Product</th>
-          <th>Retail price</th>
-          <th>Surfcenter</th>
-          <th>Dropshipment</th>
-        </tr>
-      </thead>
-      <tbody id="tbody">
-        <tr>
-          <td colspan="5" class="muted">Data laden…</td>
-        </tr>
-      </tbody>
-    </table>
-  </div>
-</div>
-
-<!-- CALCULATOR FLOATING BUTTON -->
-<div class="calcFab" id="calcBtn" title="Calculator">
-  🧮
-</div>
-
-<!-- CALCULATOR MODAL -->
-<div id="calcOverlay" class="overlay">
-  <div class="modal">
-    <div class="modalHeader">
-      <span>Marge calculator</span>
-      <div>
-        <button id="calcOpenNew">Nieuw tab</button>
-        <button id="calcClose">Sluiten</button>
-      </div>
+    <div class="searchWrap">
+      <input id="searchInput" placeholder="Zoek product of EAN…" disabled>
     </div>
-    <iframe src="https://surf-center.github.io/calculator/"></iframe>
+
+    <div id="meta" class="meta">Niet ingelogd / geen key</div>
+    <div id="err" class="error"></div>
+
+    <div class="card">
+      <table>
+        <thead>
+          <tr>
+            <th class="plus"></th>
+            <th>Product</th>
+            <th>Retail price</th>
+            <th>Surfcenter</th>
+            <th>Dropshipment</th>
+          </tr>
+        </thead>
+        <tbody id="tbody">
+          <tr><td colspan="5" class="muted">Login key nodig om data te laden…</td></tr>
+        </tbody>
+      </table>
+    </div>
   </div>
-</div>
 
-<script>
-  const APPS_SCRIPT_WEBAPP_URL =
-    "https://script.google.com/macros/s/AKfycbyqzsvu-EaeJCLbUN3IZ6nxhXmi67SYM7sh15fJjmPtB6rvAJBn609IkpnDa7SFwc-QMg/exec";
+  <!-- Calculator floating button -->
+  <div class="calcFab" id="calcBtn" title="Calculator">🧮</div>
 
-  /* Calculator modal logic */
-  const overlay = document.getElementById("calcOverlay");
-  document.getElementById("calcBtn").onclick = () => overlay.classList.add("active");
-  document.getElementById("calcClose").onclick = () => overlay.classList.remove("active");
-  document.getElementById("calcOpenNew").onclick = () =>
-    window.open("https://surf-center.github.io/calculator/", "_blank", "noopener");
-  overlay.addEventListener("click", e => {
-    if (e.target === overlay) overlay.classList.remove("active");
-  });
+  <!-- Calculator modal -->
+  <div id="calcOverlay" class="overlay">
+    <div class="modal" role="dialog" aria-modal="true" aria-label="Calculator">
+      <div class="modalHeader">
+        <span>Marge calculator</span>
+        <div class="actions">
+          <button id="calcOpenNew">Nieuw tab</button>
+          <button id="calcClose">Sluiten</button>
+        </div>
+      </div>
+      <iframe src="https://surf-center.github.io/calculator/" title="Calculator"></iframe>
+    </div>
+  </div>
 
-  /* (Je bestaande data / search JS kan hier direct onder blijven) */
-</script>
+  <script>
+    // ✅ jouw Web App URL
+    const APPS_SCRIPT_WEBAPP_URL =
+      "https://script.google.com/macros/s/AKfycbyqzsvu-EaeJCLbUN3IZ6nxhXmi67SYM7sh15fJjmPtB6rvAJBn609IkpnDa7SFwc-QMg/exec";
 
+    // Calculator modal
+    const overlay = document.getElementById("calcOverlay");
+    document.getElementById("calcBtn").onclick = () => overlay.classList.add("active");
+    document.getElementById("calcClose").onclick = () => overlay.classList.remove("active");
+    document.getElementById("calcOpenNew").onclick = () =>
+      window.open("https://surf-center.github.io/calculator/", "_blank", "noopener");
+    overlay.addEventListener("click", (e) => { if (e.target === overlay) overlay.classList.remove("active"); });
+    document.addEventListener("keydown", (e) => { if (e.key === "Escape") overlay.classList.remove("active"); });
+
+    // Portal data
+    const searchInput = document.getElementById("searchInput");
+    const tbody = document.getElementById("tbody");
+    const meta = document.getElementById("meta");
+    const err = document.getElementById("err");
+
+    let allRows = [];
+    let expanded = new Set();
+
+    function fmtPrice(v) {
+      if (v === null || v === undefined || v === "") return "";
+      const num = Number(String(v).replace(",", "."));
+      if (Number.isFinite(num)) return "€ " + num.toFixed(2);
+      return String(v);
+    }
+    function fmtVal(v) {
+      if (v === null || v === undefined) return "";
+      return String(v);
+    }
+    function escapeHtml(s) {
+      return String(s)
+        .replaceAll("&", "&amp;")
+        .replaceAll("<", "&lt;")
+        .replaceAll(">", "&gt;")
+        .replaceAll('"', "&quot;")
+        .replaceAll("'", "&#039;");
+    }
+
+    function showError(msg) { err.textContent = msg || ""; }
+
+    // JSONP loader for GitHub Pages
+    function jsonp(url) {
+      return new Promise((resolve, reject) => {
+        const script = document.createElement("script");
+        const cb = "cb_" + Math.random().toString(36).slice(2);
+        const timeout = setTimeout(() => {
+          cleanup();
+          reject(new Error("Timeout while loading data"));
+        }, 15000);
+
+        window[cb] = (data) => { cleanup(); resolve(data); };
+
+        function cleanup() {
+          clearTimeout(timeout);
+          delete window[cb];
+          script.remove();
+        }
+
+        script.onerror = () => { cleanup(); reject(new Error("Failed to load script")); };
+
+        const sep = url.includes("?") ? "&" : "?";
+        script.src = url + sep + "callback=" + encodeURIComponent(cb);
+        document.body.appendChild(script);
+      });
+    }
+
+    async function loadData(key) {
+      showError("");
+      meta.textContent = "Laden…";
+      tbody.innerHTML = `<tr><td colspan="5" class="muted">Data laden…</td></tr>`;
+
+      const url = `${APPS_SCRIPT_WEBAPP_URL}?action=data&key=${encodeURIComponent(key)}`;
+      const res = await jsonp(url);
+
+      if (!res || !res.ok) throw new Error(res?.error || "Kon data niet laden.");
+
+      allRows = res.rows || [];
+      expanded.clear();
+
+      meta.textContent = `${allRows.length} items • ${res.user?.name || ""} • ${res.user?.role || ""}`;
+      searchInput.disabled = false;
+
+      render();
+    }
+
+    function render() {
+      const q = searchInput.value.trim().toLowerCase();
+      const rows = !q ? allRows : allRows.filter(r => {
+        const product = (r.product || "").toLowerCase();
+        const ean = (r.ean || "").toLowerCase();
+        return product.includes(q) || ean.includes(q);
+      });
+
+      tbody.innerHTML = "";
+
+      if (!rows.length) {
+        tbody.innerHTML = `<tr><td colspan="5" class="muted">Geen resultaten.</td></tr>`;
+        return;
+      }
+
+      rows.forEach((r, i) => {
+        const id = `${r.ean}__${i}`;
+
+        const tr = document.createElement("tr");
+
+        const tdPlus = document.createElement("td");
+        tdPlus.className = "plus";
+        const btn = document.createElement("button");
+        btn.textContent = expanded.has(id) ? "−" : "+";
+        btn.addEventListener("click", () => {
+          expanded.has(id) ? expanded.delete(id) : expanded.add(id);
+          render();
+        });
+        tdPlus.appendChild(btn);
+
+        tr.appendChild(tdPlus);
+
+        const tdProduct = document.createElement("td");
+        tdProduct.textContent = r.product ?? "";
+        tr.appendChild(tdProduct);
+
+        const tdRetail = document.createElement("td");
+        tdRetail.textContent = fmtPrice(r.retailPrice);
+        tr.appendChild(tdRetail);
+
+        const tdSC = document.createElement("td");
+        tdSC.textContent = fmtVal(r.surfcenterStock);
+        tr.appendChild(tdSC);
+
+        const tdDS = document.createElement("td");
+        tdDS.textContent = fmtVal(r.dropshipmentStock);
+        tr.appendChild(tdDS);
+
+        tbody.appendChild(tr);
+
+        if (expanded.has(id)) {
+          const tr2 = document.createElement("tr");
+          tr2.className = "detailsRow";
+          const td = document.createElement("td");
+          td.colSpan = 5;
+          td.innerHTML = `
+            <div style="display:flex; gap:18px; flex-wrap:wrap;">
+              <div><strong>EAN:</strong> ${escapeHtml(fmtVal(r.ean))}</div>
+              <div><strong>Purchase price:</strong> ${escapeHtml(fmtPrice(r.purchasePrice))}</div>
+            </div>
+          `;
+          tr2.appendChild(td);
+          tbody.appendChild(tr2);
+        }
+      });
+    }
+
+    searchInput.addEventListener("input", render);
+
+    // Simple key prompt (so it works without the separate login page)
+    // You can replace this with your login screen later.
+    (async function boot() {
+      const savedKey = localStorage.getItem("employeeKey") || "";
+      let key = savedKey;
+
+      if (!key) {
+        key = prompt("Employee KEY:");
+        if (!key) {
+          meta.textContent = "Geen key ingevuld.";
+          return;
+        }
+        localStorage.setItem("employeeKey", key.trim());
+        key = key.trim();
+      }
+
+      try {
+        await loadData(key);
+      } catch (e) {
+        showError("Fout bij laden: " + e.message);
+        meta.textContent = "Data laden mislukt.";
+      }
+    })();
+  </script>
 </body>
 </html>
