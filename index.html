@@ -11,96 +11,47 @@
   <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;500;700&display=swap" rel="stylesheet">
 
   <style>
-    :root{
-      --border:#e5e7eb;
-      --muted:#6b7280;
-      --bg:#fff;
-      --soft:#f9fafb;
-      --accent:#111827;
-      --ok:#0f7b2f;
-      --bad:#b00020;
-    }
+    :root{ --border:#e5e7eb; --muted:#6b7280; --bg:#fff; --soft:#f9fafb; --accent:#111827; --ok:#0f7b2f; --bad:#b00020; }
     *{ box-sizing:border-box; }
     body{ margin:0; font-family:'Poppins',system-ui,sans-serif; font-weight:300; background:#fcfcfc; color:#111; }
 
-    /* Views */
-    #loginView{ display:none; }
+    /* ✅ IMPORTANT: login is visible by default to prevent white page */
+    #loginView{ display:block; }
     #appView{ display:none; }
 
-    /* Layout */
     .centerWrap{ max-width:560px; margin:0 auto; padding:28px 16px 28px; text-align:center; }
     .wrap{ max-width:1200px; margin:0 auto; padding:18px 16px 92px; }
 
-    /* Logo */
     .logo{
-      display:block;
-      width:min(560px,100%);
-      max-width:min(560px,100%);
-      height:auto;
-      max-height:70px;
-      object-fit:contain;
-      margin:18px auto 16px;
+      display:block; width:min(560px,100%); max-width:min(560px,100%);
+      height:auto; max-height:70px; object-fit:contain; margin:18px auto 16px;
     }
-    @media (max-width:480px){
-      .logo{ max-height:56px; margin:14px auto 12px; }
-    }
+    @media (max-width:480px){ .logo{ max-height:56px; margin:14px auto 12px; } }
 
-    /* Buttons/inputs */
     .btn{
-      font-family:'Poppins',sans-serif;
-      font-weight:500;
-      padding:8px 12px;
-      border-radius:12px;
-      border:1px solid var(--border);
-      background:#fff;
-      cursor:pointer;
-      white-space:nowrap;
+      font-family:'Poppins',sans-serif; font-weight:500;
+      padding:8px 12px; border-radius:12px; border:1px solid var(--border);
+      background:#fff; cursor:pointer; white-space:nowrap;
     }
     .btn:hover{ background:#f3f4f6; }
-    .btnPrimary{
-      background:var(--accent);
-      color:#fff;
-      border-color:var(--accent);
-    }
+    .btnPrimary{ background:var(--accent); color:#fff; border-color:var(--accent); }
     .btnPrimary:hover{ opacity:.92; background:var(--accent); }
 
     .input{
-      width:100%;
-      padding:12px 14px;
-      border-radius:14px;
-      border:1px solid var(--border);
-      font-family:'Poppins',sans-serif;
-      font-weight:500;
-      font-size:15px;
+      width:100%; padding:12px 14px; border-radius:14px; border:1px solid var(--border);
+      font-family:'Poppins',sans-serif; font-weight:500; font-size:15px;
     }
 
     .muted{ color:var(--muted); font-size:13px; font-weight:300; }
     .err{ color:var(--bad); font-size:13px; margin-top:10px; text-align:left; }
     .ok{ color:var(--ok); font-size:13px; margin-top:10px; text-align:left; }
 
-    /* Login card */
-    .loginCard{
-      background:var(--bg);
-      border:1px solid var(--border);
-      border-radius:18px;
-      padding:16px;
-      text-align:left;
-    }
+    .loginCard{ background:var(--bg); border:1px solid var(--border); border-radius:18px; padding:16px; text-align:left; }
+    .topbar{ display:flex; justify-content:space-between; align-items:center; gap:10px; padding:8px 0 14px; }
 
-    /* Topbar */
-    .topbar{
-      display:flex;
-      justify-content:space-between;
-      align-items:center;
-      gap:10px;
-      padding:8px 0 14px;
-    }
-
-    /* Search */
     .searchWrap{ display:flex; justify-content:center; margin:6px 0 12px; }
     .searchWrap input{ width:min(560px,100%); }
 
-    /* Cards / Tables */
     .card{ background:var(--bg); border:1px solid var(--border); border-radius:18px; padding:12px; }
     .tableWrap{ overflow-x:auto; -webkit-overflow-scrolling:touch; }
     table{ width:100%; border-collapse:collapse; font-size:14px; min-width:820px; }
@@ -109,37 +60,28 @@
     .detailsRow td{ background:var(--soft); border-bottom:1px solid #eaeaea; }
     .small{ font-size:12px; color:var(--muted); }
 
-    /* Floating buttons */
     .calcFab{
-      position:fixed; right:18px; bottom:18px;
-      width:56px; height:56px; border-radius:50%;
-      background:var(--accent); color:#fff;
-      display:flex; align-items:center; justify-content:center;
-      cursor:pointer; box-shadow:0 10px 25px rgba(0,0,0,.25);
-      z-index:9999; user-select:none;
+      position:fixed; right:18px; bottom:18px; width:56px; height:56px; border-radius:50%;
+      background:var(--accent); color:#fff; display:flex; align-items:center; justify-content:center;
+      cursor:pointer; box-shadow:0 10px 25px rgba(0,0,0,.25); z-index:9999; user-select:none;
     }
     .calcFab span{ font-weight:700; font-size:22px; transform:translateY(-1px); }
 
     .cartFab{
-      position:fixed; left:18px; bottom:18px;
-      height:56px; padding:0 16px; border-radius:999px;
-      background:var(--accent); color:#fff;
-      display:flex; align-items:center; justify-content:center; gap:10px;
-      cursor:pointer; box-shadow:0 10px 25px rgba(0,0,0,.25);
-      z-index:9999; user-select:none;
+      position:fixed; left:18px; bottom:18px; height:56px; padding:0 16px; border-radius:999px;
+      background:var(--accent); color:#fff; display:flex; align-items:center; justify-content:center; gap:10px;
+      cursor:pointer; box-shadow:0 10px 25px rgba(0,0,0,.25); z-index:9999; user-select:none;
       font-family:'Poppins',sans-serif; font-weight:700;
     }
     .cartFab .badge{
-      display:inline-flex; align-items:center; justify-content:center;
-      min-width:28px; height:28px; padding:0 8px; border-radius:999px;
-      background:#fff; color:#111; font-weight:700; font-size:13px;
+      display:inline-flex; align-items:center; justify-content:center; min-width:28px; height:28px; padding:0 8px;
+      border-radius:999px; background:#fff; color:#111; font-weight:700; font-size:13px;
     }
     @media (max-width:480px){
       .cartFab{ left:14px; bottom:14px; height:54px; padding:0 14px; }
       .calcFab{ right:14px; bottom:14px; width:54px; height:54px; }
     }
 
-    /* Modals */
     .overlay{ position:fixed; inset:0; background:rgba(0,0,0,.45); display:none; align-items:center; justify-content:center; z-index:10000; padding:14px; }
     .overlay.active{ display:flex; }
     .modal{ background:#fff; width:min(1100px,96vw); height:min(760px,92vh); border-radius:18px; overflow:hidden; display:flex; flex-direction:column; }
@@ -148,17 +90,11 @@
     .modalBody{ padding:14px; overflow:auto; }
     .modal iframe{ flex:1; border:0; width:100%; }
 
-    /* Lead form stacked */
     .formGrid{ display:grid; grid-template-columns:1fr; gap:12px; }
     .field label{ display:block; font-size:12px; color:var(--muted); margin:0 0 6px; font-weight:500; }
     .field input, .field textarea{
-      width:100%;
-      padding:10px 12px;
-      border-radius:12px;
-      border:1px solid var(--border);
-      font-family:'Poppins',sans-serif;
-      font-weight:500;
-      font-size:14px;
+      width:100%; padding:10px 12px; border-radius:12px; border:1px solid var(--border);
+      font-family:'Poppins',sans-serif; font-weight:500; font-size:14px;
     }
     .field textarea{ min-height:80px; resize:vertical; font-weight:300; }
 
@@ -167,28 +103,31 @@
     .cartRow:last-child{ border-bottom:none; }
     .cartRow .left{ display:flex; flex-direction:column; gap:2px; }
 
-    /* Tick after save */
     .tick{
       display:inline-flex; align-items:center; gap:8px;
-      padding:10px 12px;
-      border:1px solid rgba(15,123,47,.25);
-      background:rgba(15,123,47,.06);
-      border-radius:14px;
-      color:var(--ok);
-      font-weight:500;
+      padding:10px 12px; border:1px solid rgba(15,123,47,.25);
+      background:rgba(15,123,47,.06); border-radius:14px; color:var(--ok); font-weight:500;
       margin-top:12px;
     }
     .tick .dot{
       width:22px; height:22px; border-radius:50%;
       display:inline-flex; align-items:center; justify-content:center;
       background:var(--ok); color:#fff; font-weight:700;
-      line-height:1;
     }
+
+    /* Debug box for JS errors */
+    #debugBox{ display:none; margin-top:10px; padding:10px 12px; border:1px solid rgba(176,0,32,.25); background:rgba(176,0,32,.06); border-radius:14px; color:var(--bad); text-align:left; font-size:13px; }
   </style>
 </head>
 
 <body>
-  <!-- LOGIN VIEW -->
+  <noscript>
+    <div style="padding:16px;font-family:system-ui">
+      JavaScript staat uit. Zet JavaScript aan om de portal te gebruiken.
+    </div>
+  </noscript>
+
+  <!-- LOGIN VIEW (visible by default) -->
   <div id="loginView" class="centerWrap">
     <img src="./logo.png" alt="Logo" class="logo" onerror="this.style.display='none';">
     <div class="loginCard">
@@ -199,6 +138,7 @@
         <button id="loginBtn" class="btn btnPrimary" style="flex:1;">Login</button>
       </div>
       <div id="loginErr" class="err"></div>
+      <div id="debugBox"></div>
     </div>
   </div>
 
@@ -306,14 +246,13 @@
 
         <div id="cartErr" class="err"></div>
         <div id="cartTick" class="tick" style="display:none;">
-          <span class="dot">✓</span>
-          <span>Lead opgeslagen</span>
+          <span class="dot">✓</span><span>Lead opgeslagen</span>
         </div>
       </div>
     </div>
   </div>
 
-  <!-- Account modal -->
+  <!-- Account modal (leads list) -->
   <div id="accountOverlay" class="overlay">
     <div class="modal">
       <div class="modalHeader">
@@ -324,13 +263,11 @@
       </div>
       <div class="modalBody">
         <div class="muted" id="accountSub" style="margin-bottom:10px;"></div>
-
         <div class="card">
           <div style="display:flex; justify-content:space-between; align-items:center; gap:12px; flex-wrap:wrap;">
             <div style="font-weight:700;">Leads overzicht</div>
             <button id="accountRefresh" class="btn">Refresh</button>
           </div>
-
           <div class="tableWrap" style="margin-top:8px;">
             <table style="min-width:980px;">
               <thead>
@@ -345,18 +282,24 @@
             </table>
           </div>
         </div>
-
         <div id="accountErr" class="err"></div>
       </div>
     </div>
   </div>
 
   <script>
-    // ✅ UPDATE THIS if your new deployment URL changed
+    // ✅ If deployment URL changed, update this
     const APPS_SCRIPT_WEBAPP_URL =
-      "https://script.google.com/macros/s/AKfycbyFGrz4lUo8ROQHTCahJ6QPeqvJrahMxgQ1KoTFYPbOM8W7I5AbsHZ4kK_8AWzocDwX1A/exec";
+      "https://script.google.com/macros/s/AKfycbyqzsvu-EaeJCLbUN3IZ6nxhXmi67SYM7sh15fJjmPtB6rvAJBn609IkpnDa7SFwc-QMg/exec";
 
-    // JSONP
+    const debugBox = document.getElementById("debugBox");
+    function showDebug(msg){
+      debugBox.style.display = "block";
+      debugBox.textContent = msg;
+    }
+    window.addEventListener("error", (e)=> showDebug("JS error: " + (e.message || e.error || "Unknown")));
+    window.addEventListener("unhandledrejection", (e)=> showDebug("Promise error: " + (e.reason?.message || e.reason || "Unknown")));
+
     function jsonp(url){
       return new Promise((resolve,reject)=>{
         const s=document.createElement("script");
@@ -370,7 +313,6 @@
       });
     }
 
-    // Helpers
     function fmtPrice(v){
       if(v===null||v===undefined||v==="") return "";
       const n = Number(String(v).replace(",","."));
@@ -379,7 +321,6 @@
     const fmtVal = v => (v==null?"":String(v));
     const esc = s => String(s).replace(/[&<>"']/g,m=>({ "&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;","'":"&#039;" }[m]));
 
-    // Multi-word search: all tokens must match in product+ean
     function matchesTokens(row, q){
       const tokens = q.split(/\s+/).filter(Boolean);
       if(!tokens.length) return true;
@@ -387,26 +328,22 @@
       return tokens.every(t => hay.includes(t));
     }
 
-    // Views
+    // Elements
     const loginView = document.getElementById("loginView");
     const appView = document.getElementById("appView");
 
-    // Login
     const loginKey = document.getElementById("loginKey");
     const loginBtn = document.getElementById("loginBtn");
     const loginErr = document.getElementById("loginErr");
 
-    // Topbar
     const accountBtn = document.getElementById("accountBtn");
     const logoutBtn = document.getElementById("logoutBtn");
 
-    // Main
     const searchInput = document.getElementById("searchInput");
     const tbody = document.getElementById("tbody");
     const meta = document.getElementById("meta");
     const err = document.getElementById("err");
 
-    // Floating
     const cartBtn = document.getElementById("cartBtn");
     const calcBtn = document.getElementById("calcBtn");
 
@@ -449,27 +386,23 @@
     let expanded = new Set();
     let cart = [];
 
-    function setCartBadge(){
-      document.getElementById("cartBadge").textContent = String(cart.length);
-    }
+    function setCartBadge(){ document.getElementById("cartBadge").textContent = String(cart.length); }
 
     function showLogin(){
-      loginView.style.display = "";
+      loginView.style.display = "block";
       appView.style.display = "none";
       cartBtn.style.display = "none";
       calcBtn.style.display = "none";
       loginErr.textContent = "";
-      loginKey.value = "";
+      debugBox.style.display = "none";
       loginKey.focus();
     }
-
     function showApp(){
       loginView.style.display = "none";
-      appView.style.display = "";
+      appView.style.display = "block";
       cartBtn.style.display = "";
       calcBtn.style.display = "";
     }
-
     function logout(){
       localStorage.removeItem("employeeKey");
       currentKey = "";
@@ -496,13 +429,11 @@
       cart.push({ ean:item.ean, product:item.product, retailPrice:item.retailPrice });
       setCartBadge();
     }
-
     function removeFromCart(ean){
       cart = cart.filter(x => x.ean !== ean);
       setCartBadge();
       renderCart();
     }
-
     function renderCart(){
       if(!cart.length){
         cartListEl.innerHTML = `<div class="cartRow"><div class="small">Geen items.</div></div>`;
@@ -517,7 +448,6 @@
           <div><button class="btn" data-remove="${esc(it.ean)}">Verwijder</button></div>
         </div>
       `).join("");
-
       cartListEl.querySelectorAll("button[data-remove]").forEach(b=>{
         b.addEventListener("click", ()=> removeFromCart(b.getAttribute("data-remove")));
       });
@@ -543,7 +473,6 @@
       try{
         const res = await jsonp(`${APPS_SCRIPT_WEBAPP_URL}?action=orders&scope=${scope}&key=${encodeURIComponent(currentKey)}`);
         if(!res || !res.ok) throw new Error(res?.error || "Kon leads niet laden");
-
         const orders = Array.isArray(res.orders) ? res.orders : [];
         if(!orders.length){
           accountOrdersTbody.innerHTML = `<tr><td colspan="9" class="small">Geen leads.</td></tr>`;
@@ -562,13 +491,13 @@
             <td>${esc(o.sale||"")}</td>
           </tr>
         `).join("");
-      } catch(e){
+      }catch(e){
         accountErr.textContent = e.message;
         accountOrdersTbody.innerHTML = `<tr><td colspan="9" class="small">Fout.</td></tr>`;
       }
     }
 
-    // Products load
+    // Products
     async function loadProducts(){
       err.textContent = "";
       meta.textContent = "Laden…";
@@ -675,8 +604,7 @@
         renderCart();
 
         custName.value=""; contact1.value=""; contact2.value=""; note.value="";
-
-        cartTick.style.display = ""; // ✅ tick
+        cartTick.style.display = "";
       }catch(e){
         cartErr.textContent = "Fout bij opslaan: " + e.message;
       }finally{
@@ -685,37 +613,36 @@
       }
     };
 
-    // Login flow
-    async function doLogin(key){
-      const res = await jsonp(`${APPS_SCRIPT_WEBAPP_URL}?action=data&key=${encodeURIComponent(key)}`);
-      if(!res || !res.ok) throw new Error(res?.error || "Login mislukt");
-
-      localStorage.setItem("employeeKey", key);
-      currentKey = key;
-
-      showApp();
-      setCartBadge();
-
-      isAdmin = !!res.isAdmin;
-      currentUserName = (res.user && res.user.name) ? res.user.name : "";
-      accountBtn.textContent = currentUserName ? currentUserName : "Account";
-
-      allRows = Array.isArray(res.rows) ? res.rows : [];
-      expanded.clear();
-      meta.textContent = `${allRows.length} items`;
-      searchInput.disabled = false;
-      renderProducts();
-    }
-
+    // Login
     loginBtn.onclick = async () => {
       loginErr.textContent = "";
+      debugBox.style.display = "none";
+
       const key = loginKey.value.trim();
       if(!key){ loginErr.textContent = "Vul een key in."; return; }
 
       loginBtn.disabled = true;
       loginBtn.textContent = "Login…";
       try{
-        await doLogin(key);
+        const res = await jsonp(`${APPS_SCRIPT_WEBAPP_URL}?action=data&key=${encodeURIComponent(key)}`);
+        if(!res || !res.ok) throw new Error(res?.error || "Login mislukt");
+
+        localStorage.setItem("employeeKey", key);
+        currentKey = key;
+
+        showApp();
+        setCartBadge();
+
+        isAdmin = !!res.isAdmin;
+        currentUserName = (res.user && res.user.name) ? res.user.name : "";
+        accountBtn.textContent = currentUserName ? currentUserName : "Account";
+
+        allRows = Array.isArray(res.rows) ? res.rows : [];
+        expanded.clear();
+        meta.textContent = `${allRows.length} items`;
+        searchInput.disabled = false;
+        renderProducts();
+
       }catch(e){
         loginErr.textContent = e.message;
       }finally{
@@ -725,17 +652,20 @@
     };
 
     // Init
-    (function(){
+    document.addEventListener("DOMContentLoaded", () => {
       const stored = (localStorage.getItem("employeeKey") || "").trim();
-      if(!stored){
-        showLogin();
-        return;
-      }
+      if(!stored){ showLogin(); return; }
       currentKey = stored;
+
       showApp();
       setCartBadge();
-      loadProducts().catch(()=>{ logout(); });
-    })();
+
+      loadProducts().catch((e)=>{
+        // if webapp url is wrong / deployment fails, go back to login but show debug
+        showLogin();
+        showDebug("Kon data niet laden. Check APPS_SCRIPT_WEBAPP_URL of deployment. (" + (e.message||e) + ")");
+      });
+    });
   </script>
 </body>
 </html>
