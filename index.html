@@ -77,6 +77,8 @@
       cursor:pointer;
       white-space:nowrap;
       color:#111;
+      appearance:none;
+      -webkit-appearance:none;
     }
     .btn:hover{ background:#f3f4f6; }
     .btnPrimary{
@@ -88,13 +90,18 @@
 
     /* small calculator button */
     .btnCalc{
+      font-family:'Poppins',sans-serif;
       font-weight:700;
       padding:10px 12px;
       border-radius:14px;
       border:1px solid var(--border);
       background:#fff;
+      color:#111;
       cursor:pointer;
       line-height:1;
+      appearance:none;
+      -webkit-appearance:none;
+      -webkit-tap-highlight-color: transparent;
     }
     .btnCalc:hover{ background:#f3f4f6; }
 
@@ -184,11 +191,11 @@
       box-shadow:0 0 0 3px rgba(0,0,0,.03);
       flex-shrink:0;
     }
-    .dotGreen{ background:#16a34a; }   /* surfcenter > 0 */
-    .dotOrange{ background:#f59e0b; }  /* alleen warehouse > 0 */
-    .dotRed{ background:#ef4444; }     /* geen stock */
+    .dotGreen{ background:#16a34a; }
+    .dotOrange{ background:#f59e0b; }
+    .dotRed{ background:#ef4444; }
 
-    /* Desktop actions cell (Info + % + Add right aligned) */
+    /* Desktop actions cell */
     .tdActions{
       text-align:right;
       white-space:nowrap;
@@ -232,7 +239,6 @@
     .modalHeader .actions{ display:flex; gap:10px; flex-wrap:wrap; justify-content:flex-end; }
     .modalBody{ padding:14px; overflow:auto; }
 
-    /* Lead form stacked */
     .formGrid{ display:grid; grid-template-columns:1fr; gap:12px; }
     .field label{ display:block; font-size:12px; color:var(--muted); margin:0 0 6px; font-weight:500; }
     .field input, .field textarea{
@@ -322,6 +328,8 @@
       align-items:center;
       justify-content:center;
       gap:10px;
+      appearance:none;
+      -webkit-appearance:none;
     }
     .cartBarBtn .badge{
       display:inline-flex; align-items:center; justify-content:center;
@@ -379,7 +387,7 @@
               <th>Surfcenter</th>
               <th>Warehouse</th>
               <th>Stock</th>
-              <th style="text-align:right;">Info / % / Add</th>
+              <th style="text-align:right;"></th>
             </tr>
           </thead>
           <tbody id="tbody">
@@ -525,7 +533,10 @@
       const n = Number(String(v).replace(",","."));
       return Number.isFinite(n) ? "€ " + n.toFixed(2) : String(v);
     }
-    const esc = s => String(s).replace(/[&<>"']/g,m=>({ "&":"&amp;","<":"&lt;"," >":"&gt;","\"":"&quot;","'":"&#039;" }[m]||m));
+
+    const esc = s => String(s).replace(/[&<>"']/g,m=>({
+      "&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;","'":"&#039;"
+    }[m]));
 
     function toNumberStock(x){
       if(x===null||x===undefined||x==="") return null;
@@ -544,7 +555,6 @@
       return (sc===null && wh===null) ? 0 : ((sc||0) + (wh||0));
     }
 
-    // Status: green = Surfcenter > 0, orange = alleen Warehouse > 0, red = geen voorraad
     function stockStatus(scRaw, whRaw){
       const sc = toNumberStock(scRaw);
       const wh = toNumberStock(whRaw);
@@ -561,7 +571,6 @@
       return status === "green" ? "dotGreen" : (status === "orange" ? "dotOrange" : "dotRed");
     }
 
-    // Sort: green boven, dan orange, dan red. Binnen groep: meeste relevante voorraad eerst.
     function sortRowsByStock(a, b){
       const aStatus = stockStatus(a.surfcenterStock, a.dropshipmentStock);
       const bStatus = stockStatus(b.surfcenterStock, b.dropshipmentStock);
@@ -593,19 +602,21 @@
       return tokens.every(t => hay.includes(t));
     }
 
-    // ✅ Calculator opener: vult retail (incl) + purchase (excl) als query params
+    // ✅ Calculator opener: zelfde scherm (niet nieuw tabblad)
     function openCalculatorForRow(row){
       const retail = Number(String(row.retailPrice ?? "").replace(",", "."));
       const purchase = Number(String(row.purchasePrice ?? "").replace(",", "."));
 
       const params = new URLSearchParams();
 
-      // PAS DEZE 2 AAN als jouw calculator andere param names gebruikt
-      if(Number.isFinite(retail)) params.set("retail", retail.toFixed(2));
-      if(Number.isFinite(purchase)) params.set("purchase", purchase.toFixed(2));
+      // (calculator velden)
+      // Selling Price = sellPrice (incl)
+      // Purchase Price = purchasePrice (excl)
+      if(Number.isFinite(retail)) params.set("sellPrice", retail.toFixed(2));
+      if(Number.isFinite(purchase)) params.set("purchasePrice", purchase.toFixed(2));
 
       const url = params.toString() ? `${CALCULATOR_URL}?${params.toString()}` : CALCULATOR_URL;
-      window.open(url, "_blank", "noopener,noreferrer");
+      window.location.href = url; // ✅ same screen
     }
 
     const loginView = document.getElementById("loginView");
@@ -655,8 +666,8 @@
     let isAdmin = false;
 
     let allRows = [];
-    let expanded = new Set();       // desktop product expand
-    let mobileExpanded = new Set(); // mobile product expand
+    let expanded = new Set();
+    let mobileExpanded = new Set();
     let cart = [];
 
     function setCartBadge(){
@@ -719,10 +730,10 @@
       cartListEl.innerHTML = cart.map(it => `
         <div class="cartRow">
           <div class="left">
-            <div style="font-weight:500;">${String(it.product || "").replace(/[&<>"']/g,m=>({ "&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;","'":"&#039;" }[m]))}</div>
-            <div class="small">Retail: ${String(fmtPrice(it.retailPrice)).replace(/[&<>"']/g,m=>({ "&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;","'":"&#039;" }[m]))}</div>
+            <div style="font-weight:500;">${esc(it.product || "")}</div>
+            <div class="small">Retail: ${esc(fmtPrice(it.retailPrice))}</div>
           </div>
-          <div><button class="btn" data-remove="${String(it.ean||"").replace(/[&<>"']/g,m=>({ "&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;","'":"&#039;" }[m]))}">Verwijder</button></div>
+          <div><button class="btn" data-remove="${esc(it.ean)}">Verwijder</button></div>
         </div>
       `).join("");
       cartListEl.querySelectorAll("button[data-remove]").forEach(b=>{
@@ -730,7 +741,6 @@
       });
     }
 
-    // Account modal open/close
     function openAccount(){
       accountErr.textContent = "";
       accountOverlay.classList.add("active");
@@ -813,7 +823,6 @@
       }
     }
 
-    // Products
     async function loadProducts(){
       err.textContent = "";
       meta.textContent = "Laden…";
@@ -841,7 +850,6 @@
       const rowsUnsorted = !q ? allRows : allRows.filter(r => matchesTokens(r, q));
       const rows = [...rowsUnsorted].sort(sortRowsByStock);
 
-      // Desktop table
       tbody.innerHTML = "";
       if(!rows.length){
         tbody.innerHTML = `<tr><td colspan="6" class="small">Geen resultaten.</td></tr>`;
@@ -857,7 +865,6 @@
           const status = stockStatus(r.surfcenterStock, r.dropshipmentStock);
           const dotClass = dotClassForStatus(status);
 
-          // Product (met bolletje)
           const tdProd = document.createElement("td");
           tdProd.innerHTML = `<span class="stockDot ${dotClass}"></span>${esc(r.product || "")}`;
           tr.appendChild(tdProd);
@@ -867,7 +874,6 @@
           tr.appendChild(Object.assign(document.createElement("td"), { textContent: whText }));
           tr.appendChild(Object.assign(document.createElement("td"), { textContent: String(total) }));
 
-          // ✅ Info + % + Add rechts naast elkaar
           const tdActions = document.createElement("td");
           tdActions.className = "tdActions";
 
@@ -901,7 +907,6 @@
 
           tbody.appendChild(tr);
 
-          // Details row (colspan 6)
           if(expanded.has(id)){
             const tr2 = document.createElement("tr");
             tr2.className = "detailsRow";
@@ -924,7 +929,6 @@
         });
       }
 
-      // Mobile cards
       if(!rows.length){
         mobileProducts.innerHTML = `<div class="small">Geen resultaten.</div>`;
         return;
@@ -984,7 +988,6 @@
         });
       });
 
-      // ✅ mobile calc
       mobileProducts.querySelectorAll("button[data-calc]").forEach(btn=>{
         btn.addEventListener("click", ()=>{
           const parent = btn.closest(".pCard");
@@ -998,7 +1001,6 @@
 
     searchInput.addEventListener("input", renderProducts);
 
-    // Submit lead
     saveLeadBtn.onclick = async () => {
       cartErr.textContent = "";
       cartTick.style.display = "none";
@@ -1035,7 +1037,6 @@
       }
     };
 
-    // Login
     loginBtn.onclick = async () => {
       loginErr.textContent = "";
       const key = loginKey.value.trim();
@@ -1073,7 +1074,6 @@
       }
     };
 
-    // Init
     document.addEventListener("DOMContentLoaded", () => {
       const stored = (localStorage.getItem("employeeKey") || "").trim();
       if(!stored){ showLogin(); return; }
