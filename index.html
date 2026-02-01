@@ -239,6 +239,10 @@
     .modalHeader .actions{ display:flex; gap:10px; flex-wrap:wrap; justify-content:flex-end; }
     .modalBody{ padding:14px; overflow:auto; }
 
+    /* Calculator iframe netjes fullscreen in modal */
+    #calcOverlay .modalBody{ height:100%; padding:0; overflow:hidden; }
+    #calcOverlay .modal{ height:min(760px,92vh); }
+
     .formGrid{ display:grid; grid-template-columns:1fr; gap:12px; }
     .field label{ display:block; font-size:12px; color:var(--muted); margin:0 0 6px; font-weight:500; }
     .field input, .field textarea{
@@ -509,6 +513,28 @@
     </div>
   </div>
 
+  <!-- Calculator modal (sluitbaar, geen nieuw tabblad) -->
+  <div id="calcOverlay" class="overlay">
+    <div class="modal">
+      <div class="modalHeader">
+        <span>Calculator</span>
+        <div class="actions">
+          <button id="calcClose" class="btn">Sluiten</button>
+        </div>
+      </div>
+
+      <div class="modalBody">
+        <iframe
+          id="calcFrame"
+          title="Calculator"
+          src="about:blank"
+          style="width:100%; height:100%; border:0;"
+          allow="clipboard-write; fullscreen"
+        ></iframe>
+      </div>
+    </div>
+  </div>
+
   <script>
     const APPS_SCRIPT_WEBAPP_URL =
       "https://script.google.com/macros/s/AKfycbzlOHAETsCoiG3h4rE0ot9RF2Pvp3pr__iyzdbb2Kg5-Dm84B0jEqQKOJ7P7CNUa0s/exec";
@@ -602,22 +628,32 @@
       return tokens.every(t => hay.includes(t));
     }
 
-    // ✅ Calculator opener: zelfde scherm (niet nieuw tabblad)
+    // ✅ Calculator opener: GEEN nieuw tabblad, open in sluitbare modal + prefill
+    const calcOverlay = document.getElementById("calcOverlay");
+    const calcClose = document.getElementById("calcClose");
+    const calcFrame = document.getElementById("calcFrame");
+
     function openCalculatorForRow(row){
       const retail = Number(String(row.retailPrice ?? "").replace(",", "."));
       const purchase = Number(String(row.purchasePrice ?? "").replace(",", "."));
 
       const params = new URLSearchParams();
-
-      // (calculator velden)
       // Selling Price = sellPrice (incl)
       // Purchase Price = purchasePrice (excl)
       if(Number.isFinite(retail)) params.set("sellPrice", retail.toFixed(2));
       if(Number.isFinite(purchase)) params.set("purchasePrice", purchase.toFixed(2));
 
       const url = params.toString() ? `${CALCULATOR_URL}?${params.toString()}` : CALCULATOR_URL;
-      window.location.href = url; // ✅ same screen
+
+      calcFrame.src = url;
+      calcOverlay.classList.add("active");
     }
+    function closeCalculator(){
+      calcOverlay.classList.remove("active");
+      calcFrame.src = "about:blank";
+    }
+    calcClose.onclick = closeCalculator;
+    calcOverlay.addEventListener("click", e => { if(e.target===calcOverlay) closeCalculator(); });
 
     const loginView = document.getElementById("loginView");
     const appView = document.getElementById("appView");
@@ -745,6 +781,7 @@
       accountErr.textContent = "";
       accountOverlay.classList.add("active");
       accountTitle.textContent = currentUserName ? currentUserName : "Account";
+      // ✅ Admin tekst: Surfcenter
       accountSub.textContent = isAdmin ? "Surfcenter: alle leads" : "Jouw leads";
       loadAccountOrders();
     }
