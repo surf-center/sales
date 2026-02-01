@@ -86,6 +86,18 @@
     }
     .btnPrimary:hover{ opacity:.92; background:var(--accent); }
 
+    /* small calculator button */
+    .btnCalc{
+      font-weight:700;
+      padding:10px 12px;
+      border-radius:14px;
+      border:1px solid var(--border);
+      background:#fff;
+      cursor:pointer;
+      line-height:1;
+    }
+    .btnCalc:hover{ background:#f3f4f6; }
+
     .input{
       width:100%;
       padding:13px 14px;
@@ -176,7 +188,7 @@
     .dotOrange{ background:#f59e0b; }  /* alleen warehouse > 0 */
     .dotRed{ background:#ef4444; }     /* geen stock */
 
-    /* Desktop actions cell (Info + Add right aligned) */
+    /* Desktop actions cell (Info + % + Add right aligned) */
     .tdActions{
       text-align:right;
       white-space:nowrap;
@@ -367,7 +379,7 @@
               <th>Surfcenter</th>
               <th>Warehouse</th>
               <th>Stock</th>
-              <th style="text-align:right;">Info / Add</th>
+              <th style="text-align:right;">Info / % / Add</th>
             </tr>
           </thead>
           <tbody id="tbody">
@@ -493,6 +505,8 @@
     const APPS_SCRIPT_WEBAPP_URL =
       "https://script.google.com/macros/s/AKfycbzlOHAETsCoiG3h4rE0ot9RF2Pvp3pr__iyzdbb2Kg5-Dm84B0jEqQKOJ7P7CNUa0s/exec";
 
+    const CALCULATOR_URL = "https://surf-center.github.io/calculator/";
+
     function jsonp(url){
       return new Promise((resolve,reject)=>{
         const s=document.createElement("script");
@@ -511,7 +525,7 @@
       const n = Number(String(v).replace(",","."));
       return Number.isFinite(n) ? "€ " + n.toFixed(2) : String(v);
     }
-    const esc = s => String(s).replace(/[&<>"']/g,m=>({ "&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;","'":"&#039;" }[m]));
+    const esc = s => String(s).replace(/[&<>"']/g,m=>({ "&":"&amp;","<":"&lt;"," >":"&gt;","\"":"&quot;","'":"&#039;" }[m]||m));
 
     function toNumberStock(x){
       if(x===null||x===undefined||x==="") return null;
@@ -577,6 +591,21 @@
       if(!tokens.length) return true;
       const hay = ((row.product||"") + " " + (row.ean||"")).toLowerCase();
       return tokens.every(t => hay.includes(t));
+    }
+
+    // ✅ Calculator opener: vult retail (incl) + purchase (excl) als query params
+    function openCalculatorForRow(row){
+      const retail = Number(String(row.retailPrice ?? "").replace(",", "."));
+      const purchase = Number(String(row.purchasePrice ?? "").replace(",", "."));
+
+      const params = new URLSearchParams();
+
+      // PAS DEZE 2 AAN als jouw calculator andere param names gebruikt
+      if(Number.isFinite(retail)) params.set("retail", retail.toFixed(2));
+      if(Number.isFinite(purchase)) params.set("purchase", purchase.toFixed(2));
+
+      const url = params.toString() ? `${CALCULATOR_URL}?${params.toString()}` : CALCULATOR_URL;
+      window.open(url, "_blank", "noopener,noreferrer");
     }
 
     const loginView = document.getElementById("loginView");
@@ -690,10 +719,10 @@
       cartListEl.innerHTML = cart.map(it => `
         <div class="cartRow">
           <div class="left">
-            <div style="font-weight:500;">${esc(it.product || "")}</div>
-            <div class="small">Retail: ${esc(fmtPrice(it.retailPrice))}</div>
+            <div style="font-weight:500;">${String(it.product || "").replace(/[&<>"']/g,m=>({ "&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;","'":"&#039;" }[m]))}</div>
+            <div class="small">Retail: ${String(fmtPrice(it.retailPrice)).replace(/[&<>"']/g,m=>({ "&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;","'":"&#039;" }[m]))}</div>
           </div>
-          <div><button class="btn" data-remove="${esc(it.ean)}">Verwijder</button></div>
+          <div><button class="btn" data-remove="${String(it.ean||"").replace(/[&<>"']/g,m=>({ "&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;","'":"&#039;" }[m]))}">Verwijder</button></div>
         </div>
       `).join("");
       cartListEl.querySelectorAll("button[data-remove]").forEach(b=>{
@@ -706,7 +735,7 @@
       accountErr.textContent = "";
       accountOverlay.classList.add("active");
       accountTitle.textContent = currentUserName ? currentUserName : "Account";
-      accountSub.textContent = isAdmin ? "Surfcenter: alle leads" : "Jouw leads"; // ✅ ADMIN -> Surfcenter
+      accountSub.textContent = isAdmin ? "Surfcenter: alle leads" : "Jouw leads";
       loadAccountOrders();
     }
     function closeAccountFn(){ accountOverlay.classList.remove("active"); }
@@ -838,7 +867,7 @@
           tr.appendChild(Object.assign(document.createElement("td"), { textContent: whText }));
           tr.appendChild(Object.assign(document.createElement("td"), { textContent: String(total) }));
 
-          // ✅ Info + Add rechts naast elkaar
+          // ✅ Info + % + Add rechts naast elkaar
           const tdActions = document.createElement("td");
           tdActions.className = "tdActions";
 
@@ -853,12 +882,19 @@
             renderProducts();
           };
 
+          const calcBtn = document.createElement("button");
+          calcBtn.className = "btnCalc";
+          calcBtn.title = "Open calculator";
+          calcBtn.textContent = "%";
+          calcBtn.onclick = () => openCalculatorForRow(r);
+
           const addBtn = document.createElement("button");
           addBtn.className = "btn btnPrimary";
           addBtn.textContent = "Add";
           addBtn.onclick = () => addToCart({ ean:r.ean, product:r.product, retailPrice:r.retailPrice });
 
           wrap.appendChild(infoBtn);
+          wrap.appendChild(calcBtn);
           wrap.appendChild(addBtn);
           tdActions.appendChild(wrap);
           tr.appendChild(tdActions);
@@ -911,6 +947,7 @@
               <div class="pName"><span class="stockDot ${dotClass}"></span>${esc(r.product||"")}</div>
               <div class="pActions">
                 <button class="btn pToggle" data-toggle="${id}">${open ? "Sluit" : "Info"}</button>
+                <button class="btnCalc" data-calc="${id}" title="Open calculator">%</button>
                 <button class="btn btnPrimary pTiny" data-add="${id}">Add</button>
               </div>
             </div>
@@ -944,6 +981,17 @@
           const idx = rows.findIndex((_,i)=>`m_${rows[i].ean}__${i}`===pid);
           const r = rows[idx];
           addToCart({ ean:r.ean, product:r.product, retailPrice:r.retailPrice });
+        });
+      });
+
+      // ✅ mobile calc
+      mobileProducts.querySelectorAll("button[data-calc]").forEach(btn=>{
+        btn.addEventListener("click", ()=>{
+          const parent = btn.closest(".pCard");
+          const pid = parent.getAttribute("data-id");
+          const idx = rows.findIndex((_,i)=>`m_${rows[i].ean}__${i}`===pid);
+          const r = rows[idx];
+          openCalculatorForRow(r);
         });
       });
     }
