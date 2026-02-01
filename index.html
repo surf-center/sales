@@ -176,6 +176,18 @@
     .dotOrange{ background:#f59e0b; }  /* alleen warehouse > 0 */
     .dotRed{ background:#ef4444; }     /* geen stock */
 
+    /* Desktop actions cell (Info + Add right aligned) */
+    .tdActions{
+      text-align:right;
+      white-space:nowrap;
+    }
+    .actionWrap{
+      display:inline-flex;
+      gap:8px;
+      align-items:center;
+      justify-content:flex-end;
+    }
+
     /* Modals */
     .overlay{
       position:fixed; inset:0;
@@ -350,17 +362,16 @@
         <table>
           <thead>
             <tr>
-              <th></th>
               <th>Product</th>
               <th>Retail price</th>
               <th>Surfcenter</th>
               <th>Warehouse</th>
               <th>Stock</th>
-              <th>Add</th>
+              <th style="text-align:right;">Info / Add</th>
             </tr>
           </thead>
           <tbody id="tbody">
-            <tr><td colspan="7" class="small">Laden…</td></tr>
+            <tr><td colspan="6" class="small">Laden…</td></tr>
           </tbody>
         </table>
       </div>
@@ -695,7 +706,7 @@
       accountErr.textContent = "";
       accountOverlay.classList.add("active");
       accountTitle.textContent = currentUserName ? currentUserName : "Account";
-      accountSub.textContent = isAdmin ? "Surfcenter: alle leads" : "Jouw leads";
+      accountSub.textContent = isAdmin ? "Surfcenter: alle leads" : "Jouw leads"; // ✅ ADMIN -> Surfcenter
       loadAccountOrders();
     }
     function closeAccountFn(){ accountOverlay.classList.remove("active"); }
@@ -714,7 +725,6 @@
         if(!res || !res.ok) throw new Error(res?.error || "Kon leads niet laden");
         const orders = Array.isArray(res.orders) ? res.orders : [];
 
-        // Desktop table
         if(!orders.length){
           accountOrdersTbody.innerHTML = `<tr><td colspan="6" class="small">Geen leads.</td></tr>`;
         }else{
@@ -730,7 +740,6 @@
           `).join("");
         }
 
-        // Mobile leads
         if(!orders.length){
           mobileLeads.innerHTML = `<div class="small">Geen leads.</div>`;
           return;
@@ -779,7 +788,7 @@
     async function loadProducts(){
       err.textContent = "";
       meta.textContent = "Laden…";
-      tbody.innerHTML = `<tr><td colspan="7" class="small">Data laden…</td></tr>`;
+      tbody.innerHTML = `<tr><td colspan="6" class="small">Data laden…</td></tr>`;
       mobileProducts.innerHTML = `<div class="small">Laden…</div>`;
 
       const res = await jsonp(`${APPS_SCRIPT_WEBAPP_URL}?action=data&key=${encodeURIComponent(currentKey)}`);
@@ -806,7 +815,7 @@
       // Desktop table
       tbody.innerHTML = "";
       if(!rows.length){
-        tbody.innerHTML = `<tr><td colspan="7" class="small">Geen resultaten.</td></tr>`;
+        tbody.innerHTML = `<tr><td colspan="6" class="small">Geen resultaten.</td></tr>`;
       }else{
         rows.forEach((r,i)=>{
           const id = `${r.ean}__${i}`;
@@ -819,16 +828,7 @@
           const status = stockStatus(r.surfcenterStock, r.dropshipmentStock);
           const dotClass = dotClassForStatus(status);
 
-          const tdExpand = document.createElement("td");
-          const b = document.createElement("button");
-          b.className = "btn";
-          b.style.padding = "7px 10px";
-          b.textContent = expanded.has(id) ? "−" : "+";
-          b.onclick = () => { expanded.has(id) ? expanded.delete(id) : expanded.add(id); renderProducts(); };
-          tdExpand.appendChild(b);
-
-          tr.appendChild(tdExpand);
-
+          // Product (met bolletje)
           const tdProd = document.createElement("td");
           tdProd.innerHTML = `<span class="stockDot ${dotClass}"></span>${esc(r.product || "")}`;
           tr.appendChild(tdProd);
@@ -838,21 +838,39 @@
           tr.appendChild(Object.assign(document.createElement("td"), { textContent: whText }));
           tr.appendChild(Object.assign(document.createElement("td"), { textContent: String(total) }));
 
-          const tdAdd = document.createElement("td");
+          // ✅ Info + Add rechts naast elkaar
+          const tdActions = document.createElement("td");
+          tdActions.className = "tdActions";
+
+          const wrap = document.createElement("div");
+          wrap.className = "actionWrap";
+
+          const infoBtn = document.createElement("button");
+          infoBtn.className = "btn";
+          infoBtn.textContent = expanded.has(id) ? "Sluit" : "Info";
+          infoBtn.onclick = () => {
+            expanded.has(id) ? expanded.delete(id) : expanded.add(id);
+            renderProducts();
+          };
+
           const addBtn = document.createElement("button");
           addBtn.className = "btn btnPrimary";
           addBtn.textContent = "Add";
           addBtn.onclick = () => addToCart({ ean:r.ean, product:r.product, retailPrice:r.retailPrice });
-          tdAdd.appendChild(addBtn);
-          tr.appendChild(tdAdd);
+
+          wrap.appendChild(infoBtn);
+          wrap.appendChild(addBtn);
+          tdActions.appendChild(wrap);
+          tr.appendChild(tdActions);
 
           tbody.appendChild(tr);
 
+          // Details row (colspan 6)
           if(expanded.has(id)){
             const tr2 = document.createElement("tr");
             tr2.className = "detailsRow";
             const td = document.createElement("td");
-            td.colSpan = 7;
+            td.colSpan = 6;
             td.innerHTML = `
               <div class="kv" style="grid-template-columns:140px 1fr;">
                 <div class="k">Retail price</div><div class="v">${esc(fmtPrice(r.retailPrice))}</div>
