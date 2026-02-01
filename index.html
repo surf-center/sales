@@ -144,7 +144,7 @@
     .productList{ display:flex; flex-direction:column; gap:10px; }
     .pCard{ border:1px solid var(--border); border-radius:18px; background:#fff; overflow:hidden; }
     .pRow{ display:flex; align-items:center; justify-content:space-between; gap:10px; padding:12px; }
-    .pName{ font-weight:500; font-size:15px; line-height:1.2; flex:1; min-width:0; word-break:break-word; }
+    .pName{ font-weight:500; font-size:15px; line-height:1.2; flex:1; min-width:0; word-break:break-word; display:flex; align-items:center; }
     .pActions{ display:flex; gap:8px; align-items:center; flex-shrink:0; }
     .pTiny{ padding:9px 12px; border-radius:14px; font-weight:700; }
     .pToggle{ padding:9px 12px; border-radius:14px; color:#111; }
@@ -160,6 +160,21 @@
     }
     .k{ color:var(--muted); font-weight:500; }
     .v{ color:#111; font-weight:300; word-break:break-word; }
+
+    /* Stock dot */
+    .stockDot{
+      display:inline-block;
+      width:10px;
+      height:10px;
+      border-radius:999px;
+      margin-right:10px;
+      vertical-align:middle;
+      box-shadow:0 0 0 3px rgba(0,0,0,.03);
+      flex-shrink:0;
+    }
+    .dotGreen{ background:#16a34a; }   /* surfcenter > 0 */
+    .dotOrange{ background:#f59e0b; }  /* alleen warehouse > 0 */
+    .dotRed{ background:#ef4444; }     /* geen stock */
 
     /* Modals */
     .overlay{
@@ -207,7 +222,7 @@
       background:#fff;
     }
     .field textarea{
-      min-height:130px; /* bigger note */
+      min-height:130px;
       resize:vertical;
       font-weight:300;
     }
@@ -249,7 +264,7 @@
       background:#fff; color:#111; font-weight:700; font-size:13px;
     }
 
-    /* Mobile bottom cart bar (full width) */
+    /* Mobile bottom cart bar */
     .cartBar{
       display:none;
       position:fixed;
@@ -433,7 +448,7 @@
       <div class="modalBody">
         <div class="muted" id="accountSub" style="margin-bottom:10px;"></div>
 
-        <!-- Desktop leads table (updated headers) -->
+        <!-- Desktop leads table -->
         <div class="card desktopOnly">
           <div style="font-weight:700; margin-bottom:8px;">Leads overzicht</div>
           <div class="tableWrap">
@@ -452,7 +467,7 @@
           </div>
         </div>
 
-        <!-- Mobile leads: name + plus (details like product info) -->
+        <!-- Mobile leads -->
         <div class="mobileOnly">
           <div style="font-weight:700; margin-bottom:10px;">Leads overzicht</div>
           <div id="mobileLeads" class="productList"></div>
@@ -492,14 +507,58 @@
       const n = Number(String(x).replace(",",".").trim());
       return Number.isFinite(n) ? n : null;
     }
+
     function stockCellValue(raw){
       const n = toNumberStock(raw);
       return (n===null) ? "not found" : String(n);
     }
+
     function stockTotal(scRaw, whRaw){
       const sc = toNumberStock(scRaw);
       const wh = toNumberStock(whRaw);
       return (sc===null && wh===null) ? 0 : ((sc||0) + (wh||0));
+    }
+
+    // Status: green = Surfcenter > 0, orange = alleen Warehouse > 0, red = geen voorraad
+    function stockStatus(scRaw, whRaw){
+      const sc = toNumberStock(scRaw);
+      const wh = toNumberStock(whRaw);
+      if((sc||0) > 0) return "green";
+      if((wh||0) > 0) return "orange";
+      return "red";
+    }
+    function statusRank(status){
+      if(status === "green") return 2;
+      if(status === "orange") return 1;
+      return 0;
+    }
+    function dotClassForStatus(status){
+      return status === "green" ? "dotGreen" : (status === "orange" ? "dotOrange" : "dotRed");
+    }
+
+    // Sort: green boven, dan orange, dan red. Binnen groep: meeste relevante voorraad eerst.
+    function sortRowsByStock(a, b){
+      const aStatus = stockStatus(a.surfcenterStock, a.dropshipmentStock);
+      const bStatus = stockStatus(b.surfcenterStock, b.dropshipmentStock);
+
+      const r = statusRank(bStatus) - statusRank(aStatus);
+      if(r !== 0) return r;
+
+      const aSc = toNumberStock(a.surfcenterStock) || 0;
+      const bSc = toNumberStock(b.surfcenterStock) || 0;
+      const aWh = toNumberStock(a.dropshipmentStock) || 0;
+      const bWh = toNumberStock(b.dropshipmentStock) || 0;
+
+      const aVal = (aStatus === "green") ? aSc : (aStatus === "orange" ? aWh : 0);
+      const bVal = (bStatus === "green") ? bSc : (bStatus === "orange" ? bWh : 0);
+
+      if(bVal !== aVal) return bVal - aVal;
+
+      const aTot = aSc + aWh;
+      const bTot = bSc + bWh;
+      if(bTot !== aTot) return bTot - aTot;
+
+      return String(a.product||"").localeCompare(String(b.product||""));
     }
 
     function matchesTokens(row, q){
@@ -636,7 +695,7 @@
       accountErr.textContent = "";
       accountOverlay.classList.add("active");
       accountTitle.textContent = currentUserName ? currentUserName : "Account";
-      accountSub.textContent = isAdmin ? "Admin view: alle leads" : "Jouw leads";
+      accountSub.textContent = isAdmin ? "Surfcenter: alle leads" : "Jouw leads";
       loadAccountOrders();
     }
     function closeAccountFn(){ accountOverlay.classList.remove("active"); }
@@ -671,7 +730,7 @@
           `).join("");
         }
 
-        // Mobile leads: name + plus, details toggled like product info
+        // Mobile leads
         if(!orders.length){
           mobileLeads.innerHTML = `<div class="small">Geen leads.</div>`;
           return;
@@ -741,7 +800,8 @@
 
     function renderProducts(){
       const q = searchInput.value.trim().toLowerCase();
-      const rows = !q ? allRows : allRows.filter(r => matchesTokens(r, q));
+      const rowsUnsorted = !q ? allRows : allRows.filter(r => matchesTokens(r, q));
+      const rows = [...rowsUnsorted].sort(sortRowsByStock);
 
       // Desktop table
       tbody.innerHTML = "";
@@ -756,6 +816,9 @@
           const whText = stockCellValue(r.dropshipmentStock);
           const total = stockTotal(r.surfcenterStock, r.dropshipmentStock);
 
+          const status = stockStatus(r.surfcenterStock, r.dropshipmentStock);
+          const dotClass = dotClassForStatus(status);
+
           const tdExpand = document.createElement("td");
           const b = document.createElement("button");
           b.className = "btn";
@@ -765,7 +828,11 @@
           tdExpand.appendChild(b);
 
           tr.appendChild(tdExpand);
-          tr.appendChild(Object.assign(document.createElement("td"), { textContent: r.product || "" }));
+
+          const tdProd = document.createElement("td");
+          tdProd.innerHTML = `<span class="stockDot ${dotClass}"></span>${esc(r.product || "")}`;
+          tr.appendChild(tdProd);
+
           tr.appendChild(Object.assign(document.createElement("td"), { textContent: fmtPrice(r.retailPrice) }));
           tr.appendChild(Object.assign(document.createElement("td"), { textContent: scText }));
           tr.appendChild(Object.assign(document.createElement("td"), { textContent: whText }));
@@ -803,7 +870,7 @@
         });
       }
 
-      // Mobile cards (Product + Add, rest in Info)
+      // Mobile cards
       if(!rows.length){
         mobileProducts.innerHTML = `<div class="small">Geen resultaten.</div>`;
         return;
@@ -817,10 +884,13 @@
         const whText = stockCellValue(r.dropshipmentStock);
         const total = stockTotal(r.surfcenterStock, r.dropshipmentStock);
 
+        const status = stockStatus(r.surfcenterStock, r.dropshipmentStock);
+        const dotClass = dotClassForStatus(status);
+
         return `
           <div class="pCard" data-id="${id}">
             <div class="pRow">
-              <div class="pName">${esc(r.product||"")}</div>
+              <div class="pName"><span class="stockDot ${dotClass}"></span>${esc(r.product||"")}</div>
               <div class="pActions">
                 <button class="btn pToggle" data-toggle="${id}">${open ? "Sluit" : "Info"}</button>
                 <button class="btn btnPrimary pTiny" data-add="${id}">Add</button>
@@ -862,7 +932,7 @@
 
     searchInput.addEventListener("input", renderProducts);
 
-    // Submit lead (no note2)
+    // Submit lead
     saveLeadBtn.onclick = async () => {
       cartErr.textContent = "";
       cartTick.style.display = "none";
