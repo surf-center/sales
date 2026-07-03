@@ -243,8 +243,11 @@
       width:52px; padding:6px 8px; border-radius:10px; border:1px solid var(--border);
       font-family:'Poppins',sans-serif; font-size:13px; font-weight:500; text-align:center;
       outline:none; background:#fff;
+      -moz-appearance:textfield; appearance:textfield;
     }
     .inkoopMinInput:focus{ border-color:#9ca3af; }
+    .inkoopMinInput::-webkit-outer-spin-button,
+    .inkoopMinInput::-webkit-inner-spin-button{ -webkit-appearance:none; margin:0; }
     .lowBadge{ display:inline-block; width:7px; height:7px; border-radius:50%; background:var(--bad); margin-left:5px; vertical-align:middle; flex-shrink:0; }
 
     .toggleChip{
@@ -408,16 +411,9 @@
         <div class="actions"><button id="inkoopCartClose" class="btn">Sluiten</button></div>
       </div>
       <div class="modalBody">
-        <div class="field" style="margin-bottom:14px;">
-          <label>Leverancier</label>
-          <select id="inkoopCartSource" class="filterSelect" style="width:100%;"><option value="">Kies een leverancier...</option></select>
-        </div>
-        <div style="font-weight:700; margin-bottom:8px;">Producten:</div>
-        <div id="inkoopCartList" class="cartList"></div>
-        <button id="inkoopCartSendBtn" style="width:100%; margin-top:14px; height:52px; border-radius:16px; background:var(--accent); color:#fff; border:none; font-family:'Poppins',sans-serif; font-weight:700; font-size:16px; display:flex; align-items:center; justify-content:center; gap:10px; cursor:pointer; appearance:none; -webkit-appearance:none;">
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="M3 7l9 6 9-6"/></svg>
-          Bestelling versturen
-        </button>
+        <div style="font-weight:700; margin-bottom:8px;">Producten (gegroepeerd per leverancier):</div>
+        <div id="inkoopCartList"></div>
+        <div id="inkoopCartActions" style="margin-top:14px;"></div>
         <div id="inkoopCartErr" class="err"></div>
       </div>
     </div>
@@ -526,6 +522,28 @@
     function ownStock(r){ return toNum(r.msi_surfcenter_qty)??0; }
     function warehouseStock(r){ return WAREHOUSE_KEYS.reduce((s,k)=>s+(toNum(r[k])??0),0); }
     function warehouseBreakdown(r){ return WAREHOUSE_KEYS.map(k=>({label:WAREHOUSE_LABELS[k]||k,qty:toNum(r[k])??0})).filter(x=>x.qty>0); }
+    function productDetailsHtml(r,own){
+      const bd=warehouseBreakdown(r);
+      const whD=bd.length?`<div class="whBreakdown">${bd.map(x=>`<div class="whLine">${esc(x.label)}: ${x.qty}</div>`).join("")}</div>`:"";
+      return `<div class="kv" style="grid-template-columns:130px 1fr;"><div class="k">EAN</div><div class="v">${esc(r.ean_code||"")}</div><div class="k">Brand</div><div class="v">${esc(r.manufacturer||"")}</div><div class="k">Category</div><div class="v">${esc(r._attribute_set||"")}</div>${r.season?`<div class="k">Season</div><div class="v">${esc(r.season)}</div>`:""}<div class="k">Stock</div><div class="v">${own}</div><div class="k">Warehouse</div><div class="v">${whD}</div></div>`;
+    }
+    // Shared expand/collapse "Info" button used by both the sales and inkoop row layouts.
+    function makeInfoBtn(r,id,tr,own){
+      const iBtn=document.createElement("button"); iBtn.className="btn"; iBtn.textContent=expanded.has(id)?"Close":"Info";
+      iBtn.onclick=()=>{
+        if(expanded.has(id)){
+          expanded.delete(id); iBtn.textContent="Info";
+          const det=document.getElementById("det_"+id); if(det)det.remove();
+        } else {
+          expanded.add(id); iBtn.textContent="Close";
+          const tr2=document.createElement("tr"); tr2.className="detailsRow"; tr2.id="det_"+id;
+          const td=document.createElement("td"); td.colSpan=5;
+          td.innerHTML=productDetailsHtml(r,own);
+          tr2.appendChild(td); tr.insertAdjacentElement("afterend",tr2);
+        }
+      };
+      return iBtn;
+    }
     function stockStatus(r){ if(ownStock(r)>0)return"green"; if(warehouseStock(r)>0)return"orange"; return"red"; }
     function statusRank(s){ return s==="green"?2:s==="orange"?1:0; }
     function dotClass(s){ return s==="green"?"dotGreen":s==="orange"?"dotOrange":"dotRed"; }
@@ -561,7 +579,7 @@
     const calcOverlay=document.getElementById("calcOverlay"),calcClose=document.getElementById("calcClose"),calcFrame=document.getElementById("calcFrame");
     const mainOnlyLowWrap=document.getElementById("mainOnlyLowWrap"),mainOnlyLow=document.getElementById("mainOnlyLow");
     const inkoopCartOverlay=document.getElementById("inkoopCartOverlay"),inkoopCartClose=document.getElementById("inkoopCartClose");
-    const inkoopCartSource=document.getElementById("inkoopCartSource"),inkoopCartList=document.getElementById("inkoopCartList"),inkoopCartSendBtn=document.getElementById("inkoopCartSendBtn");
+    const inkoopCartList=document.getElementById("inkoopCartList"),inkoopCartActions=document.getElementById("inkoopCartActions");
     const inkoopCartErr=document.getElementById("inkoopCartErr");
     const inkoopCartBtn=document.getElementById("inkoopCartBtn"),inkoopCartBadge=document.getElementById("inkoopCartBadge");
     const inkoopCartBar=document.getElementById("inkoopCartBar"),inkoopCartBarBtn=document.getElementById("inkoopCartBarBtn"),inkoopCartBarBadge=document.getElementById("inkoopCartBarBadge");
@@ -748,7 +766,6 @@
       inkoopCartBtn.style.display=isInkoopRole?"":"none";
       inkoopCartBar.style.display=isInkoopRole?"":"none";
       mainOnlyLowWrap.style.display=isInkoopRole?"":"none";
-      if(isInkoopRole && inkoopCartSource.options.length<=1) populateLeverancierDropdown();
       const isPartial=!!(opts&&opts.partial);
       if(isInkoopRole && !isPartial){ loadMinStock(); loadLeveranciers(); }
       allRows=Array.isArray(res.rows)?res.rows:[];
@@ -842,12 +859,13 @@
           [String(own),String(wh),String(tot)].forEach(v=>tr.appendChild(Object.assign(document.createElement("td"),{textContent:v})));
           const tdA=document.createElement("td"); tdA.className="tdActions";
           const wrap=document.createElement("div"); wrap.className="actionWrap";
+          const iBtn=makeInfoBtn(r,id,tr,own);
 
           if(isInkoopRole){
             const inCart=inkoopCart.some(x=>x.ean===r.ean_code);
             const minInput=document.createElement("input");
             minInput.type="number"; minInput.min="0"; minInput.className="inkoopMinInput";
-            minInput.value=min||""; minInput.placeholder="-";
+            minInput.value=min||"";
             minInput.addEventListener("change",()=>{
               updateMinStock(r.ean_code,parseInt(minInput.value)||0);
               if(mainOnlyLow.checked)renderProducts();
@@ -863,39 +881,21 @@
               : `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#111" stroke-width="3" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>`;
             addBtn.onclick=()=>{
               if(inkoopCart.some(x=>x.ean===r.ean_code)) inkoopCart=inkoopCart.filter(x=>x.ean!==r.ean_code);
-              else inkoopCart.push({ean:r.ean_code,name:r.name});
+              else inkoopCart.push({ean:r.ean_code,name:r.name,leverancierKey:cartLeverancierKeyFor(r,wh)});
               setInkoopBadge(); renderProducts();
             };
-            wrap.appendChild(minInput); wrap.appendChild(saveBtn); wrap.appendChild(addBtn);
-            tdA.appendChild(wrap); tr.appendChild(tdA); tbody.appendChild(tr);
-            return;
+            wrap.appendChild(iBtn); wrap.appendChild(minInput); wrap.appendChild(saveBtn); wrap.appendChild(addBtn);
+          } else {
+            const cBtn=document.createElement("button"); cBtn.className="btnCalc"; cBtn.title="Calculator"; cBtn.textContent="%"; cBtn.onclick=()=>openCalculatorForRow(r);
+            const aBtn=document.createElement("button"); aBtn.className="btn btnPrimary"; aBtn.textContent="Add"; aBtn.onclick=()=>addToCart({ean:r.ean_code,name:r.name,retailPrice:r.retailPrice});
+            wrap.appendChild(iBtn); wrap.appendChild(cBtn); wrap.appendChild(aBtn);
           }
-
-          const iBtn=document.createElement("button"); iBtn.className="btn"; iBtn.textContent=expanded.has(id)?"Close":"Info";
-          iBtn.onclick=()=>{
-            if(expanded.has(id)){
-              expanded.delete(id); iBtn.textContent="Info";
-              const det=document.getElementById("det_"+id); if(det)det.remove();
-            } else {
-              expanded.add(id); iBtn.textContent="Close";
-              const bd=warehouseBreakdown(r);
-              const whD=bd.length?`<div class="whBreakdown">${bd.map(x=>`<div class="whLine">${esc(x.label)}: ${x.qty}</div>`).join("")}</div>`:"";
-              const tr2=document.createElement("tr"); tr2.className="detailsRow"; tr2.id="det_"+id;
-              const td=document.createElement("td"); td.colSpan=5;
-              td.innerHTML=`<div class="kv" style="grid-template-columns:130px 1fr;"><div class="k">EAN</div><div class="v">${esc(r.ean_code||"")}</div><div class="k">Brand</div><div class="v">${esc(r.manufacturer||"")}</div><div class="k">Category</div><div class="v">${esc(r._attribute_set||"")}</div>${r.season?`<div class="k">Season</div><div class="v">${esc(r.season)}</div>`:""}<div class="k">Stock</div><div class="v">${own}</div><div class="k">Warehouse</div><div class="v">${whD}</div></div>`;
-              tr2.appendChild(td); tr.insertAdjacentElement("afterend",tr2);
-            }
-          };
-          const cBtn=document.createElement("button"); cBtn.className="btnCalc"; cBtn.title="Calculator"; cBtn.textContent="%"; cBtn.onclick=()=>openCalculatorForRow(r);
-          const aBtn=document.createElement("button"); aBtn.className="btn btnPrimary"; aBtn.textContent="Add"; aBtn.onclick=()=>addToCart({ean:r.ean_code,name:r.name,retailPrice:r.retailPrice});
-          wrap.appendChild(iBtn); wrap.appendChild(cBtn); wrap.appendChild(aBtn); tdA.appendChild(wrap); tr.appendChild(tdA); tbody.appendChild(tr);
+          tdA.appendChild(wrap); tr.appendChild(tdA); tbody.appendChild(tr);
 
           if(expanded.has(id)){
-            const bd=warehouseBreakdown(r);
-            const whD=bd.length?`<div class="whBreakdown">${bd.map(x=>`<div class="whLine">${esc(x.label)}: ${x.qty}</div>`).join("")}</div>`:"";
             const tr2=document.createElement("tr"); tr2.className="detailsRow";
             const td=document.createElement("td"); td.colSpan=5;
-            td.innerHTML=`<div class="kv" style="grid-template-columns:130px 1fr;"><div class="k">EAN</div><div class="v">${esc(r.ean_code||"")}</div><div class="k">Brand</div><div class="v">${esc(r.manufacturer||"")}</div><div class="k">Category</div><div class="v">${esc(r._attribute_set||"")}</div>${r.season?`<div class="k">Season</div><div class="v">${esc(r.season)}</div>`:""}<div class="k">Stock</div><div class="v">${own}</div><div class="k">Warehouse</div><div class="v">${whD}</div></div>`;
+            td.innerHTML=productDetailsHtml(r,own);
             tr2.appendChild(td); tbody.appendChild(tr2);
           }
         });
@@ -923,7 +923,7 @@
           ? `<button class="pIconBtn${inCart?" pIconBtnPrimary":""}" data-add="${id}" title="Toevoegen aan bestelling"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="${inCart?"white":"#111"}" stroke-width="3" stroke-linecap="round">${inCart?'<polyline points="20 6 9 17 4 12"/>':'<line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>'}</svg></button>`
           : `<button class="pIconBtn pIconBtnPrimary" data-add="${id}" title="Add"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="3" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg></button>`;
         const minRowHtml=isInkoopRole
-          ? `<div style="display:flex;align-items:center;gap:8px;margin-bottom:10px;"><span class="small">Min voorraad</span><input type="number" min="0" class="inkoopMinInput" data-ean="${esc(r.ean_code||"")}" value="${min||""}" placeholder="-"><button class="pIconBtn inkoopMinSave" type="button" title="Opslaan" data-ean="${esc(r.ean_code||"")}" style="width:36px;height:36px;"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg></button></div>${noLeverancierHtml(r,wh)}`
+          ? `<div style="display:flex;align-items:center;gap:8px;margin-bottom:10px;"><span class="small">Min voorraad</span><input type="number" min="0" class="inkoopMinInput" data-ean="${esc(r.ean_code||"")}" value="${min||""}"><button class="pIconBtn inkoopMinSave" type="button" title="Opslaan" data-ean="${esc(r.ean_code||"")}" style="width:36px;height:36px;"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg></button></div>${noLeverancierHtml(r,wh)}`
           : "";
         return`<div class="pCard" data-id="${id}"><div class="pRow" data-toggle="${id}"><div class="pName"><span class="stockDot ${dc}"></span>${esc(r.name||"")}${isLow?`<span class="lowBadge"></span>`:""}</div><div class="pActions"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#9ca3af" stroke-width="2.5" style="flex-shrink:0;transition:transform .2s;${open?"transform:rotate(180deg)":""}"><polyline points="6 9 12 15 18 9"/></svg>${addBtnHtml}</div></div><div class="pDetails ${open?"open":""}" id="${id}">${minRowHtml}<div style="display:flex;gap:0;border:1px solid var(--border);border-radius:12px;overflow:hidden;margin-bottom:10px;"><div style="flex:1;padding:10px 12px;text-align:center;border-right:1px solid var(--border);"><div style="font-size:11px;color:#9ca3af;margin-bottom:2px;">Surfcenter</div><div style="font-weight:700;font-size:18px;">${own}</div></div><div style="flex:1;padding:10px 12px;text-align:center;border-right:1px solid var(--border);"><div style="font-size:11px;color:#9ca3af;margin-bottom:2px;">Warehouse</div><div style="font-weight:700;font-size:18px;">${wh}</div></div><div style="flex:1;padding:10px 12px;text-align:center;"><div style="font-size:11px;color:#9ca3af;margin-bottom:2px;">Total</div><div style="font-weight:700;font-size:18px;">${tot}</div></div></div>${whD?`<div style="margin-bottom:10px;"><div class="whBreakdown">${whD}</div></div>`:""}<div class="kv" style="margin-bottom:8px;">${r.manufacturer?`<div class="k">Brand</div><div class="v">${esc(r.manufacturer)}</div>`:""}<div class="k">Category</div><div class="v">${esc(r._attribute_set||"-")}</div>${r.season?`<div class="k">Season</div><div class="v">${esc(r.season)}</div>`:""}<div class="k">EAN</div><div class="v">${esc(r.ean_code||"-")}</div></div></div></div>`;
       }).join("");
@@ -954,7 +954,7 @@
         const r=rows[idx]; if(!r)return;
         if(isInkoopRole){
           if(inkoopCart.some(x=>x.ean===r.ean_code)) inkoopCart=inkoopCart.filter(x=>x.ean!==r.ean_code);
-          else inkoopCart.push({ean:r.ean_code,name:r.name});
+          else inkoopCart.push({ean:r.ean_code,name:r.name,leverancierKey:cartLeverancierKeyFor(r,warehouseStock(r))});
           setInkoopBadge(); renderProducts();
         } else {
           addToCart({ean:r.ean_code,name:r.name,retailPrice:r.retailPrice});
@@ -1004,11 +1004,6 @@
     let leveranciersByKey={};
     let brandToLeverancierKey={};
 
-    function populateLeverancierDropdown(){
-      inkoopCartSource.innerHTML=`<option value="">Kies een leverancier...</option>`+
-        WAREHOUSE_KEYS.map(k=>`<option value="${k}">${esc((leveranciersByKey[k]&&leveranciersByKey[k].naam)||WAREHOUSE_LABELS[k]||k)}</option>`).join("");
-    }
-
     async function loadLeveranciers(){
       try{
         const res=await jsonp(`${APPS_SCRIPT_WEBAPP_URL}?action=leveranciers&key=${encodeURIComponent(currentKey)}`);
@@ -1021,7 +1016,6 @@
             brandToLeverancierKey[b]=l.key;
           });
         });
-        populateLeverancierDropdown();
         renderProducts();
       }catch(e){}
     }
@@ -1039,6 +1033,16 @@
       const suggestion=suggestedLeverancierKey(r);
       const text=suggestion?`Geen voorraad - vermoedelijk ${esc(leverancierLabel(suggestion))}`:"Geen leverancier gekoppeld";
       return `<span class="small" style="display:block;color:var(--muted);">${text}</span>`;
+    }
+    // Decides which leverancier a cart item is filed under: the warehouse with the most stock
+    // if the product has any tracked warehouse stock, otherwise the brand-based suggestion.
+    function cartLeverancierKeyFor(r,wh){
+      if(wh>0){
+        let bestKey="",bestQty=0;
+        WAREHOUSE_KEYS.forEach(k=>{ const q=toNum(r[k])||0; if(q>bestQty){ bestQty=q; bestKey=k; } });
+        return bestKey;
+      }
+      return suggestedLeverancierKey(r);
     }
 
     function setInkoopBadge(){
@@ -1074,47 +1078,85 @@
         .catch(()=>{ if(btn){ btn.disabled=false; btn.title="Opslaan mislukt, probeer opnieuw"; } });
     }
 
-    function renderInkoopCartList(){
-      if(!inkoopCart.length){ inkoopCartList.innerHTML=`<div class="cartRow"><div class="small">No items.</div></div>`; return; }
-      inkoopCartList.innerHTML=inkoopCart.map(it=>`<div class="cartRow"><div class="left"><div style="font-weight:500;">${esc(it.name||"")}</div></div><div><button class="btn" data-remove-inkoop="${esc(it.ean)}">Remove</button></div></div>`).join("");
-      inkoopCartList.querySelectorAll("[data-remove-inkoop]").forEach(b=>b.addEventListener("click",()=>{
-        const ean=b.getAttribute("data-remove-inkoop");
-        inkoopCart=inkoopCart.filter(x=>x.ean!==ean);
-        setInkoopBadge(); renderInkoopCartList(); renderProducts();
-      }));
-    }
-    function openInkoopCart(){ inkoopCartErr.textContent=""; renderInkoopCartList(); inkoopCartOverlay.classList.add("active"); }
-    function closeInkoopCart(){ inkoopCartOverlay.classList.remove("active"); }
-    inkoopCartBtn.onclick=openInkoopCart;
-    inkoopCartBarBtn.onclick=openInkoopCart;
-    inkoopCartClose.onclick=closeInkoopCart;
-    inkoopCartOverlay.addEventListener("click",e=>{ if(e.target===inkoopCartOverlay)closeInkoopCart(); });
-
     // {{contactpersoon}}, {{items}} and {{datum}} placeholders in a leverancier's own template get substituted.
     function fillTemplate(tpl,vars){
       return tpl.replace(/\{\{(\w+)\}\}/g,(m,k)=>Object.prototype.hasOwnProperty.call(vars,k)?vars[k]:m);
     }
 
-    inkoopCartSendBtn.onclick=()=>{
-      inkoopCartErr.textContent="";
-      if(!inkoopCart.length) return;
-      const src=inkoopCartSource.value;
-      if(!src){ inkoopCartErr.textContent="Kies eerst een leverancier."; return; }
-      const lev=leveranciersByKey[src]||{};
-      const srcLabel=lev.naam||WAREHOUSE_LABELS[src]||src;
+    function sendInkoopGroup(key,items){
+      const lev=leveranciersByKey[key]||{};
+      const srcLabel=lev.naam||WAREHOUSE_LABELS[key]||key||"Leverancier";
       const contact=lev.contactpersoon||"";
       const date=new Date().toLocaleDateString("nl-NL",{day:"2-digit",month:"long",year:"numeric"});
       const subject=`Nabestelling Surf Center - ${srcLabel}`;
-      const itemLines=inkoopCart.map(i=>`- ${i.name}\n  EAN: ${i.ean}`).join("\n\n");
+      const itemLines=items.map(i=>`- ${i.name}\n  EAN: ${i.ean}`).join("\n\n");
       const vars={contactpersoon:contact,items:itemLines,datum:date};
       const body=lev.template
         ? fillTemplate(lev.template,vars)
         : `Hallo${contact?" "+contact:""},\n\nGraag willen wij de volgende producten nabestellen:\n\n${itemLines}\n\nKunnen jullie de beschikbaarheid, levertijd en prijzen bevestigen?\n\nMet vriendelijke groet,\nTeam Surf Center\n\nDatum: ${date}`;
       const to=lev.email?encodeURIComponent(lev.email):"";
       window.location.href=`mailto:${to}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
-      inkoopCart=[]; setInkoopBadge(); renderProducts();
-      closeInkoopCart();
-    };
+      inkoopCart=inkoopCart.filter(x=>!items.some(i=>i.ean===x.ean));
+      setInkoopBadge(); renderProducts(); renderInkoopCartList();
+    }
+
+    function inkoopCartGroups(){
+      const groups={};
+      inkoopCart.forEach(it=>{ const k=it.leverancierKey||""; (groups[k]=groups[k]||[]).push(it); });
+      return groups;
+    }
+
+    function renderInkoopCartList(){
+      inkoopCartErr.textContent="";
+      if(!inkoopCart.length){
+        inkoopCartList.innerHTML=`<div class="cartRow"><div class="small">No items.</div></div>`;
+        inkoopCartActions.innerHTML="";
+        return;
+      }
+      const groups=inkoopCartGroups();
+      const keys=Object.keys(groups).sort((a,b)=>(a?leverancierLabel(a):"zzz").localeCompare(b?leverancierLabel(b):"zzz"));
+
+      inkoopCartList.innerHTML=keys.map(k=>{
+        const label=k?leverancierLabel(k):"Onbekende leverancier";
+        const rows=groups[k].map(it=>`<div class="cartRow"><div class="left"><div style="font-weight:500;">${esc(it.name||"")}</div></div><div><button class="btn" data-remove-inkoop="${esc(it.ean)}">Remove</button></div></div>`).join("");
+        return `<div style="margin-bottom:14px;"><div class="small" style="font-weight:700;color:#111;margin-bottom:4px;">${esc(label)}</div><div class="cartList">${rows}</div></div>`;
+      }).join("");
+
+      inkoopCartList.querySelectorAll("[data-remove-inkoop]").forEach(b=>b.addEventListener("click",()=>{
+        const ean=b.getAttribute("data-remove-inkoop");
+        inkoopCart=inkoopCart.filter(x=>x.ean!==ean);
+        setInkoopBadge(); renderInkoopCartList(); renderProducts();
+      }));
+
+      // One send action per leverancier group. Unresolved items ("Onbekende leverancier")
+      // need a manual pick first since there's no email/template to send to yet.
+      inkoopCartActions.innerHTML=keys.map(k=>{
+        if(k) return `<button class="btn btnPrimary" data-send-group="${esc(k)}" style="width:100%;margin-bottom:8px;height:48px;border-radius:14px;">Versturen naar ${esc(leverancierLabel(k))} (${groups[k].length})</button>`;
+        return `<div style="display:flex;gap:8px;margin-bottom:8px;">
+          <select class="filterSelect" id="inkoopUnknownSource" style="flex:1;"><option value="">Kies leverancier voor onbekende...</option>${WAREHOUSE_KEYS.map(wk=>`<option value="${wk}">${esc(leverancierLabel(wk))}</option>`).join("")}</select>
+          <button class="btn btnPrimary" id="inkoopUnknownSendBtn" style="height:48px;border-radius:14px;">Versturen</button>
+        </div>`;
+      }).join("");
+
+      inkoopCartActions.querySelectorAll("[data-send-group]").forEach(btn=>{
+        btn.addEventListener("click",()=>sendInkoopGroup(btn.getAttribute("data-send-group"),groups[btn.getAttribute("data-send-group")]));
+      });
+      const unknownBtn=document.getElementById("inkoopUnknownSendBtn");
+      if(unknownBtn){
+        unknownBtn.addEventListener("click",()=>{
+          const sel=document.getElementById("inkoopUnknownSource");
+          if(!sel.value){ inkoopCartErr.textContent="Kies eerst een leverancier."; return; }
+          sendInkoopGroup(sel.value,groups[""]);
+        });
+      }
+    }
+
+    function openInkoopCart(){ renderInkoopCartList(); inkoopCartOverlay.classList.add("active"); }
+    function closeInkoopCart(){ inkoopCartOverlay.classList.remove("active"); }
+    inkoopCartBtn.onclick=openInkoopCart;
+    inkoopCartBarBtn.onclick=openInkoopCart;
+    inkoopCartClose.onclick=closeInkoopCart;
+    inkoopCartOverlay.addEventListener("click",e=>{ if(e.target===inkoopCartOverlay)closeInkoopCart(); });
 
     // ---- Login ----
     loginBtn.onclick=async()=>{
