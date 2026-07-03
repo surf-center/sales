@@ -67,6 +67,8 @@
     .filterSelect:focus{ outline:none; border-color:#9ca3af; }
 
     .muted{ color:var(--muted); font-size:13px; font-weight:300; }
+    .loadProgressWrap{ height:6px; background:var(--border); border-radius:999px; overflow:hidden; margin:0 0 10px; display:none; }
+    .loadProgressBar{ height:100%; width:0%; background:var(--accent); transition:width .25s ease; }
     .err{ color:var(--bad); font-size:13px; margin-top:8px; text-align:left; }
 
     .loginCard{ background:var(--bg); border:1px solid var(--border); border-radius:20px; padding:16px; text-align:left; }
@@ -332,7 +334,8 @@
       <div id="activeFilters" class="activeFilters"></div>
     </div>
 
-    <div id="meta" class="muted" style="min-height:18px; margin:0 0 10px;"></div>
+    <div id="meta" class="muted" style="min-height:18px; margin:0 0 4px;"></div>
+    <div id="loadProgress" class="loadProgressWrap"><div id="loadProgressBar" class="loadProgressBar"></div></div>
     <div id="err" class="err"></div>
 
     <!-- Desktop table -->
@@ -588,6 +591,7 @@
     const clearFiltersBtn=document.getElementById("clearFiltersBtn"),activeFiltersEl=document.getElementById("activeFilters");
     const tbody=document.getElementById("tbody"),mobileProducts=document.getElementById("mobileProducts");
     const meta=document.getElementById("meta"),err=document.getElementById("err");
+    const loadProgress=document.getElementById("loadProgress"),loadProgressBar=document.getElementById("loadProgressBar");
     const cartBtn=document.getElementById("cartBtn"),cartBar=document.getElementById("cartBar");
     const cartBarBtn=document.getElementById("cartBarBtn"),cartBarBadge=document.getElementById("cartBarBadge");
     const cartOverlay=document.getElementById("cartOverlay"),cartClose=document.getElementById("cartClose");
@@ -608,6 +612,11 @@
     const inkoopCartBar=document.getElementById("inkoopCartBar"),inkoopCartBarBtn=document.getElementById("inkoopCartBarBtn"),inkoopCartBarBadge=document.getElementById("inkoopCartBarBadge");
 
     let currentKey="",currentUserName="",currentUserRole="",isAdmin=false,isInkoopRole=false;
+    // Guards against a stale in-flight fetch (e.g. the auto-login fetch for whoever was
+    // logged in before) still resolving pages and flipping the UI back to the wrong
+    // person's data after someone else has since logged in. Every fetch checks this before
+    // touching the UI, so only the most recently started session's results ever apply.
+    let activeFetchKey="";
     let allRows=[],expanded=new Set(),mobileExpanded=new Set(),cart=[];
     let visibleCount=PAGE_SIZE;
 
@@ -692,9 +701,9 @@
     }
 
     // ---- Auth ----
-    function showLogin(){ loginView.style.display="block"; appView.style.display="none"; cartBtn.style.display="none"; cartBar.style.display="none"; inkoopCartBtn.style.display="none"; inkoopCartBar.style.display="none"; mainOnlyLowWrap.style.display="none"; mainOnlyHasMinWrap.style.display="none"; addAllBtn.style.display="none"; filterLeverancier.style.display="none"; loginErr.textContent=""; loginKey.value=""; loginKey.focus(); }
+    function showLogin(){ loginView.style.display="block"; appView.style.display="none"; cartBtn.style.display="none"; cartBar.style.display="none"; inkoopCartBtn.style.display="none"; inkoopCartBar.style.display="none"; mainOnlyLowWrap.style.display="none"; mainOnlyHasMinWrap.style.display="none"; addAllBtn.style.display="none"; filterLeverancier.style.display="none"; loadProgress.style.display="none"; loginErr.textContent=""; loginKey.value=""; loginKey.focus(); }
     function showApp(){ loginView.style.display="none"; appView.style.display="block"; cartBtn.style.display=""; cartBar.style.display=""; searchInput.disabled=false; filterCategory.disabled=false; filterSupplier.disabled=false; }
-    function logout(){ localStorage.removeItem("employeeKey"); currentKey=""; showLogin(); }
+    function logout(){ localStorage.removeItem("employeeKey"); currentKey=""; activeFetchKey=""; showLogin(); }
     logoutBtn.onclick=logout;
 
     // ---- Cart modal ----
@@ -815,9 +824,14 @@
 
       expanded.clear(); mobileExpanded.clear(); visibleCount=PAGE_SIZE;
       if(isPartial){
-        meta.textContent=`${allRows.length} of ${opts.total||allRows.length} items (loading...)`;
+        const total=opts.total||allRows.length;
+        meta.textContent=`${allRows.length} of ${total} items (loading...)`;
+        loadProgress.style.display="block";
+        loadProgressBar.style.width=(total?Math.min(100,Math.round(allRows.length/total*100)):0)+"%";
       } else {
         meta.textContent=`${allRows.length} items`+(fromCache?" (cached)":"");
+        loadProgress.style.display="none";
+        loadProgressBar.style.width="0%";
       }
       searchInput.disabled=false;
       populateDropdowns(); if(isInkoopRole) populateLeverancierDropdown(); updateActiveFilters(); renderProducts();
@@ -1237,9 +1251,11 @@
       loginErr.textContent=""; const key=loginKey.value.trim();
       if(!key){loginErr.textContent="Please enter a key.";return;}
       loginBtn.disabled=true; loginBtn.textContent="Login...";
+      activeFetchKey=key; // supersede any still-running fetch for a previous session
       let entered=false;
       try{
         const res=await fetchAllData(key,(partial,total,hasMore)=>{
+          if(key!==activeFetchKey) return;
           if(!entered){
             entered=true;
             localStorage.setItem("employeeKey",key); currentKey=key;
@@ -1247,20 +1263,23 @@
           }
           applyData(partial,false,{partial:hasMore,total});
         });
+        if(key!==activeFetchKey) return;
         localStorage.setItem(CACHE_KEY,JSON.stringify({key,res,ts:Date.now()}));
         applyData(res,false);
-      }catch(e){ loginErr.textContent=friendlyErrorMessage(e); }
+      }catch(e){ if(key===activeFetchKey) loginErr.textContent=friendlyErrorMessage(e); }
       finally{ loginBtn.disabled=false; loginBtn.textContent="Login"; }
     };
 
     // ---- Auto-login ----
     // Kick off the batched data fetch immediately (before DOMContentLoaded) to reduce cold-start wait.
     // Partial batches are buffered until the DOM is ready, then applied.
-    let _earlyFetch=null, _earlyPartial=null;
+    let _earlyFetch=null, _earlyPartial=null, _earlyKey="";
     {
       const _k=(localStorage.getItem("employeeKey")||"").trim();
       if(_k){
+        _earlyKey=_k; activeFetchKey=_k;
         _earlyFetch=fetchAllData(_k,(partial,total,hasMore)=>{
+          if(_k!==activeFetchKey) return; // a login/logout has since taken over
           _earlyPartial={partial,total,hasMore};
           if(document.readyState!=="loading") applyData(partial,false,{partial:hasMore,total});
         });
@@ -1270,7 +1289,10 @@
     document.addEventListener("DOMContentLoaded",()=>{
       const stored=(localStorage.getItem("employeeKey")||"").trim();
       if(!stored){showLogin();return;}
-      currentKey=stored; showApp(); setCartBadge();
+      currentKey=stored;
+      // The early fetch above only still applies if nothing logged out/in since it started.
+      if(stored===_earlyKey) activeFetchKey=stored; else { activeFetchKey=stored; _earlyFetch=null; _earlyPartial=null; }
+      showApp(); setCartBadge();
       // Reuse already-in-flight fetch instead of starting a new one
       const cached=localStorage.getItem(CACHE_KEY);
       let cacheIsFresh=false;
@@ -1283,18 +1305,24 @@
       if(cacheIsFresh){_earlyFetch=null;return;}
       if(!cached) { meta.textContent="Loading..."; tbody.innerHTML=`<tr><td colspan="5" class="small">Loading...</td></tr>`; mobileProducts.innerHTML=`<div class="small">Loading...</div>`; }
       if(_earlyPartial) applyData(_earlyPartial.partial,false,{partial:_earlyPartial.hasMore,total:_earlyPartial.total});
-      (_earlyFetch||fetchAllData(currentKey,(partial,total,hasMore)=>applyData(partial,false,{partial:hasMore,total})))
+      (_earlyFetch||fetchAllData(currentKey,(partial,total,hasMore)=>{
+        if(currentKey!==activeFetchKey) return;
+        applyData(partial,false,{partial:hasMore,total});
+      }))
         .then(res=>{
+          if(currentKey!==activeFetchKey) return;
           localStorage.setItem(CACHE_KEY,JSON.stringify({key:currentKey,res,ts:Date.now()}));
           applyData(res,false);
         })
         .catch(e=>{
+          if(currentKey!==activeFetchKey) return;
           // Products already on screen (from earlier pages / cache): a later page failing
           // isn't worth alarming staff over mid-shift, so stay quiet and just log it.
           if(allRows.length){
             console.warn("Kon niet alle pagina's laden:", e);
+            loadProgress.style.display="none";
           } else {
-            err.textContent=friendlyErrorMessage(e); meta.textContent=""; tbody.innerHTML=`<tr><td colspan="5" class="small">Error loading.</td></tr>`; mobileProducts.innerHTML=`<div class="small">Error loading.</div>`;
+            err.textContent=friendlyErrorMessage(e); meta.textContent=""; loadProgress.style.display="none"; tbody.innerHTML=`<tr><td colspan="5" class="small">Error loading.</td></tr>`; mobileProducts.innerHTML=`<div class="small">Error loading.</div>`;
           }
         })
         .finally(()=>{ _earlyFetch=null; });
