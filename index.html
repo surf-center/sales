@@ -344,6 +344,7 @@
         <table>
           <thead>
             <tr>
+              <th id="selectAllTh" style="display:none; width:34px;"><input type="checkbox" id="selectAllCheckbox"></th>
               <th>Product</th>
               <th>Stock</th>
               <th>Warehouse</th>
@@ -561,7 +562,7 @@
           expanded.add(id);
           if(svg) svg.style.transform="rotate(180deg)";
           const tr2=document.createElement("tr"); tr2.className="detailsRow"; tr2.id="det_"+id;
-          const td=document.createElement("td"); td.colSpan=5;
+          const td=document.createElement("td"); td.colSpan=isInkoopRole?6:5;
           td.innerHTML=productDetailsHtml(r,own);
           tr2.appendChild(td); tr.insertAdjacentElement("afterend",tr2);
         }
@@ -606,6 +607,7 @@
     const mainOnlyLowWrap=document.getElementById("mainOnlyLowWrap"),mainOnlyLow=document.getElementById("mainOnlyLow");
     const mainOnlyHasMinWrap=document.getElementById("mainOnlyHasMinWrap"),mainOnlyHasMin=document.getElementById("mainOnlyHasMin");
     const addAllBtn=document.getElementById("addAllBtn");
+    const selectAllTh=document.getElementById("selectAllTh"),selectAllCheckbox=document.getElementById("selectAllCheckbox");
     const inkoopCartOverlay=document.getElementById("inkoopCartOverlay"),inkoopCartClose=document.getElementById("inkoopCartClose");
     const inkoopCartList=document.getElementById("inkoopCartList"),inkoopCartActions=document.getElementById("inkoopCartActions");
     const inkoopCartJump=document.getElementById("inkoopCartJump");
@@ -620,6 +622,9 @@
     // touching the UI, so only the most recently started session's results ever apply.
     let activeFetchKey="";
     let allRows=[],expanded=new Set(),mobileExpanded=new Set(),cart=[];
+    // Manual bulk-selection for inkoop (independent of the filter-based "Alles toevoegen"):
+    // ticking rows here lets Jasper hand-pick an arbitrary set to add in one go.
+    let selectedEans=new Set(), lastRenderedRows=[];
     let visibleCount=PAGE_SIZE;
 
     // ---- Filters ----
@@ -703,7 +708,7 @@
     }
 
     // ---- Auth ----
-    function showLogin(){ loginView.style.display="block"; appView.style.display="none"; cartBtn.style.display="none"; cartBar.style.display="none"; inkoopCartBtn.style.display="none"; inkoopCartBar.style.display="none"; mainOnlyLowWrap.style.display="none"; mainOnlyHasMinWrap.style.display="none"; addAllBtn.style.display="none"; filterLeverancier.style.display="none"; loadProgress.style.display="none"; loginErr.textContent=""; loginKey.value=""; loginKey.focus(); }
+    function showLogin(){ loginView.style.display="block"; appView.style.display="none"; cartBtn.style.display="none"; cartBar.style.display="none"; inkoopCartBtn.style.display="none"; inkoopCartBar.style.display="none"; mainOnlyLowWrap.style.display="none"; mainOnlyHasMinWrap.style.display="none"; addAllBtn.style.display="none"; filterLeverancier.style.display="none"; loadProgress.style.display="none"; selectAllTh.style.display="none"; selectedEans.clear(); loginErr.textContent=""; loginKey.value=""; loginKey.focus(); }
     function showApp(){ loginView.style.display="none"; appView.style.display="block"; cartBtn.style.display=""; cartBar.style.display=""; searchInput.disabled=false; filterCategory.disabled=false; filterSupplier.disabled=false; }
     function logout(){ localStorage.removeItem("employeeKey"); currentKey=""; activeFetchKey=""; showLogin(); }
     logoutBtn.onclick=logout;
@@ -820,6 +825,7 @@
       mainOnlyHasMinWrap.style.display=isInkoopRole?"":"none";
       addAllBtn.style.display=isInkoopRole?"":"none";
       filterLeverancier.style.display=isInkoopRole?"":"none";
+      selectAllTh.style.display=isInkoopRole?"":"none";
       const isPartial=!!(opts&&opts.partial);
       if(isInkoopRole && !isPartial){ loadMinStock(); loadLeveranciers(); }
       allRows=Array.isArray(res.rows)?res.rows:[];
@@ -913,18 +919,29 @@
       const allFiltered=[...allRows.filter(r=>matchesFilters(r,f))].sort(sortRows);
       const total=allFiltered.length;
       const rows=allFiltered.slice(0,visibleCount);
+      lastRenderedRows=rows;
+      const colCount=isInkoopRole?6:5;
 
       meta.textContent=(f.category||f.supplier||f.q)?`${total} of ${allRows.length} items`:`${allRows.length} items`;
 
       // Desktop
       tbody.innerHTML="";
       if(!rows.length){
-        tbody.innerHTML=`<tr><td colspan="5" class="small">No results.</td></tr>`;
+        tbody.innerHTML=`<tr><td colspan="${colCount}" class="small">No results.</td></tr>`;
       } else {
         rows.forEach((r,i)=>{
           const id=`${r.ean_code}__${i}`,own=ownStock(r),wh=warehouseStock(r),tot=own+wh,dc=dotClass(stockStatus(r));
           const tr=document.createElement("tr");
           const min=minStockMap[r.ean_code]||0;
+          if(isInkoopRole){
+            const tdC=document.createElement("td");
+            const cb=document.createElement("input"); cb.type="checkbox"; cb.checked=selectedEans.has(r.ean_code);
+            cb.addEventListener("change",()=>{
+              if(cb.checked) selectedEans.add(r.ean_code); else selectedEans.delete(r.ean_code);
+              updateAddAllBtnLabel(); updateSelectAllCheckbox();
+            });
+            tdC.appendChild(cb); tr.appendChild(tdC);
+          }
           const tdP=document.createElement("td"); tdP.innerHTML=`<span class="stockDot ${dc}"></span>${esc(r.name||"")}`;
           tr.appendChild(tdP);
           [String(own),String(wh),String(tot)].forEach(v=>tr.appendChild(Object.assign(document.createElement("td"),{textContent:v})));
@@ -965,7 +982,7 @@
 
           if(expanded.has(id)){
             const tr2=document.createElement("tr"); tr2.className="detailsRow";
-            const td=document.createElement("td"); td.colSpan=5;
+            const td=document.createElement("td"); td.colSpan=colCount;
             td.innerHTML=productDetailsHtml(r,own);
             tr2.appendChild(td); tbody.appendChild(tr2);
           }
@@ -973,7 +990,7 @@
 
         if(total>visibleCount){
           const tr=document.createElement("tr");
-          const td=document.createElement("td"); td.colSpan=5;
+          const td=document.createElement("td"); td.colSpan=colCount;
           td.innerHTML=`<div class="showMoreWrap"><button class="showMoreBtn">Show more (${total-visibleCount} remaining)</button></div>`;
           td.querySelector("button").onclick=()=>{ visibleCount+=PAGE_SIZE; renderProducts(); };
           tr.appendChild(td); tbody.appendChild(tr);
@@ -1051,6 +1068,7 @@
             saveMinStockNow(ean,parseInt(inp&&inp.value)||0,btn);
           });
         });
+        updateAddAllBtnLabel(); updateSelectAllCheckbox();
       }
     }
 
@@ -1124,21 +1142,48 @@
 
     // Adds every product matching the current search/category/brand/toggle filters to the
     // inkoop cart in one go (e.g. filter on a category + "Onder min stock" to bulk-reorder it).
+    // Label reflects what a click will do: with a manual checkbox selection it adds just
+    // those; with nothing checked it falls back to everything matching the current filters.
+    function updateAddAllBtnLabel(){
+      if(addAllBtn._resetTimer) return; // mid-confirmation flash, don't fight it
+      addAllBtn.textContent=selectedEans.size?`Toevoegen (${selectedEans.size})`:"Alles toevoegen";
+    }
+
+    // Reflects whether every currently-rendered row is checked (checked/indeterminate/empty).
+    function updateSelectAllCheckbox(){
+      if(!lastRenderedRows.length){ selectAllCheckbox.checked=false; selectAllCheckbox.indeterminate=false; return; }
+      const checkedCount=lastRenderedRows.filter(r=>selectedEans.has(r.ean_code)).length;
+      selectAllCheckbox.checked=checkedCount===lastRenderedRows.length;
+      selectAllCheckbox.indeterminate=checkedCount>0&&checkedCount<lastRenderedRows.length;
+    }
+
     addAllBtn.onclick=()=>{
-      const f=getFilters();
-      const matches=allRows.filter(r=>matchesFilters(r,f));
+      let matches;
+      if(selectedEans.size){
+        matches=allRows.filter(r=>selectedEans.has(r.ean_code));
+      } else {
+        const f=getFilters();
+        matches=allRows.filter(r=>matchesFilters(r,f));
+      }
       let added=0;
       matches.forEach(r=>{
         if(inkoopCart.some(x=>x.ean===r.ean_code)) return;
         inkoopCart.push({ean:r.ean_code,name:r.name,leverancierKey:cartLeverancierKeyFor(r,warehouseStock(r))});
         added++;
       });
+      selectedEans.clear();
       setInkoopBadge(); renderProducts();
-      const original="Alles toevoegen";
       addAllBtn.textContent=added?`${added} toegevoegd`:"Al toegevoegd";
       clearTimeout(addAllBtn._resetTimer);
-      addAllBtn._resetTimer=setTimeout(()=>{ addAllBtn.textContent=original; },1500);
+      addAllBtn._resetTimer=setTimeout(()=>{ addAllBtn._resetTimer=null; updateAddAllBtnLabel(); },1500);
     };
+
+    selectAllCheckbox.addEventListener("change",()=>{
+      if(selectAllCheckbox.checked) lastRenderedRows.forEach(r=>selectedEans.add(r.ean_code));
+      else lastRenderedRows.forEach(r=>selectedEans.delete(r.ean_code));
+      updateAddAllBtnLabel();
+      renderProducts();
+    });
 
     const _minSaveTimers={};
     function updateMinStock(ean,qty){
@@ -1200,6 +1245,9 @@
 
     function renderInkoopCartList(){
       inkoopCartErr.textContent="";
+      // Remember which leverancier groups were expanded so removing an item (which rebuilds
+      // this whole list) doesn't collapse the group the user is currently working in.
+      const openIds=new Set([...inkoopCartList.querySelectorAll("details.cartGroup[open]")].map(d=>d.id));
       if(!inkoopCart.length){
         inkoopCartList.innerHTML=`<div class="cartRow"><div class="small">No items.</div></div>`;
         inkoopCartActions.innerHTML="";
@@ -1212,7 +1260,8 @@
       inkoopCartList.innerHTML=keys.map(k=>{
         const label=k?leverancierLabel(k):"Onbekende leverancier";
         const rows=groups[k].map(it=>`<div class="cartRow"><div class="left"><div style="font-weight:500;">${esc(it.name||"")}</div></div><div><button class="btn" data-remove-inkoop="${esc(it.ean)}">Remove</button></div></div>`).join("");
-        return `<details class="cartGroup" id="${cartGroupDomId(k)}"><summary>${esc(label)} (${groups[k].length})</summary><div class="cartList">${rows}</div></details>`;
+        const domId=cartGroupDomId(k);
+        return `<details class="cartGroup" id="${domId}"${openIds.has(domId)?" open":""}><summary>${esc(label)} (${groups[k].length})</summary><div class="cartList">${rows}</div></details>`;
       }).join("");
 
       // Quick-jump to a leverancier group: only useful once there's more than one.
