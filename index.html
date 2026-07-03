@@ -1,1245 +1,2487 @@
 <!doctype html>
+
 <html lang="en">
+
 <head>
+
   <link rel="icon" type="image/png" sizes="32x32" href="favicon-32x32.png">
+
   <link rel="icon" type="image/png" sizes="16x16" href="favicon-16x16.png">
+
   <link rel="apple-touch-icon" sizes="180x180" href="apple-touch-icon.png">
+
   <meta charset="utf-8" />
+
   <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no" />
+
   <title>Sales</title>
+
   <link rel="preconnect" href="https://fonts.googleapis.com">
+
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+
   <link rel="preload" href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;500;700&display=swap" as="style" onload="this.onload=null;this.rel='stylesheet'">
+
   <noscript><link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;500;700&display=swap" rel="stylesheet"></noscript>
+
   <style>
+
     :root{
+
       --border:#e5e7eb; --muted:#6b7280; --bg:#fff; --soft:#f9fafb;
+
       --accent:#111827; --ok:#0f7b2f; --bad:#b00020;
+
     }
+
     *{ box-sizing:border-box; }
+
     body{ margin:0; font-family:'Poppins',system-ui,sans-serif; font-weight:300; background:#fcfcfc; color:#111; }
 
+
+
     input,textarea{ background:#fff; color:#111; -webkit-text-fill-color:#111; transition:background-color 9999s ease-in-out 0s; }
+
     input:-webkit-autofill,input:-webkit-autofill:hover,input:-webkit-autofill:focus,textarea:-webkit-autofill{
+
       -webkit-text-fill-color:#111 !important; box-shadow:0 0 0px 1000px #fff inset !important; caret-color:#111 !important;
+
     }
+
+
 
     #loginView{ display:block; }
+
     #appView{ display:none; }
 
+
+
     .centerWrap{ max-width:520px; margin:0 auto; padding:34px 18px 28px; text-align:center; }
+
     .wrap{ max-width:1300px; margin:0 auto; padding:16px 18px 120px; }
+
     @media(max-width:480px){ .centerWrap{ padding:20px 14px 16px; } .wrap{ padding:10px 12px 110px; } }
 
+
+
     .logo{ display:block; width:min(520px,100%); height:auto; max-height:90px; object-fit:contain; margin:24px auto 20px; }
+
     @media(max-width:480px){ .logo{ max-height:70px; margin:16px auto 14px; } }
 
+
+
     .btn{
+
       font-family:'Poppins',sans-serif; font-weight:500; padding:10px 14px;
+
       border-radius:14px; border:1px solid var(--border); background:#fff;
+
       cursor:pointer; white-space:nowrap; color:#111; appearance:none; -webkit-appearance:none;
+
     }
+
     .btn:hover{ background:#f3f4f6; }
+
     .btnPrimary{ background:var(--accent); color:#fff; border-color:var(--accent); }
+
     .btnPrimary:hover{ opacity:.92; background:var(--accent); }
 
+
+
     .btnCalc{
+
       font-family:'Poppins',sans-serif; font-weight:700; padding:10px 12px;
+
       border-radius:14px; border:1px solid var(--border); background:#fff; color:#111;
+
       cursor:pointer; line-height:1; appearance:none; -webkit-appearance:none; -webkit-tap-highlight-color:transparent;
+
     }
+
     .btnCalc:hover{ background:#f3f4f6; }
 
+
+
     .input{
+
       width:100%; padding:12px 14px; border-radius:16px; border:1px solid var(--border);
+
       font-family:'Poppins',sans-serif; font-weight:500; font-size:16px; background:#fff;
+
       outline:none;
+
     }
+
     .input:focus{ border-color:#9ca3af; }
 
+
+
     .filterSelect{
+
       padding:12px 14px; border-radius:16px; border:1px solid var(--border);
+
       font-family:'Poppins',sans-serif; font-weight:500; font-size:16px;
+
       background:#fff; color:#111; appearance:none; -webkit-appearance:none;
+
       background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%236b7280' stroke-width='2'%3E%3Cpolyline points='6 9 12 15 18 9'/%3E%3C/svg%3E");
+
       background-repeat:no-repeat; background-position:right 12px center; padding-right:36px; cursor:pointer;
+
     }
+
     .filterSelect:focus{ outline:none; border-color:#9ca3af; }
 
+
+
     .muted{ color:var(--muted); font-size:13px; font-weight:300; }
+
     .err{ color:var(--bad); font-size:13px; margin-top:8px; text-align:left; }
+
+
 
     .loginCard{ background:var(--bg); border:1px solid var(--border); border-radius:20px; padding:16px; text-align:left; }
 
+
+
     .topbar{ display:flex; justify-content:space-between; align-items:center; gap:10px; padding:6px 0 10px; }
 
+
+
     .searchArea{ display:flex; flex-direction:column; gap:8px; margin:6px 0 12px; }
+
     .searchRow{ display:flex; gap:8px; align-items:center; }
+
     .searchRow .input{ flex:1; }
+
     .filterRow{ display:flex; gap:8px; flex-wrap:wrap; }
+
     .filterRow .filterSelect{ flex:1; min-width:120px; }
 
+
+
     @media(max-width:640px){
+
       .mobileSearchBar{
+
         position:sticky; top:0; z-index:100;
+
         background:rgba(252,252,252,.97); backdrop-filter:blur(10px);
+
         padding:10px 12px 8px; margin:0 -12px 10px;
+
       }
+
       .mobileSearchBar .input{
+
         font-size:17px; padding:14px 16px; border-radius:18px;
+
         border:1.5px solid var(--border); background:#fff;
+
         box-shadow:0 2px 12px rgba(0,0,0,.08);
+
       }
+
       .mobileSearchBar .input:focus{ outline:none; border-color:#9ca3af; }
+
       .mobileSearchBar .filterRow{ margin-top:6px; }
+
       .mobileSearchBar .filterRow .filterSelect{ font-size:14px; padding:10px 12px; }
+
     }
 
+
+
     .activeFilters{ display:flex; flex-wrap:wrap; gap:6px; margin-top:2px; }
+
     .filterChip{
+
       display:inline-flex; align-items:center; gap:5px; padding:3px 10px 3px 12px;
+
       border-radius:999px; background:#f3f4f6; border:1px solid var(--border); font-size:12px; font-weight:500;
+
     }
+
     .filterChip button{ border:none; background:none; cursor:pointer; padding:0; font-size:14px; line-height:1; color:var(--muted); }
+
+
 
     .card{ background:var(--bg); border:1px solid var(--border); border-radius:20px; padding:12px; }
 
+
+
     .tableWrap{ overflow-x:auto; -webkit-overflow-scrolling:touch; }
+
     table{ width:100%; border-collapse:collapse; font-size:14px; min-width:720px; }
+
     th{ padding:10px; border-bottom:1px solid #eee; font-weight:500; text-align:left; white-space:nowrap; }
+
     td{ padding:10px; border-bottom:1px solid #f1f1f1; font-weight:300; vertical-align:top; }
+
     .detailsRow td{ background:var(--soft); border-bottom:1px solid #eaeaea; }
+
     .small{ font-size:12px; color:var(--muted); }
 
+
+
     .mobileOnly{ display:none; }
+
     .desktopOnly{ display:block; }
+
     @media(max-width:640px){ .mobileOnly{ display:block; } .desktopOnly{ display:none; } }
 
+
+
     /* Mobile cards - compact */
+
     .productList{ display:flex; flex-direction:column; gap:8px; }
+
     .pCard{ border:1px solid var(--border); border-radius:16px; background:#fff; overflow:hidden; }
+
     .pRow{ display:flex; align-items:center; justify-content:space-between; gap:8px; padding:10px 12px; cursor:pointer; -webkit-tap-highlight-color:transparent; }
+
     .pName{ font-weight:500; font-size:14px; line-height:1.2; flex:1; min-width:0; word-break:break-word; display:flex; align-items:center; }
+
     .pActions{ display:flex; gap:6px; align-items:center; flex-shrink:0; }
+
     .pTiny{ padding:8px 10px; border-radius:12px; font-weight:700; font-size:13px; }
+
     .pToggle{ padding:8px 10px; border-radius:12px; color:#111; font-size:13px; }
+
     .pIconBtn{
+
       display:inline-flex; align-items:center; justify-content:center;
+
       width:36px; height:36px; border-radius:12px; border:1px solid var(--border);
+
       background:#fff; cursor:pointer; flex-shrink:0; -webkit-tap-highlight-color:transparent;
+
       appearance:none; -webkit-appearance:none;
+
     }
+
     .pIconBtn:hover{ background:#f3f4f6; }
+
     .pIconBtnPrimary{ background:var(--accent); border-color:var(--accent); }
 
+
+
     .pDetails{ display:none; padding:8px 12px 12px; border-top:1px solid #eee; background:var(--soft); }
+
     .pDetails.open{ display:block; }
 
+
+
     .kv{ display:grid; grid-template-columns:110px 1fr; gap:6px 10px; font-size:13px; }
+
     .k{ color:var(--muted); font-weight:500; }
+
     .v{ color:#111; font-weight:300; word-break:break-word; }
 
+
+
     .whBreakdown{ display:flex; flex-direction:column; gap:2px; }
+
     .whLine{ font-size:12px; }
 
+
+
     .stockDot{
+
       display:inline-block; width:9px; height:9px; border-radius:999px;
+
       margin-right:8px; vertical-align:middle; flex-shrink:0;
+
     }
+
     .dotGreen{ background:#16a34a; }
+
     .dotOrange{ background:#f59e0b; }
+
     .dotRed{ background:#ef4444; }
 
+
+
     .tdActions{ text-align:right; white-space:nowrap; }
+
     .actionWrap{ display:inline-flex; gap:8px; align-items:center; justify-content:flex-end; }
 
+
+
     /* Show more button */
+
     .showMoreWrap{ display:flex; justify-content:center; padding:14px 0 4px; }
+
     .showMoreBtn{
+
       font-family:'Poppins',sans-serif; font-weight:500; font-size:14px;
+
       padding:10px 24px; border-radius:14px; border:1px solid var(--border);
+
       background:#fff; cursor:pointer; color:#111;
+
     }
+
     .showMoreBtn:hover{ background:#f3f4f6; }
 
+
+
     .overlay{
+
       position:fixed; inset:0; background:rgba(0,0,0,.45);
+
       display:none; align-items:center; justify-content:center; z-index:10000; padding:14px;
+
     }
+
     .overlay.active{ display:flex; }
+
     .modal{
+
       background:#fff; width:min(1100px,96vw); height:min(760px,92vh);
+
       border-radius:20px; overflow:hidden; display:flex; flex-direction:column;
+
     }
+
     .modalHeader{
+
       padding:12px 14px; border-bottom:1px solid #eee;
+
       display:flex; justify-content:space-between; align-items:center; font-weight:500; gap:10px;
+
     }
+
     .modalHeader .actions{ display:flex; gap:10px; flex-wrap:wrap; justify-content:flex-end; }
+
     .modalBody{ padding:14px; overflow:auto; }
 
+
+
     #calcOverlay .modalBody{ padding:0; overflow:hidden; height:100%; }
+
     #calcOverlay .modalBody iframe{ width:100%; height:100%; border:0; display:block; }
 
+
+
     .formGrid{ display:grid; grid-template-columns:1fr; gap:12px; }
+
     .field label{ display:block; font-size:12px; color:var(--muted); margin:0 0 5px; font-weight:500; }
+
     .field input,.field textarea{
+
       width:100%; padding:10px 12px; border-radius:14px; border:1px solid var(--border);
+
       font-family:'Poppins',sans-serif; font-weight:500; font-size:16px; background:#fff;
+
       outline:none;
+
     }
+
     .field input:focus,.field textarea:focus{ border-color:#9ca3af; }
+
     .field textarea{ min-height:80px; resize:vertical; font-weight:300; }
 
+
+
     .cartList{ margin:10px 0 0; border:1px solid var(--border); border-radius:16px; overflow:hidden; }
+
     .cartRow{ display:flex; justify-content:space-between; gap:10px; padding:12px; border-bottom:1px solid #eee; }
+
     .cartRow:last-child{ border-bottom:none; }
+
     .cartGroup{ margin-bottom:12px; border:1px solid var(--border); border-radius:16px; overflow:hidden; }
+
     .cartGroup summary{ list-style:none; cursor:pointer; padding:12px 14px; font-weight:700; color:#111; display:flex; align-items:center; justify-content:space-between; background:var(--soft); }
+
     .cartGroup summary::-webkit-details-marker{ display:none; }
+
     .cartGroup summary::after{ content:"\25BE"; color:#9ca3af; transition:transform .15s; }
+
     .cartGroup[open] summary::after{ transform:rotate(180deg); }
+
     .cartGroup .cartList{ margin:0; border:none; border-radius:0; border-top:1px solid var(--border); }
+
     .cartGroup .cartList .cartRow:last-child{ border-bottom:none; }
+
     .cartRow .left{ display:flex; flex-direction:column; gap:3px; }
 
+
+
     .tick{
+
       display:inline-flex; align-items:center; gap:8px; padding:10px 12px;
+
       border:1px solid rgba(15,123,47,.25); background:rgba(15,123,47,.06);
+
       border-radius:14px; color:var(--ok); font-weight:500; margin-top:12px;
+
     }
+
     .tick .dot{
+
       width:22px; height:22px; border-radius:50%; display:inline-flex;
+
       align-items:center; justify-content:center; background:var(--ok); color:#fff; font-weight:700;
+
     }
+
+
 
     .cartFab{
+
       position:fixed; left:18px; bottom:18px; height:56px; padding:0 16px; border-radius:999px;
+
       background:var(--accent); color:#fff; display:flex; align-items:center; justify-content:center; gap:10px;
+
       cursor:pointer; box-shadow:0 10px 25px rgba(0,0,0,.25); z-index:9999; user-select:none;
+
       font-family:'Poppins',sans-serif; font-weight:700;
+
     }
+
     .cartFab .badge{
+
       display:inline-flex; align-items:center; justify-content:center;
+
       min-width:30px; height:30px; padding:0 9px; border-radius:999px;
+
       background:#fff; color:#111; font-weight:700; font-size:13px;
+
     }
+
+
 
     .cartBar{
+
       display:none; position:fixed; left:0; right:0; bottom:0;
+
       padding:10px 14px; background:rgba(252,252,252,.92); border-top:1px solid var(--border);
+
       backdrop-filter:blur(10px); z-index:9999;
+
       padding-bottom:calc(10px + env(safe-area-inset-bottom));
+
     }
+
     .cartBarInner{ max-width:1300px; margin:0 auto; display:flex; gap:10px; align-items:center; }
+
     .cartBarBtn{
+
       width:100%; height:50px; border-radius:16px; background:var(--accent); color:#fff;
+
       border:1px solid var(--accent); font-family:'Poppins',sans-serif; font-weight:700; font-size:16px;
+
       display:flex; align-items:center; justify-content:center; gap:10px;
+
       appearance:none; -webkit-appearance:none;
+
     }
+
     .cartBarBtn .badge{
+
       display:inline-flex; align-items:center; justify-content:center;
+
       min-width:26px; height:26px; padding:0 8px; border-radius:999px;
+
       background:#fff; color:#111; font-weight:700; font-size:13px;
+
     }
+
     @media(max-width:640px){ .cartBar{ display:block; } .cartFab{ display:none !important; } }
 
+
+
     /* ---- Inkoop (inline row actions for role=inkoop) ---- */
+
     .inkoopMinInput{
+
       width:52px; padding:6px 8px; border-radius:10px; border:1px solid var(--border);
+
       font-family:'Poppins',sans-serif; font-size:13px; font-weight:500; text-align:center;
+
       outline:none; background:#fff;
+
       -moz-appearance:textfield; appearance:textfield;
+
     }
+
     .inkoopMinInput:focus{ border-color:#9ca3af; }
+
     .inkoopMinInput::-webkit-outer-spin-button,
+
     .inkoopMinInput::-webkit-inner-spin-button{ -webkit-appearance:none; margin:0; }
 
+
+
     .toggleChip{
+
       position:relative; display:inline-flex; align-items:center; gap:8px; padding:10px 16px 10px 12px;
+
       border-radius:999px; border:1px solid var(--border); background:#fff;
+
       font-family:'Poppins',sans-serif; font-size:14px; font-weight:500; color:#111;
+
       white-space:nowrap; cursor:pointer; user-select:none;
+
       transition:background .15s ease,border-color .15s ease,color .15s ease;
+
     }
+
     .toggleChip:hover{ border-color:#9ca3af; }
+
     .toggleChip input{ position:absolute; opacity:0; width:0; height:0; }
+
     .toggleChip .toggleDot{
+
       width:18px; height:18px; border-radius:50%; border:2px solid var(--border);
+
       display:inline-flex; align-items:center; justify-content:center; flex-shrink:0;
+
       transition:background .15s ease,border-color .15s ease;
+
     }
+
     .toggleChip .toggleDot::after{
+
       content:""; width:8px; height:8px; border-radius:50%; background:#fff;
+
       transform:scale(0); transition:transform .15s ease;
+
     }
+
     .toggleChip:has(input:checked){ background:var(--accent); border-color:var(--accent); color:#fff; }
+
     .toggleChip:has(input:checked) .toggleDot{ background:#fff; border-color:#fff; }
+
     .toggleChip:has(input:checked) .toggleDot::after{ background:var(--accent); transform:scale(1); }
+
   </style>
+
 </head>
+
 <body>
 
+
+
   <!-- LOGIN -->
+
   <div id="loginView" class="centerWrap">
+
     <img src="./logo.png" alt="Logo" class="logo" onerror="this.style.display='none';">
+
     <div class="loginCard">
+
       <div style="font-weight:700; margin-bottom:10px;">Login</div>
+
       <input id="loginKey" class="input" placeholder="Key" autocomplete="off" autocapitalize="off" spellcheck="false">
+
       <div style="display:flex; gap:10px; margin-top:12px;">
+
         <button id="loginBtn" class="btn btnPrimary" style="flex:1;">Login</button>
+
       </div>
+
       <div id="loginErr" class="err"></div>
+
     </div>
+
   </div>
+
+
 
   <!-- APP -->
+
   <div id="appView" class="wrap">
+
     <div class="topbar">
+
       <div></div>
+
       <div style="display:flex; gap:8px; align-items:center;">
+
         <button id="accountBtn" class="btn">Account</button>
+
         <button id="logoutBtn" class="btn" title="Log out" style="padding:9px 11px;">
+
           <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+
         </button>
+
       </div>
+
     </div>
+
+
 
     <img src="./logo.png" alt="Logo" class="logo" onerror="this.style.display='none';">
 
+
+
     <div class="searchArea mobileSearchBar">
+
       <div class="searchRow">
+
         <input id="searchInput" class="input" placeholder="Search product or EAN..." disabled>
+
       </div>
+
       <div class="filterRow">
+
         <select id="filterCategory" class="filterSelect" disabled><option value="">All categories</option></select>
+
         <select id="filterSupplier" class="filterSelect" disabled><option value="">All brands</option></select>
+
         <label class="toggleChip" id="mainOnlyLowWrap" style="display:none;">
+
           <input type="checkbox" id="mainOnlyLow">
+
           <span class="toggleDot"></span>
+
           Onder min stock
+
         </label>
+
         <label class="toggleChip" id="mainOnlyHasMinWrap" style="display:none;">
+
           <input type="checkbox" id="mainOnlyHasMin">
+
           <span class="toggleDot"></span>
+
           Heeft min voorraad
+
         </label>
+
         <button id="clearFiltersBtn" class="btn" style="flex-shrink:0; display:none; padding:10px 12px;">&#x2715;</button>
+
       </div>
+
       <div id="activeFilters" class="activeFilters"></div>
+
     </div>
+
+
 
     <div id="meta" class="muted" style="min-height:18px; margin:0 0 10px;"></div>
+
     <div id="err" class="err"></div>
 
+
+
     <!-- Desktop table -->
+
     <div class="card desktopOnly">
+
       <div class="tableWrap">
+
         <table>
+
           <thead>
+
             <tr>
+
               <th>Product</th>
+
               <th>Stock</th>
+
               <th>Warehouse</th>
+
               <th>Total</th>
+
               <th style="text-align:right;"></th>
+
             </tr>
+
           </thead>
+
           <tbody id="tbody">
+
             <tr><td colspan="5" class="small">Loading...</td></tr>
+
           </tbody>
+
         </table>
+
       </div>
+
     </div>
+
+
 
     <!-- Mobile cards -->
+
     <div class="mobileOnly">
+
       <div id="mobileProducts" class="productList"></div>
+
     </div>
+
   </div>
+
+
 
   <!-- Desktop floating LEAD -->
+
   <div class="cartFab" id="cartBtn" style="display:none;">
+
     <span>Enter contact</span><span class="badge" id="cartBadge">0</span>
+
   </div>
+
+
 
   <!-- Mobile bottom lead bar -->
+
   <div class="cartBar" id="cartBar" style="display:none;">
+
     <div class="cartBarInner">
+
       <button class="cartBarBtn" id="cartBarBtn">
+
         Enter contact <span class="badge" id="cartBarBadge">0</span>
+
       </button>
+
     </div>
+
   </div>
+
+
 
   <!-- Desktop floating INKOOP order (role=inkoop only) -->
+
   <div class="cartFab" id="inkoopCartBtn" style="display:none;">
+
     <span>Bestelling versturen</span><span class="badge" id="inkoopCartBadge">0</span>
+
   </div>
+
+
 
   <!-- Mobile bottom INKOOP order bar -->
+
   <div class="cartBar" id="inkoopCartBar" style="display:none;">
+
     <div class="cartBarInner">
+
       <button class="cartBarBtn" id="inkoopCartBarBtn">
+
         Bestelling versturen <span class="badge" id="inkoopCartBarBadge">0</span>
+
       </button>
+
     </div>
+
   </div>
+
+
 
   <!-- Lead modal -->
+
   <div id="cartOverlay" class="overlay">
+
     <div class="modal">
+
       <div class="modalHeader">
+
         <span>Enter contact</span>
+
         <div class="actions"><button id="cartClose" class="btn">Close</button></div>
+
       </div>
+
       <div class="modalBody">
+
         <div class="formGrid">
+
           <div class="field"><label>Name</label><input id="custName" placeholder="Name"></div>
+
           <div class="field"><label>Phone number</label><input id="phone" placeholder="Phone number" inputmode="tel"></div>
+
           <div class="field"><label>Email</label><input id="mail" placeholder="Email" inputmode="email"></div>
+
           <div class="field"><label>Note</label><textarea id="note1" placeholder="Note"></textarea></div>
+
         </div>
+
         <div style="margin-top:14px; font-weight:700;">Items:</div>
+
         <div id="cartList" class="cartList"></div>
+
         <button id="cartSaveBtn" class="btn btnPrimary" style="width:100%; margin-top:12px; height:52px; border-radius:16px; font-size:16px;">Opslaan</button>
+
         <button id="waBtn" style="width:100%; margin-top:12px; height:52px; border-radius:16px; background:#25D366; color:#fff; border:none; font-family:'Poppins',sans-serif; font-weight:700; font-size:16px; display:none; align-items:center; justify-content:center; gap:10px; cursor:pointer; appearance:none; -webkit-appearance:none;">
+
           <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg>
+
           Send via WhatsApp
+
         </button>
+
         <div id="cartErr" class="err"></div>
+
         <div id="cartTick" class="tick" style="display:none;"><span class="dot">v</span><span> Saved</span></div>
+
       </div>
+
     </div>
+
   </div>
+
+
 
   <!-- Inkoop order review modal (role=inkoop) -->
+
   <div id="inkoopCartOverlay" class="overlay">
+
     <div class="modal" style="width:min(560px,96vw);">
+
       <div class="modalHeader">
+
         <span>Bestelling</span>
+
         <div class="actions"><button id="inkoopCartClose" class="btn">Sluiten</button></div>
+
       </div>
+
       <div class="modalBody">
+
         <div style="font-weight:700; margin-bottom:8px;">Producten (gegroepeerd per leverancier):</div>
+
         <div id="inkoopCartList"></div>
+
         <div id="inkoopCartActions" style="margin-top:14px;"></div>
+
         <div id="inkoopCartErr" class="err"></div>
+
       </div>
+
     </div>
+
   </div>
+
+
 
   <!-- Account modal -->
+
   <div id="accountOverlay" class="overlay">
+
     <div class="modal">
+
       <div class="modalHeader">
+
         <span id="accountTitle">Account</span>
+
         <div class="actions"><button id="accountClose" class="btn">Close</button></div>
+
       </div>
+
       <div class="modalBody">
+
         <div class="muted" id="accountSub" style="margin-bottom:10px;"></div>
+
         <div class="card desktopOnly">
+
           <div style="font-weight:700; margin-bottom:8px;">Leads overview</div>
+
           <div class="tableWrap">
+
             <table style="min-width:820px;">
+
               <thead>
+
                 <tr><th>Name</th><th>Phone</th><th>Mail</th><th>Product</th><th>Retail price</th><th>Note</th></tr>
+
               </thead>
+
               <tbody id="accountOrdersTbody">
+
                 <tr><td colspan="6" class="small">Loading...</td></tr>
+
               </tbody>
+
             </table>
+
           </div>
+
         </div>
+
         <div class="mobileOnly">
+
           <div style="font-weight:700; margin-bottom:10px;">Leads overview</div>
+
           <div id="mobileLeads" class="productList"></div>
+
         </div>
+
         <div id="accountErr" class="err"></div>
+
       </div>
+
     </div>
+
   </div>
+
+
 
   <!-- Calculator modal -->
+
   <div id="calcOverlay" class="overlay">
+
     <div class="modal">
+
       <div class="modalHeader">
+
         <span>Calculator</span>
+
         <div class="actions"><button id="calcClose" class="btn">Close</button></div>
+
       </div>
+
       <div class="modalBody">
+
         <iframe id="calcFrame" title="Calculator" src="about:blank"></iframe>
+
       </div>
+
     </div>
+
   </div>
 
+
+
   <script>
+
     const APPS_SCRIPT_WEBAPP_URL = "https://script.google.com/macros/s/AKfycbx16TL4k6EraUDXpA5CWMJnueCWUiMGKlLBBTdUEMpzYyj91a8fGVvNuDLU6av9k5jT3Q/exec";
+
     const CALCULATOR_URL = "https://surf-center.github.io/calculator/";
+
     const PAGE_SIZE = 20;
+
     const CACHE_KEY = "sc_products_cache";
 
+
+
     const WAREHOUSE_KEYS = [
+
       "msi_F4_qty","msi_NP7_qty","msi_apm_qty","msi_boards-and-more_qty",
+
       "msi_coros_qty","msi_foxsports_qty","msi_h20_qty","msi_kubus_qty",
+
       "msi_neilpryde_qty","msi_newsports_qty","msi_patrik_qty","msi_point7_qty",
+
       "msi_ride_engine_qty","msi_slingshot_qty","msi_unifiber_qty","msi_weone_qty","msi_wip_qty"
+
     ];
+
     const WAREHOUSE_LABELS = {
+
       "msi_F4_qty":"F4","msi_NP7_qty":"NP7","msi_apm_qty":"APM",
+
       "msi_boards-and-more_qty":"Boards & More","msi_coros_qty":"Coros",
+
       "msi_foxsports_qty":"Foxsports","msi_h20_qty":"H2O","msi_kubus_qty":"Kubus",
+
       "msi_neilpryde_qty":"Neil Pryde","msi_newsports_qty":"Newsports",
+
       "msi_patrik_qty":"Patrik","msi_point7_qty":"Point-7",
+
       "msi_ride_engine_qty":"Ride Engine","msi_slingshot_qty":"Slingshot",
+
       "msi_unifiber_qty":"Unifiber","msi_weone_qty":"WeOne","msi_wip_qty":"WIP"
+
     };
 
+
+
     function jsonp(url){
+
       return new Promise((resolve,reject)=>{
+
         const s=document.createElement("script");
+
         const cb="cb_"+Math.random().toString(36).slice(2);
+
         const t=setTimeout(()=>{cleanup();reject(new Error("Timeout"));},30000);
+
         window[cb]=d=>{cleanup();resolve(d);};
+
         function cleanup(){clearTimeout(t);delete window[cb];s.remove();}
+
         s.onerror=()=>{cleanup();reject(new Error("Failed to load script"));};
+
         s.src=url+(url.includes("?")?"&":"?")+"callback="+cb;
+
         document.body.appendChild(s);
+
       });
+
     }
+
+
 
     function fmtPrice(v){
+
       if(v===null||v===undefined||v==="") return "";
+
       const n=Number(String(v).replace(",","."));
+
       return Number.isFinite(n) ? "EUR "+n.toFixed(2) : String(v);
+
     }
 
+
+
     // Hides raw Google/quota error text from staff-facing messages.
+
     function friendlyErrorMessage(e){
+
       const msg=String((e&&e.message)||e||"");
+
       if(/quota|rate limit/i.test(msg)) return "Even geduld, probeer over een moment opnieuw.";
+
       return "Kon de gegevens niet laden. Probeer het opnieuw.";
+
     }
+
+
 
     const esc=s=>String(s).replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[m]));
 
+
+
     function toNum(x){
+
       if(x===null||x===undefined||x==="") return null;
+
       const n=Number(String(x).replace(",",".").trim());
+
       return Number.isFinite(n)?n:null;
+
     }
+
+
 
     function ownStock(r){ return toNum(r.msi_surfcenter_qty)??0; }
+
     function warehouseStock(r){ return WAREHOUSE_KEYS.reduce((s,k)=>s+(toNum(r[k])??0),0); }
+
     function warehouseBreakdown(r){ return WAREHOUSE_KEYS.map(k=>({label:WAREHOUSE_LABELS[k]||k,qty:toNum(r[k])??0})).filter(x=>x.qty>0); }
+
     function productDetailsHtml(r,own){
+
       const bd=warehouseBreakdown(r);
+
       const whD=bd.length?`<div class="whBreakdown">${bd.map(x=>`<div class="whLine">${esc(x.label)}: ${x.qty}</div>`).join("")}</div>`:"";
+
       const noLevHtml=noLeverancierHtml(r,warehouseStock(r));
+
       return `<div class="kv" style="grid-template-columns:130px 1fr;"><div class="k">EAN</div><div class="v">${esc(r.ean_code||"")}</div><div class="k">Brand</div><div class="v">${esc(r.manufacturer||"")}</div><div class="k">Category</div><div class="v">${esc(r._attribute_set||"")}</div>${r.season?`<div class="k">Season</div><div class="v">${esc(r.season)}</div>`:""}<div class="k">Stock</div><div class="v">${own}</div><div class="k">Warehouse</div><div class="v">${whD}</div></div>${noLevHtml}`;
+
     }
+
     // Shared expand/collapse "Info" button used by both the sales and inkoop row layouts.
+
     function makeInfoBtn(r,id,tr,own){
+
       const iBtn=document.createElement("button"); iBtn.className="btn"; iBtn.textContent=expanded.has(id)?"Close":"Info";
+
       iBtn.onclick=()=>{
+
         if(expanded.has(id)){
+
           expanded.delete(id); iBtn.textContent="Info";
+
           const det=document.getElementById("det_"+id); if(det)det.remove();
+
         } else {
+
           expanded.add(id); iBtn.textContent="Close";
+
           const tr2=document.createElement("tr"); tr2.className="detailsRow"; tr2.id="det_"+id;
+
           const td=document.createElement("td"); td.colSpan=5;
+
           td.innerHTML=productDetailsHtml(r,own);
+
           tr2.appendChild(td); tr.insertAdjacentElement("afterend",tr2);
+
         }
+
       };
+
       return iBtn;
+
     }
+
     function stockStatus(r){ if(ownStock(r)>0)return"green"; if(warehouseStock(r)>0)return"orange"; return"red"; }
+
     function statusRank(s){ return s==="green"?2:s==="orange"?1:0; }
+
     function dotClass(s){ return s==="green"?"dotGreen":s==="orange"?"dotOrange":"dotRed"; }
 
+
+
     function sortRows(a,b){
+
       const sa=stockStatus(a),sb=stockStatus(b);
+
       const r=statusRank(sb)-statusRank(sa); if(r!==0)return r;
+
       const aO=ownStock(a),bO=ownStock(b),aW=warehouseStock(a),bW=warehouseStock(b);
+
       const aV=sa==="green"?aO:sa==="orange"?aW:0, bV=sb==="green"?bO:sb==="orange"?bW:0;
+
       if(bV!==aV)return bV-aV;
+
       if((aO+aW)!==(bO+bW))return(bO+bW)-(aO+aW);
+
       return String(a.name||"").localeCompare(String(b.name||""));
+
     }
+
+
 
     // ---- DOM refs ----
+
     const loginView=document.getElementById("loginView"),appView=document.getElementById("appView");
+
     const loginKey=document.getElementById("loginKey"),loginBtn=document.getElementById("loginBtn"),loginErr=document.getElementById("loginErr");
+
     const accountBtn=document.getElementById("accountBtn"),logoutBtn=document.getElementById("logoutBtn");
+
     const searchInput=document.getElementById("searchInput");
+
     const filterCategory=document.getElementById("filterCategory"),filterSupplier=document.getElementById("filterSupplier");
+
     const clearFiltersBtn=document.getElementById("clearFiltersBtn"),activeFiltersEl=document.getElementById("activeFilters");
+
     const tbody=document.getElementById("tbody"),mobileProducts=document.getElementById("mobileProducts");
+
     const meta=document.getElementById("meta"),err=document.getElementById("err");
+
     const cartBtn=document.getElementById("cartBtn"),cartBar=document.getElementById("cartBar");
+
     const cartBarBtn=document.getElementById("cartBarBtn"),cartBarBadge=document.getElementById("cartBarBadge");
+
     const cartOverlay=document.getElementById("cartOverlay"),cartClose=document.getElementById("cartClose");
+
     const cartListEl=document.getElementById("cartList"),cartErr=document.getElementById("cartErr"),cartTick=document.getElementById("cartTick");
+
     const waBtn=document.getElementById("waBtn"),cartSaveBtn=document.getElementById("cartSaveBtn");
+
     const custName=document.getElementById("custName"),phone=document.getElementById("phone"),mail=document.getElementById("mail"),note1=document.getElementById("note1");
+
     const accountOverlay=document.getElementById("accountOverlay"),accountClose=document.getElementById("accountClose");
+
     const accountTitle=document.getElementById("accountTitle"),accountSub=document.getElementById("accountSub");
+
     const accountOrdersTbody=document.getElementById("accountOrdersTbody"),accountErr=document.getElementById("accountErr"),mobileLeads=document.getElementById("mobileLeads");
+
     const calcOverlay=document.getElementById("calcOverlay"),calcClose=document.getElementById("calcClose"),calcFrame=document.getElementById("calcFrame");
+
     const mainOnlyLowWrap=document.getElementById("mainOnlyLowWrap"),mainOnlyLow=document.getElementById("mainOnlyLow");
+
     const mainOnlyHasMinWrap=document.getElementById("mainOnlyHasMinWrap"),mainOnlyHasMin=document.getElementById("mainOnlyHasMin");
+
     const inkoopCartOverlay=document.getElementById("inkoopCartOverlay"),inkoopCartClose=document.getElementById("inkoopCartClose");
+
     const inkoopCartList=document.getElementById("inkoopCartList"),inkoopCartActions=document.getElementById("inkoopCartActions");
+
     const inkoopCartErr=document.getElementById("inkoopCartErr");
+
     const inkoopCartBtn=document.getElementById("inkoopCartBtn"),inkoopCartBadge=document.getElementById("inkoopCartBadge");
+
     const inkoopCartBar=document.getElementById("inkoopCartBar"),inkoopCartBarBtn=document.getElementById("inkoopCartBarBtn"),inkoopCartBarBadge=document.getElementById("inkoopCartBarBadge");
 
+
+
     let currentKey="",currentUserName="",currentUserRole="",isAdmin=false,isInkoopRole=false;
+
     let allRows=[],expanded=new Set(),mobileExpanded=new Set(),cart=[];
+
     let visibleCount=PAGE_SIZE;
 
+
+
     // ---- Filters ----
+
     function getFilters(){
+
       return {
+
         q:searchInput.value.trim().toLowerCase(), category:filterCategory.value, supplier:filterSupplier.value,
+
         onlyLow: isInkoopRole ? mainOnlyLow.checked : false,
+
         hasMin: isInkoopRole ? mainOnlyHasMin.checked : false
+
       };
+
     }
+
     function filtersActive(){ const f=getFilters(); return f.q||f.category||f.supplier; }
 
+
+
     function matchesFilters(r,f){
+
       if(f.q){ const tokens=f.q.split(/\s+/).filter(Boolean); const hay=((r.name||"")+" "+(r.ean_code||"")).toLowerCase(); if(!tokens.every(t=>hay.includes(t)))return false; }
+
       if(f.category&&(r._attribute_set||"")!==f.category)return false;
+
       if(f.supplier&&(r.manufacturer||"")!==f.supplier)return false;
+
       if(f.onlyLow){ const min=minStockMap[r.ean_code]||0; if(min<=0||ownStock(r)>=min)return false; }
+
       if(f.hasMin){ const min=minStockMap[r.ean_code]||0; if(min<=0)return false; }
+
       return true;
+
     }
+
+
 
     function populateDropdowns(){
+
       const cats=[...new Set(allRows.map(r=>r._attribute_set||"").filter(Boolean))].sort();
+
       const sups=[...new Set(allRows.map(r=>r.manufacturer||"").filter(Boolean))].sort();
+
       filterCategory.innerHTML=`<option value="">All categories</option>`+cats.map(c=>`<option value="${esc(c)}">${esc(c)}</option>`).join("");
+
       filterSupplier.innerHTML=`<option value="">All brands</option>`+sups.map(s=>`<option value="${esc(s)}">${esc(s)}</option>`).join("");
+
       filterCategory.disabled=false; filterSupplier.disabled=false;
+
     }
+
+
 
     function updateActiveFilters(){
+
       const f=getFilters();
+
       activeFiltersEl.innerHTML="";
+
       [f.category&&{label:f.category,clear:()=>{filterCategory.value="";onFilterChange();}},
+
        f.supplier&&{label:f.supplier,clear:()=>{filterSupplier.value="";onFilterChange();}}]
+
       .filter(Boolean).forEach(chip=>{
+
         const el=document.createElement("div"); el.className="filterChip";
+
         el.innerHTML=`<span>${esc(chip.label)}</span><button>x</button>`;
+
         el.querySelector("button").onclick=chip.clear; activeFiltersEl.appendChild(el);
+
       });
+
       clearFiltersBtn.style.display=filtersActive()?"":"none";
+
     }
+
+
 
     // Debounce: only re-render 200ms after last keystroke
+
     let _searchTimer=null;
+
     function onFilterChange(reset){
+
       updateActiveFilters();
+
       if(reset!==false) visibleCount=PAGE_SIZE;
+
       clearTimeout(_searchTimer);
+
       _searchTimer=setTimeout(renderProducts, 200);
+
     }
+
+
 
     searchInput.addEventListener("input",()=>onFilterChange(true));
+
     filterCategory.addEventListener("change",()=>onFilterChange(true));
+
     filterSupplier.addEventListener("change",()=>onFilterChange(true));
+
     mainOnlyLow.addEventListener("change",()=>onFilterChange(true));
+
     mainOnlyHasMin.addEventListener("change",()=>onFilterChange(true));
+
     clearFiltersBtn.onclick=()=>{ searchInput.value=""; filterCategory.value=""; filterSupplier.value=""; onFilterChange(true); };
 
+
+
     // ---- Cart ----
+
     function setCartBadge(){ const n=String(cart.length); document.getElementById("cartBadge").textContent=n; cartBarBadge.textContent=n; }
+
     function addToCart(item){ if(cart.some(x=>x.ean===item.ean))return; cart.push({ean:item.ean,product:item.name,retailPrice:item.retailPrice}); setCartBadge(); }
+
     function removeFromCart(ean){ cart=cart.filter(x=>x.ean!==ean); setCartBadge(); renderCart(); }
+
     function renderCart(){
+
       if(!cart.length){ cartListEl.innerHTML=`<div class="cartRow"><div class="small">No items.</div></div>`; return; }
+
       cartListEl.innerHTML=cart.map(it=>`<div class="cartRow"><div class="left"><div style="font-weight:500;">${esc(it.product||"")}</div></div><div><button class="btn" data-remove="${esc(it.ean)}">Remove</button></div></div>`).join("");
+
       cartListEl.querySelectorAll("button[data-remove]").forEach(b=>b.addEventListener("click",()=>removeFromCart(b.getAttribute("data-remove"))));
+
     }
+
+
 
     // ---- Auth ----
+
     function showLogin(){ loginView.style.display="block"; appView.style.display="none"; cartBtn.style.display="none"; cartBar.style.display="none"; inkoopCartBtn.style.display="none"; inkoopCartBar.style.display="none"; mainOnlyLowWrap.style.display="none"; mainOnlyHasMinWrap.style.display="none"; loginErr.textContent=""; loginKey.value=""; loginKey.focus(); }
+
     function showApp(){ loginView.style.display="none"; appView.style.display="block"; cartBtn.style.display=""; cartBar.style.display=""; searchInput.disabled=false; filterCategory.disabled=false; filterSupplier.disabled=false; }
+
     function logout(){ localStorage.removeItem("employeeKey"); currentKey=""; showLogin(); }
+
     logoutBtn.onclick=logout;
 
+
+
     // ---- Cart modal ----
+
     const LEAD_CACHE="sc_lead_form";
+
     function saveLeadForm(){ localStorage.setItem(LEAD_CACHE,JSON.stringify({name:custName.value,phone:phone.value,mail:mail.value,note:note1.value})); }
+
     function restoreLeadForm(){ try{ const d=JSON.parse(localStorage.getItem(LEAD_CACHE)||"{}"); if(d.name)custName.value=d.name; if(d.phone)phone.value=d.phone; if(d.mail)mail.value=d.mail; if(d.note)note1.value=d.note; }catch(e){} }
 
+
+
     // No more silent autosave-to-sheet while typing: the customer lead is only written
+
     // to the sheet once the user explicitly clicks "Opslaan". Local draft persistence
+
     // (saveLeadForm/restoreLeadForm) is unrelated and still runs on every keystroke.
+
     function resetCartSaveState(){
+
       waBtn.style.display="none";
+
       cartTick.style.display="none";
+
       cartSaveBtn.style.display="";
+
       cartSaveBtn.disabled=false; cartSaveBtn.textContent="Opslaan";
+
     }
+
     [custName,phone,mail,note1].forEach(el=>el.addEventListener("input",()=>{
+
       saveLeadForm();
+
       if(waBtn.style.display!=="none") resetCartSaveState(); // edited after saving: must save again
+
     }));
 
+
+
     function openCart(){ cartErr.textContent=""; resetCartSaveState(); restoreLeadForm(); renderCart(); cartOverlay.classList.add("active"); }
+
     function closeCart(){ cartOverlay.classList.remove("active"); }
+
     cartBtn.onclick=openCart; cartBarBtn.onclick=openCart; cartClose.onclick=closeCart;
+
     cartOverlay.addEventListener("click",e=>{ if(e.target===cartOverlay)closeCart(); });
 
+
+
     cartSaveBtn.onclick=async()=>{
+
       const name=custName.value.trim(),p=phone.value.trim(),m=mail.value.trim(),n1=note1.value.trim();
+
       if(!name){cartErr.textContent="Name is required.";return;}
+
       if(!p&&!m){cartErr.textContent="Phone number or email is required.";return;}
+
       if(!cart.length){cartErr.textContent="No items added.";return;}
+
       cartErr.textContent="";
+
       cartSaveBtn.disabled=true; cartSaveBtn.textContent="Opslaan...";
+
       try{
+
         const payload={name,phoneNumber:p,mail:m,note1:n1,items:cart};
+
         const url=`${APPS_SCRIPT_WEBAPP_URL}?action=submitLead&key=${encodeURIComponent(currentKey)}&payload=${encodeURIComponent(JSON.stringify(payload))}`;
+
         await jsonp(url);
+
         cartSaveBtn.style.display="none";
+
         cartTick.style.display="";
+
         waBtn.style.display="flex";
+
       }catch(e){
+
         cartErr.textContent="Opslaan mislukt, probeer opnieuw.";
+
         cartSaveBtn.disabled=false; cartSaveBtn.textContent="Opslaan";
+
       }
+
     };
+
+
 
     waBtn.onclick=()=>{
+
       const name=custName.value.trim(),p=phone.value.trim(),m=mail.value.trim(),n1=note1.value.trim();
+
       let msg="*New lead - Surf Center*\n\n";
+
       if(name) msg+=`*Name:* ${name}\n`;
+
       if(p)    msg+=`*Phone:* ${p}\n`;
+
       if(m)    msg+=`*Email:* ${m}\n`;
+
       if(cart.length){ msg+=`\n*Products:*\n`; cart.forEach(it=>{ msg+=`- ${it.product}\n`; }); }
+
       if(n1) msg+=`\n*Note:* ${n1}`;
+
       const url=`https://wa.me/31683599751?text=${encodeURIComponent(msg.trim())}`;
+
       window.open(url,"_blank");
+
       cart=[]; setCartBadge(); renderCart();
+
       custName.value=""; phone.value=""; mail.value=""; note1.value="";
+
       localStorage.removeItem(LEAD_CACHE);
+
       cartOverlay.classList.remove("active");
+
     };
 
+
+
     // ---- Calculator modal ----
+
     function openCalculatorForRow(r){
+
       const retail=Number(String(r.retailPrice??"").replace(",","."));
+
       const purchase=Number(String(r.purchasePrice??"").replace(",","."));
+
       const params=new URLSearchParams();
+
       if(Number.isFinite(purchase))params.set("p",purchase.toFixed(2));
+
       if(Number.isFinite(retail))params.set("s",retail.toFixed(2));
+
       calcFrame.src=params.toString()?`${CALCULATOR_URL}?${params}`:CALCULATOR_URL;
+
       calcOverlay.classList.add("active");
+
     }
+
     function closeCalculator(){ calcOverlay.classList.remove("active"); calcFrame.src="about:blank"; }
+
     calcClose.onclick=closeCalculator;
+
     calcOverlay.addEventListener("click",e=>{ if(e.target===calcOverlay)closeCalculator(); });
 
+
+
     // ---- Account modal ----
+
     function openAccount(){ accountErr.textContent=""; accountOverlay.classList.add("active"); accountTitle.textContent=currentUserName||"Account"; accountSub.textContent=isAdmin?"Surfcenter: all leads":"Your leads"; loadAccountOrders(); }
+
     function closeAccountFn(){ accountOverlay.classList.remove("active"); }
+
     accountBtn.onclick=openAccount; accountClose.onclick=closeAccountFn;
+
     accountOverlay.addEventListener("click",e=>{ if(e.target===accountOverlay)closeAccountFn(); });
 
+
+
     async function loadAccountOrders(){
+
       accountErr.textContent=""; accountOrdersTbody.innerHTML=`<tr><td colspan="6" class="small">Loading...</td></tr>`; mobileLeads.innerHTML="";
+
       const scope=isAdmin?"all":"mine";
+
       try{
+
         const res=await jsonp(`${APPS_SCRIPT_WEBAPP_URL}?action=orders&scope=${scope}&key=${encodeURIComponent(currentKey)}`);
+
         if(!res||!res.ok)throw new Error(res?.error||"Could not load leads");
+
         const orders=Array.isArray(res.orders)?res.orders:[];
+
         if(!orders.length){ accountOrdersTbody.innerHTML=`<tr><td colspan="6" class="small">No leads.</td></tr>`; mobileLeads.innerHTML=`<div class="small">No leads.</div>`; return; }
+
         accountOrdersTbody.innerHTML=orders.map(o=>`<tr><td>${esc(o.name||"")}</td><td>${esc(o.phoneNumber||"")}</td><td>${esc(o.mail||"")}</td><td>${esc(o.product||"")}</td><td>${esc(fmtPrice(o.retailPrice))}</td><td>${esc(o.note1||o.note||"")}</td></tr>`).join("");
+
         mobileLeads.innerHTML=orders.map((o,i)=>{const id=`lead_${i}`;return`<div class="pCard" data-lead="${id}"><div class="pRow"><div class="pName" style="font-weight:700;">${esc(o.name||"Lead")}</div><div class="pActions"><button class="btn pToggle" data-toggle-lead="${id}">+</button></div></div><div class="pDetails" id="${id}"><div class="kv"><div class="k">Phone</div><div class="v">${esc(o.phoneNumber||"-")}</div><div class="k">Mail</div><div class="v">${esc(o.mail||"-")}</div><div class="k">Product</div><div class="v">${esc(o.product||"")}</div><div class="k">Retail</div><div class="v">${esc(fmtPrice(o.retailPrice))}</div><div class="k">Note</div><div class="v">${esc(o.note1||o.note||"-")}</div></div></div></div>`;}).join("");
+
         mobileLeads.querySelectorAll("button[data-toggle-lead]").forEach(btn=>btn.addEventListener("click",()=>{const id=btn.getAttribute("data-toggle-lead");const d=document.getElementById(id);const open=d.classList.toggle("open");btn.textContent=open?"-":"+";}));
+
       }catch(e){ accountErr.textContent=e.message; accountOrdersTbody.innerHTML=`<tr><td colspan="6" class="small">Error.</td></tr>`; mobileLeads.innerHTML=`<div class="small">Error.</div>`; }
+
     }
+
+
 
     // ---- Products ----
+
     function applyData(res, fromCache, opts){
+
       err.textContent=""; // clear any stale error from an earlier failed attempt
+
       isAdmin=!!res.isAdmin;
+
       currentUserName=(res.user&&res.user.name)?res.user.name:"";
+
       currentUserRole=(res.user&&res.user.role)?String(res.user.role).trim().toLowerCase():"";
+
       accountBtn.textContent=currentUserName||"Account";
+
       // "inkoop" role: purchasing staff get inline min-stock/order actions on the main list instead of the customer-lead cart.
+
       // "sales" role (or any other/blank role): customer-lead cart, normal Info/%/Add actions.
+
       isInkoopRole=currentUserRole==="inkoop";
+
       cartBtn.style.display=isInkoopRole?"none":"";
+
       cartBar.style.display=isInkoopRole?"none":"";
+
       inkoopCartBtn.style.display=isInkoopRole?"":"none";
+
       inkoopCartBar.style.display=isInkoopRole?"":"none";
+
       mainOnlyLowWrap.style.display=isInkoopRole?"":"none";
+
       mainOnlyHasMinWrap.style.display=isInkoopRole?"":"none";
+
       const isPartial=!!(opts&&opts.partial);
+
       if(isInkoopRole && !isPartial){ loadMinStock(); loadLeveranciers(); }
+
       allRows=Array.isArray(res.rows)?res.rows:[];
 
+
+
       expanded.clear(); mobileExpanded.clear(); visibleCount=PAGE_SIZE;
+
       if(isPartial){
+
         meta.textContent=`${allRows.length} of ${opts.total||allRows.length} items (loading...)`;
+
       } else {
+
         meta.textContent=`${allRows.length} items`+(fromCache?" (cached)":"");
+
       }
+
       searchInput.disabled=false;
+
       populateDropdowns(); updateActiveFilters(); renderProducts();
+
     }
 
+
+
     // Fetches the full catalog in batches (server paginates via action=data&page=N)
+
     // instead of one multi-MB response, so the first batch can render immediately.
+
     async function fetchAllData(key, onPartial){
+
       let page=0, merged=null;
+
       while(true){
+
         const res=await jsonp(`${APPS_SCRIPT_WEBAPP_URL}?action=data&key=${encodeURIComponent(key)}&page=${page}`);
+
         if(!res||!res.ok) throw new Error(res?.error||"Could not load data");
+
         if(!merged) merged={ok:true,isAdmin:res.isAdmin,user:res.user,rows:[]};
+
         merged.rows=merged.rows.concat(Array.isArray(res.rows)?res.rows:[]);
+
         const hasMore=!!res.hasMore;
+
         if(onPartial) onPartial(merged, res.total!=null?res.total:merged.rows.length, hasMore);
+
         if(!hasMore) break;
+
         page++;
+
       }
+
       return merged;
+
     }
+
+
 
     const CACHE_TTL_MS = 2 * 60 * 60 * 1000; // 2 hours
 
+
+
     async function loadProducts(){
+
       err.textContent="";
+
       const cached=localStorage.getItem(CACHE_KEY);
+
       let hasCache=false;
+
       let cacheIsFresh=false;
+
       if(cached){
+
         try{
+
           const c=JSON.parse(cached);
+
           if(c.key===currentKey){
+
             applyData(c.res,true);
+
             hasCache=true;
+
             if(c.ts && (Date.now()-c.ts)<CACHE_TTL_MS) cacheIsFresh=true;
+
           }
+
         }catch(e){}
+
       }
+
       if(!hasCache){
+
         meta.textContent="Loading...";
+
         tbody.innerHTML=`<tr><td colspan="5" class="small">Loading...</td></tr>`;
+
         mobileProducts.innerHTML=`<div class="small">Loading...</div>`;
+
       }
+
       if(cacheIsFresh) return; // skip fetch, cache is recent enough
+
       try{
+
         const res=await jsonp(`${APPS_SCRIPT_WEBAPP_URL}?action=data&key=${encodeURIComponent(currentKey)}`);
+
         if(!res||!res.ok)throw new Error(res?.error||"Could not load data");
+
         localStorage.setItem(CACHE_KEY,JSON.stringify({key:currentKey,res,ts:Date.now()}));
+
         applyData(res,false);
+
       }catch(e){
+
         if(!hasCache){
+
           err.textContent=friendlyErrorMessage(e);
+
           meta.textContent="";
+
           tbody.innerHTML=`<tr><td colspan="5" class="small">Error loading.</td></tr>`;
+
           mobileProducts.innerHTML=`<div class="small">Error loading.</div>`;
+
         }
+
       }
+
     }
 
+
+
     // ---- Render ----
+
     function renderProducts(){
+
       const f=getFilters();
+
       const allFiltered=[...allRows.filter(r=>matchesFilters(r,f))].sort(sortRows);
+
       const total=allFiltered.length;
+
       const rows=allFiltered.slice(0,visibleCount);
+
+
 
       meta.textContent=(f.category||f.supplier||f.q)?`${total} of ${allRows.length} items`:`${allRows.length} items`;
 
+
+
       // Desktop
+
       tbody.innerHTML="";
+
       if(!rows.length){
+
         tbody.innerHTML=`<tr><td colspan="5" class="small">No results.</td></tr>`;
+
       } else {
+
         rows.forEach((r,i)=>{
+
           const id=`${r.ean_code}__${i}`,own=ownStock(r),wh=warehouseStock(r),tot=own+wh,dc=dotClass(stockStatus(r));
+
           const tr=document.createElement("tr");
+
           const min=minStockMap[r.ean_code]||0;
+
           const tdP=document.createElement("td"); tdP.innerHTML=`<span class="stockDot ${dc}"></span>${esc(r.name||"")}`;
+
           tr.appendChild(tdP);
+
           [String(own),String(wh),String(tot)].forEach(v=>tr.appendChild(Object.assign(document.createElement("td"),{textContent:v})));
+
           const tdA=document.createElement("td"); tdA.className="tdActions";
+
           const wrap=document.createElement("div"); wrap.className="actionWrap";
+
           const iBtn=makeInfoBtn(r,id,tr,own);
 
+
+
           if(isInkoopRole){
+
             const inCart=inkoopCart.some(x=>x.ean===r.ean_code);
+
             const minInput=document.createElement("input");
+
             minInput.type="number"; minInput.min="0"; minInput.className="inkoopMinInput";
+
             minInput.value=min||"";
+
             minInput.addEventListener("change",()=>{
+
               updateMinStock(r.ean_code,parseInt(minInput.value)||0);
+
               if(mainOnlyLow.checked)renderProducts();
+
             });
+
             const saveBtn=document.createElement("button");
+
             saveBtn.type="button"; saveBtn.className="pIconBtn"; saveBtn.title="Opslaan";
+
             saveBtn.innerHTML=`<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>`;
+
             saveBtn.onclick=()=>saveMinStockNow(r.ean_code,parseInt(minInput.value)||0,saveBtn);
+
             const addBtn=document.createElement("button");
+
             addBtn.type="button"; addBtn.className="pIconBtn"+(inCart?" pIconBtnPrimary":"");
+
             addBtn.innerHTML=inCart
+
               ? `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="3" stroke-linecap="round"><polyline points="20 6 9 17 4 12"/></svg>`
+
               : `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#111" stroke-width="3" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>`;
+
             addBtn.onclick=()=>{
+
               if(inkoopCart.some(x=>x.ean===r.ean_code)) inkoopCart=inkoopCart.filter(x=>x.ean!==r.ean_code);
+
               else inkoopCart.push({ean:r.ean_code,name:r.name,leverancierKey:cartLeverancierKeyFor(r,wh)});
+
               setInkoopBadge(); renderProducts();
+
             };
+
             wrap.appendChild(iBtn); wrap.appendChild(minInput); wrap.appendChild(saveBtn); wrap.appendChild(addBtn);
+
           } else {
+
             const cBtn=document.createElement("button"); cBtn.className="btnCalc"; cBtn.title="Calculator"; cBtn.textContent="%"; cBtn.onclick=()=>openCalculatorForRow(r);
+
             const aBtn=document.createElement("button"); aBtn.className="btn btnPrimary"; aBtn.textContent="Add"; aBtn.onclick=()=>addToCart({ean:r.ean_code,name:r.name,retailPrice:r.retailPrice});
+
             wrap.appendChild(iBtn); wrap.appendChild(cBtn); wrap.appendChild(aBtn);
+
           }
+
           tdA.appendChild(wrap); tr.appendChild(tdA); tbody.appendChild(tr);
 
+
+
           if(expanded.has(id)){
+
             const tr2=document.createElement("tr"); tr2.className="detailsRow";
+
             const td=document.createElement("td"); td.colSpan=5;
+
             td.innerHTML=productDetailsHtml(r,own);
+
             tr2.appendChild(td); tbody.appendChild(tr2);
+
           }
+
         });
+
+
 
         if(total>visibleCount){
+
           const tr=document.createElement("tr");
+
           const td=document.createElement("td"); td.colSpan=5;
+
           td.innerHTML=`<div class="showMoreWrap"><button class="showMoreBtn">Show more (${total-visibleCount} remaining)</button></div>`;
+
           td.querySelector("button").onclick=()=>{ visibleCount+=PAGE_SIZE; renderProducts(); };
+
           tr.appendChild(td); tbody.appendChild(tr);
+
         }
+
       }
+
+
 
       // Mobile
+
       if(!rows.length){ mobileProducts.innerHTML=`<div class="small">No results.</div>`; return; }
 
+
+
       mobileProducts.innerHTML=rows.map((r,i)=>{
+
         const id=`m_${r.ean_code}__${i}`,open=mobileExpanded.has(id);
+
         const own=ownStock(r),wh=warehouseStock(r),tot=own+wh,dc=dotClass(stockStatus(r));
+
         const bd=warehouseBreakdown(r);
+
         const whD=bd.map(x=>`<div class="whLine">${esc(x.label)}: ${x.qty}</div>`).join("");
+
         const min=minStockMap[r.ean_code]||0;
+
         const inCart=inkoopCart.some(x=>x.ean===r.ean_code);
+
         const addBtnHtml=isInkoopRole
+
           ? `<button class="pIconBtn${inCart?" pIconBtnPrimary":""}" data-add="${id}" title="Toevoegen aan bestelling"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="${inCart?"white":"#111"}" stroke-width="3" stroke-linecap="round">${inCart?'<polyline points="20 6 9 17 4 12"/>':'<line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>'}</svg></button>`
+
           : `<button class="pIconBtn pIconBtnPrimary" data-add="${id}" title="Add"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="3" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg></button>`;
+
         const minRowHtml=isInkoopRole
+
           ? `<div style="display:flex;align-items:center;gap:8px;margin-bottom:10px;"><span class="small">Min voorraad</span><input type="number" min="0" class="inkoopMinInput" data-ean="${esc(r.ean_code||"")}" value="${min||""}"><button class="pIconBtn inkoopMinSave" type="button" title="Opslaan" data-ean="${esc(r.ean_code||"")}" style="width:36px;height:36px;"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg></button></div>${noLeverancierHtml(r,wh)}`
+
           : "";
+
         return`<div class="pCard" data-id="${id}"><div class="pRow" data-toggle="${id}"><div class="pName"><span class="stockDot ${dc}"></span>${esc(r.name||"")}</div><div class="pActions"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#9ca3af" stroke-width="2.5" style="flex-shrink:0;transition:transform .2s;${open?"transform:rotate(180deg)":""}"><polyline points="6 9 12 15 18 9"/></svg>${addBtnHtml}</div></div><div class="pDetails ${open?"open":""}" id="${id}">${minRowHtml}<div style="display:flex;gap:0;border:1px solid var(--border);border-radius:12px;overflow:hidden;margin-bottom:10px;"><div style="flex:1;padding:10px 12px;text-align:center;border-right:1px solid var(--border);"><div style="font-size:11px;color:#9ca3af;margin-bottom:2px;">Surfcenter</div><div style="font-weight:700;font-size:18px;">${own}</div></div><div style="flex:1;padding:10px 12px;text-align:center;border-right:1px solid var(--border);"><div style="font-size:11px;color:#9ca3af;margin-bottom:2px;">Warehouse</div><div style="font-weight:700;font-size:18px;">${wh}</div></div><div style="flex:1;padding:10px 12px;text-align:center;"><div style="font-size:11px;color:#9ca3af;margin-bottom:2px;">Total</div><div style="font-weight:700;font-size:18px;">${tot}</div></div></div>${whD?`<div style="margin-bottom:10px;"><div class="whBreakdown">${whD}</div></div>`:""}<div class="kv" style="margin-bottom:8px;">${r.manufacturer?`<div class="k">Brand</div><div class="v">${esc(r.manufacturer)}</div>`:""}<div class="k">Category</div><div class="v">${esc(r._attribute_set||"-")}</div>${r.season?`<div class="k">Season</div><div class="v">${esc(r.season)}</div>`:""}<div class="k">EAN</div><div class="v">${esc(r.ean_code||"-")}</div></div></div></div>`;
+
       }).join("");
+
+
 
       if(total>visibleCount){
+
         mobileProducts.innerHTML+=`<div class="showMoreWrap"><button class="showMoreBtn">Show more (${total-visibleCount} remaining)</button></div>`;
+
         mobileProducts.querySelector(".showMoreBtn").onclick=()=>{ visibleCount+=PAGE_SIZE; renderProducts(); };
+
       }
+
+
 
       mobileProducts.querySelectorAll("[data-toggle]").forEach(row=>row.addEventListener("click",e=>{
+
         if(e.target.closest("[data-add]")||e.target.closest("[data-calc]")) return;
+
         const id=row.getAttribute("data-toggle");
+
         const details=document.getElementById(id);
+
         const chevron=row.querySelector("svg");
+
         if(mobileExpanded.has(id)){
+
           mobileExpanded.delete(id);
+
           if(details)details.classList.remove("open");
+
           if(chevron)chevron.style.transform="";
+
         } else {
+
           mobileExpanded.add(id);
+
           if(details)details.classList.add("open");
+
           if(chevron)chevron.style.transform="rotate(180deg)";
+
         }
+
       }));
+
       mobileProducts.querySelectorAll("button[data-add]").forEach(btn=>btn.addEventListener("click",()=>{
+
         const parent=btn.closest(".pCard"); const pid=parent.getAttribute("data-id");
+
         const idx=rows.findIndex((_,i)=>`m_${rows[i].ean_code}__${i}`===pid);
+
         const r=rows[idx]; if(!r)return;
+
         if(isInkoopRole){
+
           if(inkoopCart.some(x=>x.ean===r.ean_code)) inkoopCart=inkoopCart.filter(x=>x.ean!==r.ean_code);
+
           else inkoopCart.push({ean:r.ean_code,name:r.name,leverancierKey:cartLeverancierKeyFor(r,warehouseStock(r))});
+
           setInkoopBadge(); renderProducts();
+
         } else {
+
           addToCart({ean:r.ean_code,name:r.name,retailPrice:r.retailPrice});
+
         }
+
       }));
+
       mobileProducts.querySelectorAll("button[data-calc]").forEach(btn=>btn.addEventListener("click",()=>{
+
         const parent=btn.closest(".pCard"); const pid=parent.getAttribute("data-id");
+
         const idx=rows.findIndex((_,i)=>`m_${rows[i].ean_code}__${i}`===pid);
+
         const r=rows[idx]; if(r)openCalculatorForRow(r);
+
       }));
+
       if(isInkoopRole){
+
         mobileProducts.querySelectorAll(".inkoopMinInput").forEach(inp=>{
+
           inp.addEventListener("change",()=>{
+
             updateMinStock(inp.getAttribute("data-ean"),parseInt(inp.value)||0);
+
             if(mainOnlyLow.checked)renderProducts();
+
           });
+
         });
+
         mobileProducts.querySelectorAll(".inkoopMinSave").forEach(btn=>{
+
           btn.addEventListener("click",()=>{
+
             const ean=btn.getAttribute("data-ean");
+
             const wrap=btn.closest("div");
+
             const inp=wrap&&wrap.querySelector(".inkoopMinInput");
+
             saveMinStockNow(ean,parseInt(inp&&inp.value)||0,btn);
+
           });
+
         });
+
       }
+
     }
+
+
 
     // ---- MinStock loader (separate call, admin only) ----
+
     async function loadMinStock(){
+
       try{
+
         const res=await jsonp(`${APPS_SCRIPT_WEBAPP_URL}?action=minstock&key=${encodeURIComponent(currentKey)}`);
+
         if(res&&res.ok&&Array.isArray(res.minStock)){
+
           res.minStock.forEach(m=>{ if(m.ean_code&&m.min_qty!=null) minStockMap[m.ean_code]=Number(m.min_qty)||0; });
+
           localStorage.setItem("sc_minstock",JSON.stringify(minStockMap));
+
         }
+
       }catch(e){}
+
     }
+
+
 
     // ---- Inkoop ----
+
     let inkoopCart=[];
+
     let minStockMap={};
+
     try{ minStockMap=JSON.parse(localStorage.getItem("sc_minstock")||"{}"); }catch(e){}
 
+
+
     // Leveranciers: contact info + mail template per supplier, maintained in the "Leveranciers" sheet tab.
+
     // Falls back to the hardcoded WAREHOUSE_LABELS name if a leverancier row hasn't been filled in yet.
+
     let leveranciersByKey={};
+
     let brandToLeverancierKey={};
 
+
+
     async function loadLeveranciers(){
+
       try{
+
         const res=await jsonp(`${APPS_SCRIPT_WEBAPP_URL}?action=leveranciers&key=${encodeURIComponent(currentKey)}`);
+
         if(!res||!res.ok||!Array.isArray(res.leveranciers))return;
+
         leveranciersByKey={}; brandToLeverancierKey={};
+
         res.leveranciers.forEach(l=>{
+
           if(!l.key)return;
+
           leveranciersByKey[l.key]=l;
+
           String(l.merken||"").split(",").map(b=>b.trim().toLowerCase()).filter(Boolean).forEach(b=>{
+
             brandToLeverancierKey[b]=l.key;
+
           });
+
         });
+
         renderProducts();
+
       }catch(e){}
+
     }
+
+
 
     // For products with zero stock at every tracked warehouse: suggest a leverancier based on brand.
+
     function suggestedLeverancierKey(r){
+
       const brand=String(r.manufacturer||"").trim().toLowerCase();
+
       return brand ? (brandToLeverancierKey[brand]||"") : "";
+
     }
+
     function leverancierLabel(key){
+
       return (leveranciersByKey[key]&&leveranciersByKey[key].naam)||WAREHOUSE_LABELS[key]||key;
+
     }
+
     function noLeverancierHtml(r,wh){
+
       if(!isInkoopRole||wh>0)return"";
+
       const suggestion=suggestedLeverancierKey(r);
+
       const text=suggestion?`Geen voorraad - leverancier: ${esc(leverancierLabel(suggestion))}`:"Geen voorraad - geen leverancier gekoppeld";
+
       return `<span class="small" style="display:block;color:var(--muted);">${text}</span>`;
+
     }
+
     // Decides which leverancier a cart item is filed under: the warehouse with the most stock
+
     // if the product has any tracked warehouse stock, otherwise the brand-based suggestion.
+
     function cartLeverancierKeyFor(r,wh){
+
       if(wh>0){
+
         let bestKey="",bestQty=0;
+
         WAREHOUSE_KEYS.forEach(k=>{ const q=toNum(r[k])||0; if(q>bestQty){ bestQty=q; bestKey=k; } });
+
         return bestKey;
+
       }
+
       return suggestedLeverancierKey(r);
+
     }
+
+
 
     function setInkoopBadge(){
+
       const n=String(inkoopCart.length);
+
       inkoopCartBadge.textContent=n; inkoopCartBarBadge.textContent=n;
+
     }
+
+
 
     const _minSaveTimers={};
+
     function updateMinStock(ean,qty){
+
       minStockMap[ean]=qty;
+
       localStorage.setItem("sc_minstock",JSON.stringify(minStockMap));
+
       clearTimeout(_minSaveTimers[ean]);
+
       _minSaveTimers[ean]=setTimeout(()=>{
+
         const url=`${APPS_SCRIPT_WEBAPP_URL}?action=setMinStock&key=${encodeURIComponent(currentKey)}&ean=${encodeURIComponent(ean)}&qty=${encodeURIComponent(qty)}`;
+
         jsonp(url).catch(()=>{});
+
       },1500);
+
     }
+
+
 
     // Explicit save button: writes immediately (no debounce) and shows a brief confirmation.
+
     function saveMinStockNow(ean,qty,btn){
+
       clearTimeout(_minSaveTimers[ean]);
+
       minStockMap[ean]=qty;
+
       localStorage.setItem("sc_minstock",JSON.stringify(minStockMap));
+
       const url=`${APPS_SCRIPT_WEBAPP_URL}?action=setMinStock&key=${encodeURIComponent(currentKey)}&ean=${encodeURIComponent(ean)}&qty=${encodeURIComponent(qty)}`;
+
       if(btn) btn.disabled=true;
+
       jsonp(url)
+
         .then(()=>{
+
           if(!btn) return;
+
           btn.classList.add("pIconBtnPrimary");
+
           btn.title="Opgeslagen";
+
           setTimeout(()=>{ btn.classList.remove("pIconBtnPrimary"); btn.title="Opslaan"; btn.disabled=false; },1200);
+
         })
+
         .catch(()=>{ if(btn){ btn.disabled=false; btn.title="Opslaan mislukt, probeer opnieuw"; } });
+
     }
+
+
 
     // {{contactpersoon}}, {{items}} and {{datum}} placeholders in a leverancier's own template get substituted.
+
     function fillTemplate(tpl,vars){
+
       return tpl.replace(/\{\{(\w+)\}\}/g,(m,k)=>Object.prototype.hasOwnProperty.call(vars,k)?vars[k]:m);
+
     }
+
+
 
     function sendInkoopGroup(key,items){
+
       const lev=leveranciersByKey[key]||{};
+
       const srcLabel=lev.naam||WAREHOUSE_LABELS[key]||key||"Leverancier";
+
       const contact=lev.contactpersoon||"";
+
       const date=new Date().toLocaleDateString("nl-NL",{day:"2-digit",month:"long",year:"numeric"});
+
       const subject=`Nabestelling Surf Center - ${srcLabel}`;
+
       const itemLines=items.map(i=>`- ${i.name}\n  EAN: ${i.ean}`).join("\n\n");
+
       const vars={contactpersoon:contact,items:itemLines,datum:date};
+
       const body=lev.template
+
         ? fillTemplate(lev.template,vars)
+
         : `Hallo${contact?" "+contact:""},\n\nGraag willen wij de volgende producten nabestellen:\n\n${itemLines}\n\nKunnen jullie de beschikbaarheid, levertijd en prijzen bevestigen?\n\nMet vriendelijke groet,\nTeam Surf Center\n\nDatum: ${date}`;
+
       const to=lev.email?encodeURIComponent(lev.email):"";
+
       window.location.href=`mailto:${to}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
+
       inkoopCart=inkoopCart.filter(x=>!items.some(i=>i.ean===x.ean));
+
       setInkoopBadge(); renderProducts(); renderInkoopCartList();
+
     }
+
+
 
     function inkoopCartGroups(){
+
       const groups={};
+
       inkoopCart.forEach(it=>{ const k=it.leverancierKey||""; (groups[k]=groups[k]||[]).push(it); });
+
       return groups;
+
     }
+
+
 
     function renderInkoopCartList(){
+
       inkoopCartErr.textContent="";
+
       if(!inkoopCart.length){
+
         inkoopCartList.innerHTML=`<div class="cartRow"><div class="small">No items.</div></div>`;
+
         inkoopCartActions.innerHTML="";
+
         return;
+
       }
+
       const groups=inkoopCartGroups();
+
       const keys=Object.keys(groups).sort((a,b)=>(a?leverancierLabel(a):"zzz").localeCompare(b?leverancierLabel(b):"zzz"));
 
+
+
       inkoopCartList.innerHTML=keys.map(k=>{
+
         const label=k?leverancierLabel(k):"Onbekende leverancier";
+
         const rows=groups[k].map(it=>`<div class="cartRow"><div class="left"><div style="font-weight:500;">${esc(it.name||"")}</div></div><div><button class="btn" data-remove-inkoop="${esc(it.ean)}">Remove</button></div></div>`).join("");
+
         return `<details class="cartGroup"><summary>${esc(label)} (${groups[k].length})</summary><div class="cartList">${rows}</div></details>`;
+
       }).join("");
+
+
 
       inkoopCartList.querySelectorAll("[data-remove-inkoop]").forEach(b=>b.addEventListener("click",()=>{
+
         const ean=b.getAttribute("data-remove-inkoop");
+
         inkoopCart=inkoopCart.filter(x=>x.ean!==ean);
+
         setInkoopBadge(); renderInkoopCartList(); renderProducts();
+
       }));
 
+
+
       // One send action per leverancier group. Unresolved items ("Onbekende leverancier")
+
       // need a manual pick first since there's no email/template to send to yet.
+
       inkoopCartActions.innerHTML=keys.map(k=>{
+
         if(k) return `<button class="btn btnPrimary" data-send-group="${esc(k)}" style="width:100%;margin-bottom:8px;height:48px;border-radius:14px;">Versturen naar ${esc(leverancierLabel(k))} (${groups[k].length})</button>`;
+
         return `<div style="display:flex;gap:8px;margin-bottom:8px;">
+
           <select class="filterSelect" id="inkoopUnknownSource" style="flex:1;"><option value="">Kies leverancier voor onbekende...</option>${WAREHOUSE_KEYS.map(wk=>`<option value="${wk}">${esc(leverancierLabel(wk))}</option>`).join("")}</select>
+
           <button class="btn btnPrimary" id="inkoopUnknownSendBtn" style="height:48px;border-radius:14px;">Versturen</button>
+
         </div>`;
+
       }).join("");
 
+
+
       inkoopCartActions.querySelectorAll("[data-send-group]").forEach(btn=>{
+
         btn.addEventListener("click",()=>sendInkoopGroup(btn.getAttribute("data-send-group"),groups[btn.getAttribute("data-send-group")]));
+
       });
+
       const unknownBtn=document.getElementById("inkoopUnknownSendBtn");
+
       if(unknownBtn){
+
         unknownBtn.addEventListener("click",()=>{
+
           const sel=document.getElementById("inkoopUnknownSource");
+
           if(!sel.value){ inkoopCartErr.textContent="Kies eerst een leverancier."; return; }
+
           sendInkoopGroup(sel.value,groups[""]);
+
         });
+
       }
+
     }
+
+
 
     function openInkoopCart(){ renderInkoopCartList(); inkoopCartOverlay.classList.add("active"); }
+
     function closeInkoopCart(){ inkoopCartOverlay.classList.remove("active"); }
+
     inkoopCartBtn.onclick=openInkoopCart;
+
     inkoopCartBarBtn.onclick=openInkoopCart;
+
     inkoopCartClose.onclick=closeInkoopCart;
+
     inkoopCartOverlay.addEventListener("click",e=>{ if(e.target===inkoopCartOverlay)closeInkoopCart(); });
 
+
+
     // ---- Login ----
+
     loginBtn.onclick=async()=>{
+
       loginErr.textContent=""; const key=loginKey.value.trim();
+
       if(!key){loginErr.textContent="Please enter a key.";return;}
+
       loginBtn.disabled=true; loginBtn.textContent="Login...";
+
       let entered=false;
+
       try{
+
         const res=await fetchAllData(key,(partial,total,hasMore)=>{
+
           if(!entered){
+
             entered=true;
+
             localStorage.setItem("employeeKey",key); currentKey=key;
+
             showApp(); setCartBadge();
+
           }
+
           applyData(partial,false,{partial:hasMore,total});
+
         });
+
         localStorage.setItem(CACHE_KEY,JSON.stringify({key,res,ts:Date.now()}));
+
         applyData(res,false);
+
       }catch(e){ loginErr.textContent=friendlyErrorMessage(e); }
+
       finally{ loginBtn.disabled=false; loginBtn.textContent="Login"; }
+
     };
 
+
+
     // ---- Auto-login ----
+
     // Kick off the batched data fetch immediately (before DOMContentLoaded) to reduce cold-start wait.
+
     // Partial batches are buffered until the DOM is ready, then applied.
+
     let _earlyFetch=null, _earlyPartial=null;
+
     {
+
       const _k=(localStorage.getItem("employeeKey")||"").trim();
+
       if(_k){
+
         _earlyFetch=fetchAllData(_k,(partial,total,hasMore)=>{
+
           _earlyPartial={partial,total,hasMore};
+
           if(document.readyState!=="loading") applyData(partial,false,{partial:hasMore,total});
+
         });
+
       }
+
     }
 
+
+
     document.addEventListener("DOMContentLoaded",()=>{
-      const stored=(localStorage.getItem("employ    document.addEventListener("DOMContentLoaded",()=>{
+
       const stored=(localStorage.getItem("employeeKey")||"").trim();
+
       if(!stored){showLogin();return;}
+
       currentKey=stored; showApp(); setCartBadge();
+
       // Reuse already-in-flight fetch instead of starting a new one
+
       const cached=localStorage.getItem(CACHE_KEY);
+
       let cacheIsFresh=false;
+
       if(cached){
+
         try{
+
           const c=JSON.parse(cached);
+
           if(c.key===currentKey){applyData(c.res,true); if(c.ts&&(Date.now()-c.ts)<CACHE_TTL_MS)cacheIsFresh=true;}
+
         }catch(e){}
+
       }
+
       if(cacheIsFresh){_earlyFetch=null;return;}
+
       if(!cached) { meta.textContent="Loading..."; tbody.innerHTML=`<tr><td colspan="5" class="small">Loading...</td></tr>`; mobileProducts.innerHTML=`<div class="small">Loading...</div>`; }
+
       if(_earlyPartial) applyData(_earlyPartial.partial,false,{partial:_earlyPartial.hasMore,total:_earlyPartial.total});
+
       (_earlyFetch||fetchAllData(currentKey,(partial,total,hasMore)=>applyData(partial,false,{partial:hasMore,total})))
+
         .then(res=>{
+
           localStorage.setItem(CACHE_KEY,JSON.stringify({key:currentKey,res,ts:Date.now()}));
+
           applyData(res,false);
+
         })
+
         .catch(e=>{
+
           if(allRows.length){
+
             err.textContent=friendlyErrorMessage(e);
+
           } else {
-            err.textContent=friendlyErrorMessage(e); meta.textContent=""; tbody.innerHTML=`<tr><td colspan="5" class="small">Error loading.</td></tr>`; mobileProducts.innerHTML=`<div class="small">Error loading.</div>`;
+
+            err.textContent=            err.textContent=friendlyErrorMessage(e); meta.textContent=""; tbody.innerHTML=`<tr><td colspan="5" class="small">Error loading.</td></tr>`; mobileProducts.innerHTML=`<div class="small">Error loading.</div>`;
+
           }
+
         })
+
         .finally(()=>{ _earlyFetch=null; });
+
     });
+
   </script>
+
 </body>
+
 </html>
