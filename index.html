@@ -81,34 +81,34 @@
     .filterRow{ display:flex; gap:8px; flex-wrap:wrap; }
     .filterRow .filterSelect{ flex:1; min-width:120px; }
 
-    @media(max-width:640px){
-      .mobileSearchBar{
-        position:sticky; top:0; z-index:100;
-        background:rgba(252,252,252,.97); backdrop-filter:blur(10px);
-        padding:12px 12px 10px; margin:0 -12px 10px;
-      }
-      /* Mobile: the search bar should dominate — big, unmissable target for a thumb.
-         Everything else (category/brand/leverancier/toggles) is tucked behind "Filters"
-         below it so it doesn't compete for attention. */
-      .mobileSearchBar .input{
-        font-size:19px; padding:18px 18px; border-radius:20px;
-        border:2px solid var(--border); background:#fff;
-        box-shadow:0 3px 14px rgba(0,0,0,.1);
-      }
-      .mobileSearchBar .input:focus{ outline:none; border-color:var(--accent); }
-      .mobileFiltersToggle.mobileOnly{
-        display:flex; align-items:center; justify-content:center; gap:6px;
-        width:100%; margin-top:8px; padding:9px 12px; border-radius:14px;
-        border:1px solid var(--border); background:#fff; color:var(--muted);
-        font-family:'Poppins',sans-serif; font-weight:500; font-size:13px; cursor:pointer;
-        appearance:none; -webkit-appearance:none;
-      }
-      .mobileFiltersToggle svg{ transition:transform .2s; }
-      .mobileFiltersToggle.open svg{ transform:rotate(180deg); }
-      .mobileSearchBar .filterRow{ display:none; margin-top:8px; }
-      .mobileSearchBar .filterRow.open{ display:flex; }
-      .mobileSearchBar .filterRow .filterSelect{ font-size:14px; padding:10px 12px; }
+    /* Keyed off the JS-driven html.mobileMode class rather than a raw @media(max-width)
+       query — a spoofed/"desktop site" viewport must not defeat the mobile layout. */
+    html.mobileMode .mobileSearchBar{
+      position:sticky; top:0; z-index:100;
+      background:rgba(252,252,252,.97); backdrop-filter:blur(10px);
+      padding:12px 12px 10px; margin:0 -12px 10px;
     }
+    /* Mobile: the search bar should dominate — big, unmissable target for a thumb.
+       Everything else (category/brand/leverancier/toggles) is tucked behind "Filters"
+       below it so it doesn't compete for attention. */
+    html.mobileMode .mobileSearchBar .input{
+      font-size:19px; padding:18px 18px; border-radius:20px;
+      border:2px solid var(--border); background:#fff;
+      box-shadow:0 3px 14px rgba(0,0,0,.1);
+    }
+    html.mobileMode .mobileSearchBar .input:focus{ outline:none; border-color:var(--accent); }
+    html.mobileMode .mobileFiltersToggle.mobileOnly{
+      display:flex; align-items:center; justify-content:center; gap:6px;
+      width:100%; margin-top:8px; padding:9px 12px; border-radius:14px;
+      border:1px solid var(--border); background:#fff; color:var(--muted);
+      font-family:'Poppins',sans-serif; font-weight:500; font-size:13px; cursor:pointer;
+      appearance:none; -webkit-appearance:none;
+    }
+    html.mobileMode .mobileFiltersToggle svg{ transition:transform .2s; }
+    html.mobileMode .mobileFiltersToggle.open svg{ transform:rotate(180deg); }
+    html.mobileMode .mobileSearchBar .filterRow{ display:none; margin-top:8px; }
+    html.mobileMode .mobileSearchBar .filterRow.open{ display:flex; }
+    html.mobileMode .mobileSearchBar .filterRow .filterSelect{ font-size:14px; padding:10px 12px; }
 
     .activeFilters{ display:flex; flex-wrap:wrap; gap:6px; margin-top:2px; }
     .filterChip{
@@ -128,14 +128,17 @@
 
     .mobileOnly{ display:none; }
     .desktopOnly{ display:block; }
-    @media(max-width:640px){ .mobileOnly{ display:block; } .desktopOnly{ display:none; } }
+    html.mobileMode .mobileOnly{ display:block; }
+    html.mobileMode .desktopOnly{ display:none; }
 
     /* Mobile cards - compact */
-    .productList{ display:flex; flex-direction:column; gap:8px; }
-    .pCard{ border:1px solid var(--border); border-radius:16px; background:#fff; overflow:hidden; }
-    .pRow{ display:flex; align-items:center; justify-content:space-between; gap:8px; padding:10px 12px; cursor:pointer; -webkit-tap-highlight-color:transparent; }
-    .pName{ font-weight:500; font-size:14px; line-height:1.2; flex:1; min-width:0; word-break:break-word; display:flex; align-items:center; }
-    .pActions{ display:flex; gap:6px; align-items:center; flex-shrink:0; }
+    .productList{ display:flex; flex-direction:column; gap:10px; }
+    .pCard{ border:1px solid var(--border); border-radius:18px; background:#fff; overflow:hidden; box-shadow:0 1px 3px rgba(0,0,0,.04); }
+    .pRow{ display:flex; align-items:center; justify-content:space-between; gap:10px; padding:14px; cursor:pointer; -webkit-tap-highlight-color:transparent; }
+    .pNameWrap{ flex:1; min-width:0; }
+    .pName{ font-weight:600; font-size:16px; line-height:1.25; min-width:0; word-break:break-word; display:flex; align-items:center; }
+    .pStats{ font-size:13px; color:var(--muted); margin-top:3px; font-weight:500; }
+    .pActions{ display:flex; gap:8px; align-items:center; flex-shrink:0; }
     .pTiny{ padding:8px 10px; border-radius:12px; font-weight:700; font-size:13px; }
     .pToggle{ padding:8px 10px; border-radius:12px; color:#111; font-size:13px; }
     .pIconBtn{
@@ -268,14 +271,12 @@
       min-width:26px; height:26px; padding:0 8px; border-radius:999px;
       background:#fff; color:#111; font-weight:700; font-size:13px;
     }
-    @media(max-width:640px){
-      .cartBar{ display:block; }
-      .cartFab{ display:none !important; }
-      /* Big, unmissable thumb target at the bottom — this is the other half of "focus on
-         search, worry about the rest less" for mobile. */
-      .cartBarBtn{ height:62px; font-size:18px; border-radius:18px; }
-      .cartBarBtn .badge{ min-width:30px; height:30px; font-size:14px; }
-    }
+    html.mobileMode .cartBar{ display:block; }
+    html.mobileMode .cartFab{ display:none !important; }
+    /* Big, unmissable thumb target at the bottom — this is the other half of "focus on
+       search, worry about the rest less" for mobile. */
+    html.mobileMode .cartBarBtn{ height:62px; font-size:18px; border-radius:18px; }
+    html.mobileMode .cartBarBtn .badge{ min-width:30px; height:30px; font-size:14px; }
 
     /* ---- Inkoop (inline row actions for role=inkoop) ---- */
     .inkoopMinInput{
@@ -520,6 +521,16 @@
   </div>
 
   <script>
+    // Decide mobile layout from device type, not just viewport width: Safari's "Request
+    // Desktop Website" (and similar) reports a wide viewport (~980px) on an actual phone,
+    // which would otherwise make @media(max-width) miss it entirely and show the desktop
+    // table + floating cart pill on a phone screen. Checking the UA too makes this robust.
+    (function(){
+      var isPhoneUA=/iPhone|iPod|Android/i.test(navigator.userAgent);
+      var isNarrow=window.matchMedia("(max-width:640px)").matches;
+      if(isPhoneUA||isNarrow) document.documentElement.classList.add("mobileMode");
+    })();
+
     const APPS_SCRIPT_WEBAPP_URL = "https://script.google.com/macros/s/AKfycbx16TL4k6EraUDXpA5CWMJnueCWUiMGKlLBBTdUEMpzYyj91a8fGVvNuDLU6av9k5jT3Q/exec";
     const CALCULATOR_URL = "https://surf-center.github.io/calculator/";
     const PAGE_SIZE = 20;
@@ -1038,7 +1049,7 @@
 
       mobileProducts.innerHTML=rows.map((r,i)=>{
         const id=`m_${r.ean_code}__${i}`,open=mobileExpanded.has(id);
-        const own=ownStock(r),wh=warehouseStock(r),tot=own+wh,dc=dotClass(stockStatus(r));
+        const own=ownStock(r),wh=warehouseStock(r),dc=dotClass(stockStatus(r));
         const bd=warehouseBreakdown(r);
         const whD=bd.map(x=>`<div class="whLine">${esc(x.label)}: ${x.qty}</div>`).join("");
         const min=minStockMap[r.ean_code]||0;
@@ -1049,7 +1060,7 @@
         const minRowHtml=isInkoopRole
           ? `<div style="display:flex;align-items:center;gap:8px;margin-bottom:10px;"><span class="small">Min voorraad</span><input type="number" min="0" class="inkoopMinInput" data-ean="${esc(r.ean_code||"")}" value="${min||""}"><button class="pIconBtn inkoopMinSave" type="button" title="Opslaan" data-ean="${esc(r.ean_code||"")}" style="width:36px;height:36px;"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg></button></div>${noLeverancierHtml(r,wh)}`
           : "";
-        return`<div class="pCard" data-id="${id}"><div class="pRow" data-toggle="${id}"><div class="pName"><span class="stockDot ${dc}"></span>${esc(r.name||"")}</div><div class="pActions"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#9ca3af" stroke-width="2.5" style="flex-shrink:0;transition:transform .2s;${open?"transform:rotate(180deg)":""}"><polyline points="6 9 12 15 18 9"/></svg>${addBtnHtml}</div></div><div class="pDetails ${open?"open":""}" id="${id}">${minRowHtml}<div style="text-align:center;padding:10px 12px;border:1px solid var(--border);border-radius:12px;margin-bottom:10px;"><div style="font-size:11px;color:#9ca3af;margin-bottom:2px;">Total</div><div style="font-weight:700;font-size:20px;">${tot}</div></div>${whD?`<div style="margin-bottom:10px;"><div class="whBreakdown">${whD}</div></div>`:""}<div class="kv" style="margin-bottom:8px;">${r.manufacturer?`<div class="k">Brand</div><div class="v">${esc(r.manufacturer)}</div>`:""}<div class="k">Category</div><div class="v">${esc(r._attribute_set||"-")}</div>${r.season?`<div class="k">Season</div><div class="v">${esc(r.season)}</div>`:""}<div class="k">EAN</div><div class="v">${esc(r.ean_code||"-")}</div></div></div></div>`;
+        return`<div class="pCard" data-id="${id}"><div class="pRow" data-toggle="${id}"><div class="pNameWrap"><div class="pName"><span class="stockDot ${dc}"></span>${esc(r.name||"")}</div><div class="pStats">Stock: ${own} &middot; Warehouse: ${wh}</div></div><div class="pActions"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#9ca3af" stroke-width="2.5" style="flex-shrink:0;transition:transform .2s;${open?"transform:rotate(180deg)":""}"><polyline points="6 9 12 15 18 9"/></svg>${addBtnHtml}</div></div><div class="pDetails ${open?"open":""}" id="${id}">${minRowHtml}${whD?`<div style="margin-bottom:10px;"><div class="whBreakdown">${whD}</div></div>`:""}<div class="kv" style="margin-bottom:8px;">${r.manufacturer?`<div class="k">Brand</div><div class="v">${esc(r.manufacturer)}</div>`:""}<div class="k">Category</div><div class="v">${esc(r._attribute_set||"-")}</div>${r.season?`<div class="k">Season</div><div class="v">${esc(r.season)}</div>`:""}<div class="k">EAN</div><div class="v">${esc(r.ean_code||"-")}</div></div></div></div>`;
       }).join("");
 
       if(total>visibleCount){
