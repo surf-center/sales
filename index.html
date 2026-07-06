@@ -92,19 +92,18 @@
        Everything else (category/brand/leverancier/toggles) is tucked behind "Filters"
        below it so it doesn't compete for attention. */
     html.mobileMode #searchInput{
-      font-size:22px; padding:22px 20px 22px 54px; border-radius:22px;
+      font-size:26px; padding:24px 20px 24px 58px; border-radius:24px;
       border:2.5px solid var(--border); background:#fff;
       box-shadow:0 4px 16px rgba(0,0,0,.12);
-      background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24' fill='none' stroke='%236b7280' stroke-width='2.25' stroke-linecap='round' stroke-linejoin='round'%3E%3Ccircle cx='11' cy='11' r='7'/%3E%3Cline x1='21' y1='21' x2='16.65' y2='16.65'/%3E%3C/svg%3E");
-      background-repeat:no-repeat; background-position:18px center; background-size:24px;
+      background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='26' height='26' viewBox='0 0 24 24' fill='none' stroke='%236b7280' stroke-width='2.25' stroke-linecap='round' stroke-linejoin='round'%3E%3Ccircle cx='11' cy='11' r='7'/%3E%3Cline x1='21' y1='21' x2='16.65' y2='16.65'/%3E%3C/svg%3E");
+      background-repeat:no-repeat; background-position:18px center; background-size:26px;
     }
     html.mobileMode #searchInput:focus{ outline:none; border-color:var(--accent); box-shadow:0 4px 20px rgba(17,24,39,.18); }
     html.mobileMode .mobileFiltersToggle.mobileOnly{
-      display:flex; align-items:center; justify-content:center; gap:6px;
-      width:100%; margin-top:8px; padding:9px 12px; border-radius:14px;
-      border:1px solid var(--border); background:#fff; color:var(--muted);
-      font-family:'Poppins',sans-serif; font-weight:500; font-size:13px; cursor:pointer;
-      appearance:none; -webkit-appearance:none;
+      display:flex; align-items:center; justify-content:center;
+      width:56px; height:56px; flex-shrink:0; border-radius:18px;
+      border:2.5px solid var(--border); background:#fff; color:#111;
+      cursor:pointer; appearance:none; -webkit-appearance:none;
     }
     html.mobileMode .mobileFiltersToggle svg{ transition:transform .2s; }
     html.mobileMode .mobileFiltersToggle.open svg{ transform:rotate(180deg); }
@@ -139,15 +138,15 @@
     .pRow{ display:flex; align-items:center; justify-content:space-between; gap:10px; padding:16px; cursor:pointer; -webkit-tap-highlight-color:transparent; }
     /* No secondary stats line — the colored dot alone (green/orange/red) is the at-a-glance
        stock signal; tap the row for exact numbers. Keeps the list scannable. */
-    .pName{ font-weight:700; font-size:18px; line-height:1.3; flex:1; min-width:0; word-break:break-word; display:flex; align-items:center; }
+    .pName{ font-weight:500; font-size:22px; line-height:1.3; flex:1; min-width:0; word-break:break-word; display:flex; align-items:center; }
     .pActions{ display:flex; gap:10px; align-items:center; flex-shrink:0; }
     /* Bigger tap targets specifically on mobile — the shared .pIconBtn size (36px) stays
        as-is for desktop inkoop rows so this doesn't blow up that layout. */
     /* The add button is the single most-used action on this list — make it the biggest,
        most obvious tap target on the row. */
-    html.mobileMode .pIconBtn{ width:52px; height:52px; border-radius:16px; }
-    html.mobileMode .pIconBtn svg{ width:22px; height:22px; }
-    html.mobileMode .pRow > .pActions > svg{ width:16px; height:16px; }
+    html.mobileMode .pIconBtn{ width:60px; height:60px; border-radius:18px; }
+    html.mobileMode .pIconBtn svg{ width:26px; height:26px; }
+    html.mobileMode .pRow > .pActions > svg{ width:18px; height:18px; }
     .pTiny{ padding:8px 10px; border-radius:12px; font-weight:700; font-size:13px; }
     .pToggle{ padding:8px 10px; border-radius:12px; color:#111; font-size:13px; }
     .pIconBtn{
@@ -284,8 +283,8 @@
     html.mobileMode .cartFab{ display:none !important; }
     /* Big, unmissable thumb target at the bottom — this is the other half of "focus on
        search, worry about the rest less" for mobile. */
-    html.mobileMode .cartBarBtn{ height:70px; font-size:23px; font-weight:800; letter-spacing:.2px; border-radius:20px; }
-    html.mobileMode .cartBarBtn .badge{ min-width:32px; height:32px; font-size:15px; }
+    html.mobileMode .cartBarBtn{ height:76px; font-size:26px; font-weight:800; letter-spacing:.2px; border-radius:22px; }
+    html.mobileMode .cartBarBtn .badge{ min-width:34px; height:34px; font-size:16px; }
 
     /* ---- Inkoop (inline row actions for role=inkoop) ---- */
     .inkoopMinInput{
@@ -353,11 +352,10 @@
     <div class="searchArea mobileSearchBar">
       <div class="searchRow">
         <input id="searchInput" class="input" placeholder="Search product or EAN..." disabled>
+        <button id="mobileFiltersToggle" type="button" class="mobileFiltersToggle mobileOnly" aria-label="Filters" title="Filters">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
+        </button>
       </div>
-      <button id="mobileFiltersToggle" type="button" class="mobileFiltersToggle mobileOnly">
-        Filters
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
-      </button>
       <div class="filterRow">
         <select id="filterCategory" class="filterSelect" disabled><option value="">All categories</option></select>
         <select id="filterSupplier" class="filterSelect" disabled><option value="">All brands</option></select>
