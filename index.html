@@ -91,12 +91,14 @@
     /* Mobile: the search bar should dominate — big, unmissable target for a thumb.
        Everything else (category/brand/leverancier/toggles) is tucked behind "Filters"
        below it so it doesn't compete for attention. */
-    html.mobileMode .mobileSearchBar .input{
-      font-size:19px; padding:18px 18px; border-radius:20px;
-      border:2px solid var(--border); background:#fff;
-      box-shadow:0 3px 14px rgba(0,0,0,.1);
+    html.mobileMode #searchInput{
+      font-size:22px; padding:22px 20px 22px 54px; border-radius:22px;
+      border:2.5px solid var(--border); background:#fff;
+      box-shadow:0 4px 16px rgba(0,0,0,.12);
+      background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24' fill='none' stroke='%236b7280' stroke-width='2.25' stroke-linecap='round' stroke-linejoin='round'%3E%3Ccircle cx='11' cy='11' r='7'/%3E%3Cline x1='21' y1='21' x2='16.65' y2='16.65'/%3E%3C/svg%3E");
+      background-repeat:no-repeat; background-position:18px center; background-size:24px;
     }
-    html.mobileMode .mobileSearchBar .input:focus{ outline:none; border-color:var(--accent); }
+    html.mobileMode #searchInput:focus{ outline:none; border-color:var(--accent); box-shadow:0 4px 20px rgba(17,24,39,.18); }
     html.mobileMode .mobileFiltersToggle.mobileOnly{
       display:flex; align-items:center; justify-content:center; gap:6px;
       width:100%; margin-top:8px; padding:9px 12px; border-radius:14px;
@@ -134,11 +136,18 @@
     /* Mobile cards - compact */
     .productList{ display:flex; flex-direction:column; gap:10px; }
     .pCard{ border:1px solid var(--border); border-radius:18px; background:#fff; overflow:hidden; box-shadow:0 1px 3px rgba(0,0,0,.04); }
-    .pRow{ display:flex; align-items:center; justify-content:space-between; gap:10px; padding:14px; cursor:pointer; -webkit-tap-highlight-color:transparent; }
-    .pNameWrap{ flex:1; min-width:0; }
-    .pName{ font-weight:600; font-size:16px; line-height:1.25; min-width:0; word-break:break-word; display:flex; align-items:center; }
-    .pStats{ font-size:13px; color:var(--muted); margin-top:3px; font-weight:500; }
-    .pActions{ display:flex; gap:8px; align-items:center; flex-shrink:0; }
+    .pRow{ display:flex; align-items:center; justify-content:space-between; gap:10px; padding:16px; cursor:pointer; -webkit-tap-highlight-color:transparent; }
+    /* No secondary stats line — the colored dot alone (green/orange/red) is the at-a-glance
+       stock signal; tap the row for exact numbers. Keeps the list scannable. */
+    .pName{ font-weight:700; font-size:18px; line-height:1.3; flex:1; min-width:0; word-break:break-word; display:flex; align-items:center; }
+    .pActions{ display:flex; gap:10px; align-items:center; flex-shrink:0; }
+    /* Bigger tap targets specifically on mobile — the shared .pIconBtn size (36px) stays
+       as-is for desktop inkoop rows so this doesn't blow up that layout. */
+    /* The add button is the single most-used action on this list — make it the biggest,
+       most obvious tap target on the row. */
+    html.mobileMode .pIconBtn{ width:52px; height:52px; border-radius:16px; }
+    html.mobileMode .pIconBtn svg{ width:22px; height:22px; }
+    html.mobileMode .pRow > .pActions > svg{ width:16px; height:16px; }
     .pTiny{ padding:8px 10px; border-radius:12px; font-weight:700; font-size:13px; }
     .pToggle{ padding:8px 10px; border-radius:12px; color:#111; font-size:13px; }
     .pIconBtn{
@@ -275,8 +284,8 @@
     html.mobileMode .cartFab{ display:none !important; }
     /* Big, unmissable thumb target at the bottom — this is the other half of "focus on
        search, worry about the rest less" for mobile. */
-    html.mobileMode .cartBarBtn{ height:62px; font-size:18px; border-radius:18px; }
-    html.mobileMode .cartBarBtn .badge{ min-width:30px; height:30px; font-size:14px; }
+    html.mobileMode .cartBarBtn{ height:70px; font-size:23px; font-weight:800; letter-spacing:.2px; border-radius:20px; }
+    html.mobileMode .cartBarBtn .badge{ min-width:32px; height:32px; font-size:15px; }
 
     /* ---- Inkoop (inline row actions for role=inkoop) ---- */
     .inkoopMinInput{
@@ -420,14 +429,14 @@
 
   <!-- Desktop floating INKOOP order (role=inkoop only) -->
   <div class="cartFab" id="inkoopCartBtn" style="display:none;">
-    <span>Bestelling versturen</span><span class="badge" id="inkoopCartBadge">0</span>
+    <span>Bestellen</span><span class="badge" id="inkoopCartBadge">0</span>
   </div>
 
   <!-- Mobile bottom INKOOP order bar -->
   <div class="cartBar" id="inkoopCartBar" style="display:none;">
     <div class="cartBarInner">
       <button class="cartBarBtn" id="inkoopCartBarBtn">
-        Bestelling versturen <span class="badge" id="inkoopCartBarBadge">0</span>
+        Bestellen <span class="badge" id="inkoopCartBarBadge">0</span>
       </button>
     </div>
   </div>
@@ -1060,7 +1069,7 @@
         const minRowHtml=isInkoopRole
           ? `<div style="display:flex;align-items:center;gap:8px;margin-bottom:10px;"><span class="small">Min voorraad</span><input type="number" min="0" class="inkoopMinInput" data-ean="${esc(r.ean_code||"")}" value="${min||""}"><button class="pIconBtn inkoopMinSave" type="button" title="Opslaan" data-ean="${esc(r.ean_code||"")}" style="width:36px;height:36px;"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg></button></div>${noLeverancierHtml(r,wh)}`
           : "";
-        return`<div class="pCard" data-id="${id}"><div class="pRow" data-toggle="${id}"><div class="pNameWrap"><div class="pName"><span class="stockDot ${dc}"></span>${esc(r.name||"")}</div><div class="pStats">Stock: ${own} &middot; Warehouse: ${wh}</div></div><div class="pActions"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#9ca3af" stroke-width="2.5" style="flex-shrink:0;transition:transform .2s;${open?"transform:rotate(180deg)":""}"><polyline points="6 9 12 15 18 9"/></svg>${addBtnHtml}</div></div><div class="pDetails ${open?"open":""}" id="${id}">${minRowHtml}${whD?`<div style="margin-bottom:10px;"><div class="whBreakdown">${whD}</div></div>`:""}<div class="kv" style="margin-bottom:8px;">${r.manufacturer?`<div class="k">Brand</div><div class="v">${esc(r.manufacturer)}</div>`:""}<div class="k">Category</div><div class="v">${esc(r._attribute_set||"-")}</div>${r.season?`<div class="k">Season</div><div class="v">${esc(r.season)}</div>`:""}<div class="k">EAN</div><div class="v">${esc(r.ean_code||"-")}</div></div></div></div>`;
+        return`<div class="pCard" data-id="${id}"><div class="pRow" data-toggle="${id}"><div class="pName"><span class="stockDot ${dc}"></span>${esc(r.name||"")}</div><div class="pActions"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#9ca3af" stroke-width="2.5" style="flex-shrink:0;transition:transform .2s;${open?"transform:rotate(180deg)":""}"><polyline points="6 9 12 15 18 9"/></svg>${addBtnHtml}</div></div><div class="pDetails ${open?"open":""}" id="${id}">${minRowHtml}${whD?`<div style="margin-bottom:10px;"><div class="whBreakdown">${whD}</div></div>`:""}<div class="kv" style="margin-bottom:8px;">${r.manufacturer?`<div class="k">Brand</div><div class="v">${esc(r.manufacturer)}</div>`:""}<div class="k">Category</div><div class="v">${esc(r._attribute_set||"-")}</div>${r.season?`<div class="k">Season</div><div class="v">${esc(r.season)}</div>`:""}<div class="k">EAN</div><div class="v">${esc(r.ean_code||"-")}</div></div></div></div>`;
       }).join("");
 
       if(total>visibleCount){
@@ -1434,5 +1443,3 @@
   </script>
 </body>
 </html>
-
-
