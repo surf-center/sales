@@ -85,15 +85,28 @@
       .mobileSearchBar{
         position:sticky; top:0; z-index:100;
         background:rgba(252,252,252,.97); backdrop-filter:blur(10px);
-        padding:10px 12px 8px; margin:0 -12px 10px;
+        padding:12px 12px 10px; margin:0 -12px 10px;
       }
+      /* Mobile: the search bar should dominate — big, unmissable target for a thumb.
+         Everything else (category/brand/leverancier/toggles) is tucked behind "Filters"
+         below it so it doesn't compete for attention. */
       .mobileSearchBar .input{
-        font-size:17px; padding:14px 16px; border-radius:18px;
-        border:1.5px solid var(--border); background:#fff;
-        box-shadow:0 2px 12px rgba(0,0,0,.08);
+        font-size:19px; padding:18px 18px; border-radius:20px;
+        border:2px solid var(--border); background:#fff;
+        box-shadow:0 3px 14px rgba(0,0,0,.1);
       }
-      .mobileSearchBar .input:focus{ outline:none; border-color:#9ca3af; }
-      .mobileSearchBar .filterRow{ margin-top:6px; }
+      .mobileSearchBar .input:focus{ outline:none; border-color:var(--accent); }
+      .mobileFiltersToggle.mobileOnly{
+        display:flex; align-items:center; justify-content:center; gap:6px;
+        width:100%; margin-top:8px; padding:9px 12px; border-radius:14px;
+        border:1px solid var(--border); background:#fff; color:var(--muted);
+        font-family:'Poppins',sans-serif; font-weight:500; font-size:13px; cursor:pointer;
+        appearance:none; -webkit-appearance:none;
+      }
+      .mobileFiltersToggle svg{ transition:transform .2s; }
+      .mobileFiltersToggle.open svg{ transform:rotate(180deg); }
+      .mobileSearchBar .filterRow{ display:none; margin-top:8px; }
+      .mobileSearchBar .filterRow.open{ display:flex; }
       .mobileSearchBar .filterRow .filterSelect{ font-size:14px; padding:10px 12px; }
     }
 
@@ -133,6 +146,16 @@
     }
     .pIconBtn:hover{ background:#f3f4f6; }
     .pIconBtnPrimary{ background:var(--accent); border-color:var(--accent); }
+
+    .rowCheck{
+      display:inline-flex; align-items:center; justify-content:center;
+      width:36px; height:36px; border-radius:12px; border:1px solid var(--border);
+      background:#fff; cursor:pointer; flex-shrink:0; position:relative;
+    }
+    .rowCheck:hover{ background:#f3f4f6; }
+    .rowCheck input{ position:absolute; inset:0; opacity:0; margin:0; cursor:pointer; }
+    .rowCheck svg{ display:none; }
+    .rowCheck:has(input:checked) svg{ display:block; }
 
     .pDetails{ display:none; padding:8px 12px 12px; border-top:1px solid #eee; background:var(--soft); }
     .pDetails.open{ display:block; }
@@ -245,7 +268,14 @@
       min-width:26px; height:26px; padding:0 8px; border-radius:999px;
       background:#fff; color:#111; font-weight:700; font-size:13px;
     }
-    @media(max-width:640px){ .cartBar{ display:block; } .cartFab{ display:none !important; } }
+    @media(max-width:640px){
+      .cartBar{ display:block; }
+      .cartFab{ display:none !important; }
+      /* Big, unmissable thumb target at the bottom — this is the other half of "focus on
+         search, worry about the rest less" for mobile. */
+      .cartBarBtn{ height:62px; font-size:18px; border-radius:18px; }
+      .cartBarBtn .badge{ min-width:30px; height:30px; font-size:14px; }
+    }
 
     /* ---- Inkoop (inline row actions for role=inkoop) ---- */
     .inkoopMinInput{
@@ -301,7 +331,6 @@
     <div class="topbar">
       <div></div>
       <div style="display:flex; gap:8px; align-items:center;">
-        <button id="addAllBtn" class="btn" style="display:none; padding:8px 12px; font-size:13px;">Alles selecteren</button>
         <button id="accountBtn" class="btn">Account</button>
         <button id="logoutBtn" class="btn" title="Log out" style="padding:9px 11px;">
           <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
@@ -315,6 +344,10 @@
       <div class="searchRow">
         <input id="searchInput" class="input" placeholder="Search product or EAN..." disabled>
       </div>
+      <button id="mobileFiltersToggle" type="button" class="mobileFiltersToggle mobileOnly">
+        Filters
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
+      </button>
       <div class="filterRow">
         <select id="filterCategory" class="filterSelect" disabled><option value="">All categories</option></select>
         <select id="filterSupplier" class="filterSelect" disabled><option value="">All brands</option></select>
@@ -344,7 +377,12 @@
         <table>
           <thead>
             <tr>
-              <th id="selectAllTh" style="display:none; width:34px;"></th>
+              <th id="selectAllTh" style="display:none; width:44px;">
+                <label class="rowCheck">
+                  <input type="checkbox" id="selectAllCheckbox">
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#111" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+                </label>
+              </th>
               <th>Product</th>
               <th>Stock</th>
               <th>Warehouse</th>
@@ -591,6 +629,7 @@
     const filterCategory=document.getElementById("filterCategory"),filterSupplier=document.getElementById("filterSupplier");
     const filterLeverancier=document.getElementById("filterLeverancier");
     const clearFiltersBtn=document.getElementById("clearFiltersBtn"),activeFiltersEl=document.getElementById("activeFilters");
+    const mobileFiltersToggle=document.getElementById("mobileFiltersToggle"),mobileFilterRow=document.querySelector(".mobileSearchBar .filterRow");
     const tbody=document.getElementById("tbody"),mobileProducts=document.getElementById("mobileProducts");
     const meta=document.getElementById("meta"),err=document.getElementById("err");
     const loadProgress=document.getElementById("loadProgress"),loadProgressBar=document.getElementById("loadProgressBar");
@@ -606,8 +645,7 @@
     const calcOverlay=document.getElementById("calcOverlay"),calcClose=document.getElementById("calcClose"),calcFrame=document.getElementById("calcFrame");
     const mainOnlyLowWrap=document.getElementById("mainOnlyLowWrap"),mainOnlyLow=document.getElementById("mainOnlyLow");
     const mainOnlyHasMinWrap=document.getElementById("mainOnlyHasMinWrap"),mainOnlyHasMin=document.getElementById("mainOnlyHasMin");
-    const addAllBtn=document.getElementById("addAllBtn");
-    const selectAllTh=document.getElementById("selectAllTh");
+    const selectAllTh=document.getElementById("selectAllTh"),selectAllCheckbox=document.getElementById("selectAllCheckbox");
     const inkoopCartOverlay=document.getElementById("inkoopCartOverlay"),inkoopCartClose=document.getElementById("inkoopCartClose");
     const inkoopCartList=document.getElementById("inkoopCartList"),inkoopCartActions=document.getElementById("inkoopCartActions");
     const inkoopCartJump=document.getElementById("inkoopCartJump");
@@ -694,6 +732,13 @@
     mainOnlyHasMin.addEventListener("change",()=>onFilterChange(true));
     clearFiltersBtn.onclick=()=>{ searchInput.value=""; filterCategory.value=""; filterSupplier.value=""; filterLeverancier.value=""; onFilterChange(true); };
 
+    // Mobile: category/brand/leverancier/toggles start tucked away so the search bar
+    // is the one thing that stands out; tapping "Filters" reveals them on demand.
+    mobileFiltersToggle.addEventListener("click",()=>{
+      mobileFilterRow.classList.toggle("open");
+      mobileFiltersToggle.classList.toggle("open");
+    });
+
     // ---- Cart ----
     function setCartBadge(){ const n=String(cart.length); document.getElementById("cartBadge").textContent=n; cartBarBadge.textContent=n; }
     function addToCart(item){ if(cart.some(x=>x.ean===item.ean))return; cart.push({ean:item.ean,product:item.name,retailPrice:item.retailPrice}); setCartBadge(); }
@@ -705,7 +750,7 @@
     }
 
     // ---- Auth ----
-    function showLogin(){ loginView.style.display="block"; appView.style.display="none"; cartBtn.style.display="none"; cartBar.style.display="none"; inkoopCartBtn.style.display="none"; inkoopCartBar.style.display="none"; mainOnlyLowWrap.style.display="none"; mainOnlyHasMinWrap.style.display="none"; addAllBtn.style.display="none"; filterLeverancier.style.display="none"; loadProgress.style.display="none"; selectAllTh.style.display="none"; loginErr.textContent=""; loginKey.value=""; loginKey.focus(); }
+    function showLogin(){ loginView.style.display="block"; appView.style.display="none"; cartBtn.style.display="none"; cartBar.style.display="none"; inkoopCartBtn.style.display="none"; inkoopCartBar.style.display="none"; mainOnlyLowWrap.style.display="none"; mainOnlyHasMinWrap.style.display="none"; filterLeverancier.style.display="none"; loadProgress.style.display="none"; selectAllTh.style.display="none"; loginErr.textContent=""; loginKey.value=""; loginKey.focus(); }
     function showApp(){ loginView.style.display="none"; appView.style.display="block"; cartBtn.style.display=""; cartBar.style.display=""; searchInput.disabled=false; filterCategory.disabled=false; filterSupplier.disabled=false; }
     function logout(){ localStorage.removeItem("employeeKey"); currentKey=""; activeFetchKey=""; showLogin(); }
     logoutBtn.onclick=logout;
@@ -820,7 +865,6 @@
       inkoopCartBar.style.display=isInkoopRole?"":"none";
       mainOnlyLowWrap.style.display=isInkoopRole?"":"none";
       mainOnlyHasMinWrap.style.display=isInkoopRole?"":"none";
-      addAllBtn.style.display=isInkoopRole?"":"none";
       filterLeverancier.style.display=isInkoopRole?"":"none";
       selectAllTh.style.display=isInkoopRole?"":"none";
       const isPartial=!!(opts&&opts.partial);
@@ -934,13 +978,16 @@
             // Checkbox doubles as the add/remove-from-order control: checked = in the
             // bestelling. Bulk-select with "Alles selecteren" then untick the odd one out.
             const tdC=document.createElement("td");
+            const label=document.createElement("label"); label.className="rowCheck";
             const cb=document.createElement("input"); cb.type="checkbox"; cb.checked=inCart;
             cb.addEventListener("change",()=>{
               if(cb.checked) inkoopCart.push({ean:r.ean_code,name:r.name,leverancierKey:cartLeverancierKeyFor(r,wh)});
               else inkoopCart=inkoopCart.filter(x=>x.ean!==r.ean_code);
               setInkoopBadge(); renderProducts();
             });
-            tdC.appendChild(cb); tr.appendChild(tdC);
+            label.appendChild(cb);
+            label.insertAdjacentHTML("beforeend",`<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#111" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>`);
+            tdC.appendChild(label); tr.appendChild(tdC);
           }
           const tdP=document.createElement("td"); tdP.innerHTML=`<span class="stockDot ${dc}"></span>${esc(r.name||"")}`;
           tr.appendChild(tdP);
@@ -1002,7 +1049,7 @@
         const minRowHtml=isInkoopRole
           ? `<div style="display:flex;align-items:center;gap:8px;margin-bottom:10px;"><span class="small">Min voorraad</span><input type="number" min="0" class="inkoopMinInput" data-ean="${esc(r.ean_code||"")}" value="${min||""}"><button class="pIconBtn inkoopMinSave" type="button" title="Opslaan" data-ean="${esc(r.ean_code||"")}" style="width:36px;height:36px;"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg></button></div>${noLeverancierHtml(r,wh)}`
           : "";
-        return`<div class="pCard" data-id="${id}"><div class="pRow" data-toggle="${id}"><div class="pName"><span class="stockDot ${dc}"></span>${esc(r.name||"")}</div><div class="pActions"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#9ca3af" stroke-width="2.5" style="flex-shrink:0;transition:transform .2s;${open?"transform:rotate(180deg)":""}"><polyline points="6 9 12 15 18 9"/></svg>${addBtnHtml}</div></div><div class="pDetails ${open?"open":""}" id="${id}">${minRowHtml}<div style="display:flex;gap:0;border:1px solid var(--border);border-radius:12px;overflow:hidden;margin-bottom:10px;"><div style="flex:1;padding:10px 12px;text-align:center;border-right:1px solid var(--border);"><div style="font-size:11px;color:#9ca3af;margin-bottom:2px;">Surfcenter</div><div style="font-weight:700;font-size:18px;">${own}</div></div><div style="flex:1;padding:10px 12px;text-align:center;border-right:1px solid var(--border);"><div style="font-size:11px;color:#9ca3af;margin-bottom:2px;">Warehouse</div><div style="font-weight:700;font-size:18px;">${wh}</div></div><div style="flex:1;padding:10px 12px;text-align:center;"><div style="font-size:11px;color:#9ca3af;margin-bottom:2px;">Total</div><div style="font-weight:700;font-size:18px;">${tot}</div></div></div>${whD?`<div style="margin-bottom:10px;"><div class="whBreakdown">${whD}</div></div>`:""}<div class="kv" style="margin-bottom:8px;">${r.manufacturer?`<div class="k">Brand</div><div class="v">${esc(r.manufacturer)}</div>`:""}<div class="k">Category</div><div class="v">${esc(r._attribute_set||"-")}</div>${r.season?`<div class="k">Season</div><div class="v">${esc(r.season)}</div>`:""}<div class="k">EAN</div><div class="v">${esc(r.ean_code||"-")}</div></div></div></div>`;
+        return`<div class="pCard" data-id="${id}"><div class="pRow" data-toggle="${id}"><div class="pName"><span class="stockDot ${dc}"></span>${esc(r.name||"")}</div><div class="pActions"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#9ca3af" stroke-width="2.5" style="flex-shrink:0;transition:transform .2s;${open?"transform:rotate(180deg)":""}"><polyline points="6 9 12 15 18 9"/></svg>${addBtnHtml}</div></div><div class="pDetails ${open?"open":""}" id="${id}">${minRowHtml}<div style="text-align:center;padding:10px 12px;border:1px solid var(--border);border-radius:12px;margin-bottom:10px;"><div style="font-size:11px;color:#9ca3af;margin-bottom:2px;">Total</div><div style="font-weight:700;font-size:20px;">${tot}</div></div>${whD?`<div style="margin-bottom:10px;"><div class="whBreakdown">${whD}</div></div>`:""}<div class="kv" style="margin-bottom:8px;">${r.manufacturer?`<div class="k">Brand</div><div class="v">${esc(r.manufacturer)}</div>`:""}<div class="k">Category</div><div class="v">${esc(r._attribute_set||"-")}</div>${r.season?`<div class="k">Season</div><div class="v">${esc(r.season)}</div>`:""}<div class="k">EAN</div><div class="v">${esc(r.ean_code||"-")}</div></div></div></div>`;
       }).join("");
 
       if(total>visibleCount){
@@ -1011,7 +1058,7 @@
       }
 
       mobileProducts.querySelectorAll("[data-toggle]").forEach(row=>row.addEventListener("click",e=>{
-        if(e.target.closest("[data-add]")||e.target.closest("[data-calc]")) return;
+        if(e.target.closest("[data-add]")) return;
         const id=row.getAttribute("data-toggle");
         const details=document.getElementById(id);
         const chevron=row.querySelector("svg");
@@ -1037,11 +1084,6 @@
           addToCart({ean:r.ean_code,name:r.name,retailPrice:r.retailPrice});
         }
       }));
-      mobileProducts.querySelectorAll("button[data-calc]").forEach(btn=>btn.addEventListener("click",()=>{
-        const parent=btn.closest(".pCard"); const pid=parent.getAttribute("data-id");
-        const idx=rows.findIndex((_,i)=>`m_${rows[i].ean_code}__${i}`===pid);
-        const r=rows[idx]; if(r)openCalculatorForRow(r);
-      }));
       if(isInkoopRole){
         mobileProducts.querySelectorAll(".inkoopMinInput").forEach(inp=>{
           inp.addEventListener("change",()=>{
@@ -1057,6 +1099,7 @@
             saveMinStockNow(ean,parseInt(inp&&inp.value)||0,btn);
           });
         });
+        updateSelectAllCheckbox();
       }
     }
 
@@ -1128,26 +1171,39 @@
       inkoopCartBadge.textContent=n; inkoopCartBarBadge.textContent=n;
     }
 
-    // Adds every product matching the current search/category/brand/toggle filters to the
-    // inkoop cart in one go (e.g. filter on a category + "Onder min stock" to bulk-reorder it).
-    // Label reflects what a click will do: with a manual checkbox selection it adds just
-    // those; with nothing checked it falls back to everything matching the current filters.
-    // Selects everything matching the current search/category/brand/toggle filters (adds it
-    // to the bestelling) — the per-row checkboxes then let Jasper untick the odd one out.
-    addAllBtn.onclick=()=>{
+    // Same rows renderProducts() would show right now, for the header checkbox to act on.
+    function currentlyRenderedRows(){
       const f=getFilters();
-      const matches=allRows.filter(r=>matchesFilters(r,f));
-      let added=0;
-      matches.forEach(r=>{
-        if(inkoopCart.some(x=>x.ean===r.ean_code)) return;
-        inkoopCart.push({ean:r.ean_code,name:r.name,leverancierKey:cartLeverancierKeyFor(r,warehouseStock(r))});
-        added++;
-      });
+      return [...allRows.filter(r=>matchesFilters(r,f))].sort(sortRows).slice(0,visibleCount);
+    }
+
+    // Header checkbox: exact same logic as a row checkbox, just applied to every row
+    // currently on screen at once — check to bulk-add, uncheck to bulk-remove.
+    selectAllCheckbox.addEventListener("change",()=>{
+      // Decide the direction from the actual cart state, not selectAllCheckbox.checked:
+      // browsers always flip an indeterminate checkbox to checked on click, so relying on
+      // .checked here would make it impossible to ever bulk-deselect once partially checked.
+      const rows=currentlyRenderedRows();
+      const allIn=rows.length>0 && rows.every(r=>inkoopCart.some(x=>x.ean===r.ean_code));
+      if(!allIn){
+        rows.forEach(r=>{
+          if(!inkoopCart.some(x=>x.ean===r.ean_code)) inkoopCart.push({ean:r.ean_code,name:r.name,leverancierKey:cartLeverancierKeyFor(r,warehouseStock(r))});
+        });
+      } else {
+        const eans=new Set(rows.map(r=>r.ean_code));
+        inkoopCart=inkoopCart.filter(x=>!eans.has(x.ean));
+      }
       setInkoopBadge(); renderProducts();
-      addAllBtn.textContent=added?`${added} toegevoegd`:"Al geselecteerd";
-      clearTimeout(addAllBtn._resetTimer);
-      addAllBtn._resetTimer=setTimeout(()=>{ addAllBtn.textContent="Alles selecteren"; },1500);
-    };
+    });
+
+    // Reflects whether every currently-rendered row is in the order (checked/indeterminate/empty).
+    function updateSelectAllCheckbox(){
+      const rows=currentlyRenderedRows();
+      if(!rows.length){ selectAllCheckbox.checked=false; selectAllCheckbox.indeterminate=false; return; }
+      const inCartCount=rows.filter(r=>inkoopCart.some(x=>x.ean===r.ean_code)).length;
+      selectAllCheckbox.checked=inCartCount===rows.length;
+      selectAllCheckbox.indeterminate=inCartCount>0&&inCartCount<rows.length;
+    }
 
     const _minSaveTimers={};
     function updateMinStock(ean,qty){
@@ -1367,4 +1423,5 @@
   </script>
 </body>
 </html>
+
 
